@@ -1,4 +1,6 @@
 from functools import partial
+import string
+import copy
 
 from scipy.stats import truncnorm
 from scipy.stats import norm
@@ -51,6 +53,108 @@ def criterion_function(df, questions, cutoffs, *args):
     rslt = -np.mean(np.clip(np.log(sorted(contribs)), -HUGE_FLOAT, HUGE_FLOAT))
 
     return rslt
+
+
+def print_init_dict(dict_, fname='test.trempy.ini'):
+    """This function prints an initialization dictionary."""
+    keys = ['PREFERENCES', 'QUESTIONS', 'SIMULATION', 'ESTIMATION']
+    questions = list(dict_['QUESTIONS'].keys())
+
+    with open(fname, 'w') as outfile:
+        for key_ in keys:
+            outfile.write(key_ + '\n\n')
+            for label in sorted(dict_[key_].keys()):
+                info = dict_[key_][label]
+
+                str_ = '{:<10}'
+                if label in ['alpha', 'beta', 'eta'] + questions:
+                    str_ += ' {:25.4f} {:>5} '
+                else:
+                    str_ += ' {:>25}\n'
+
+                if label in ['detailed']:
+                    info = str(info)
+
+                if label in ['alpha', 'beta', 'eta']:
+                    line, str_ = format_coefficient_line(label, info, str_)
+                elif label in questions:
+                    line, str_ = format_question_line(label, info, str_)
+                else:
+                    line = [label, info]
+
+                outfile.write(str_.format(*line))
+
+            outfile.write('\n')
+
+
+def format_question_line(label, info, str_):
+    """This function returns a properly formatted question line."""
+    value, is_fixed, cutoffs = info
+
+    # We need to make sure this is an independent copy as otherwise the bound in the original
+    # dictionary are overwritten with the value None.
+    cutoffs = copy.deepcopy(cutoffs)
+
+    line = []
+    line += [label, value]
+
+    if is_fixed == 'True':
+        line += ['!']
+    else:
+        line += ['']
+
+    # Bounds might be printed or now.
+    for i in range(2):
+        value = cutoffs[i]
+        if abs(value) > HUGE_FLOAT:
+            cutoffs[i] = None
+        else:
+            cutoffs[i] = np.round(value, decimals=4)
+
+    if cutoffs.count(None) == 2:
+        cutoffs = ['', '']
+        str_ += '{:}\n'
+    else:
+        str_ += '({:},{:})\n'
+
+    line += cutoffs
+
+    return line, str_
+
+
+def format_coefficient_line(label, info, str_):
+    """This function returns a properly formatted coefficient line."""
+    value, is_fixed, bounds = info
+
+    # We need to make sure this is an independent copy as otherwise the bound in the original
+    # dictionary are overwritten with the value None.
+    bounds = copy.deepcopy(bounds)
+
+    line = []
+    line += [label, value]
+
+    if is_fixed == 'True':
+        line += ['!']
+    else:
+        line += ['']
+
+    # Bounds might be printed or now.
+    for i in range(2):
+        value = bounds[i]
+        if abs(value) > HUGE_FLOAT:
+            bounds[i] = None
+        else:
+            bounds[i] = np.round(value, decimals=4)
+
+    if bounds.count(None) == 2:
+        bounds = ['', '']
+        str_ += '{:}\n'
+    else:
+        str_ += '({:},{:})\n'
+
+    line += bounds
+
+    return line, str_
 
 
 def single_attribute_utility(alpha, x):
@@ -216,3 +320,9 @@ def dist_class_attributes(model_obj, *args):
 
     # Finishing
     return ret
+
+def get_random_string(size=6):
+    """This function samples a random string of varying size."""
+    chars = list(string.ascii_lowercase)
+    str_ = ''.join(np.random.choice(chars) for x in range(size))
+    return str_

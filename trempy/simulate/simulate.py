@@ -6,8 +6,8 @@ import os
 import pandas as pd
 import numpy as np
 
-from trempy.shared.shared import determine_optimal_compensation
-from trempy.shared.shared import dist_class_attributes
+from trempy.shared.shared_auxiliary import determine_optimal_compensation
+from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.shared.shared import criterion_function
 from trempy.clsModel import ModelCls
 

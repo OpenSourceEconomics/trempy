@@ -7,8 +7,8 @@ import numpy as np
 
 from trempy.estimate.estimate_auxiliary import write_info_estimation
 from trempy.simulate.simulate import simulate_estimation
-from trempy.shared.shared import criterion_function
-from trempy.shared.shared import dist_class_attributes
+from trempy.shared.shared_auxiliary import criterion_function
+from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.clsModel import ModelCls
 from trempy.estimate.clsEstimate import EstimateClass
 

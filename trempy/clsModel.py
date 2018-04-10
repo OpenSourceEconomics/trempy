@@ -43,6 +43,7 @@ class ModelCls(BaseCls):
             questions += [label]
 
         self.attr['questions'] = sorted(questions)
+        self.attr['num_questions'] = len(questions)
 
         cutoffs = dict()
         for q in questions:

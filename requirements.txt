@@ -1,0 +1,9 @@
+statsmodels==0.8
+scipy==1.0
+numpy==1.13
+pandas==0.21
+pytest==3.3     
+PyPDF2==1.26   
+matplotlib==2.2.2
+seaborn==0.8
+pytest==3.3

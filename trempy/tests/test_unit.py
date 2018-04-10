@@ -3,15 +3,15 @@ import numpy as np
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
 # from interalpy.shared.shared_auxiliary import atemporal_utility
-# from interalpy.tests.test_auxiliary import get_random_init
+from trempy.tests.test_auxiliary import get_random_init
 # from interalpy.shared.shared_auxiliary import luce_prob
-# from interalpy.tests.test_auxiliary import get_bounds
-# from interalpy.tests.test_auxiliary import get_value
+from trempy.tests.test_auxiliary import get_bounds
+from trempy.tests.test_auxiliary import get_value
 # from interalpy.estimate.estimate import estimate
 # from interalpy.simulate.simulate import simulate
 # from interalpy.config_interalpy import NUM_PARAS
-# from interalpy.clsModel import ModelCls
-# from interalpy.read.read import read
+from trempy.clsModel import ModelCls
+from trempy.read.read import read
 #
 #
 # def test_1():
@@ -42,33 +42,33 @@ from trempy.shared.shared_auxiliary import dist_class_attributes
 #         payment = np.random.lognormal(size=2)
 #         stat = atemporal_utility(payment, r, eta, b)
 #         np.testing.assert_equal(stat, payment.sum())
-#
-#
-# def test_3():
-#     """This test checks that the random initialization files can all be properly processed."""
-#     for _ in range(100):
-#         get_random_init()
-#         read('test.interalpy.ini')
-#
-#
-# def test_4():
-#     """This test ensures the back an fourth transformations for the parameter values."""
-#     get_random_init()
-#
-#     model_obj = ModelCls('test.interalpy.ini')
-#     paras_obj = dist_class_attributes(model_obj, 'paras_obj')
-#
-#     for _ in range(500):
-#         x_optim_all_current = np.random.uniform(-1, 1, size=NUM_PARAS)
-#         paras_obj.set_values('optim', 'all', x_optim_all_current)
-#
-#         x_econ_all_current = paras_obj.get_values('econ', 'all')
-#         paras_obj.set_values('econ', 'all', x_econ_all_current)
-#
-#         stat = paras_obj.get_values('optim', 'all')
-#         np.testing.assert_almost_equal(x_optim_all_current, stat)
-#
-#
+
+
+def test_3():
+    """This test checks that the random initialization files can all be properly processed."""
+    for _ in range(100):
+        get_random_init()
+        read('test.interalpy.ini')
+
+
+def test_4():
+    """This test ensures the back an forth transformations for the parameter values."""
+    get_random_init()
+
+    model_obj = ModelCls('test.interalpy.ini')
+    paras_obj, num_questions = dist_class_attributes(model_obj, 'paras_obj', 'num_questions')
+
+    for _ in range(500):
+        x_optim_all_current = np.random.uniform(-1, 1, size=num_questions + 3)
+        paras_obj.set_values('optim', 'all', x_optim_all_current)
+
+        x_econ_all_current = paras_obj.get_values('econ', 'all')
+        paras_obj.set_values('econ', 'all', x_econ_all_current)
+
+        stat = paras_obj.get_values('optim', 'all')
+        np.testing.assert_almost_equal(x_optim_all_current, stat)
+
+
 # def test_5():
 #     """This test ensures that writing out an initialization results in exactly the same value of
 #     the criterion function."""
@@ -83,11 +83,11 @@ from trempy.shared.shared_auxiliary import dist_class_attributes
 #
 #     np.testing.assert_almost_equal(y, x)
 #
-#
-# def test_6():
-#     """This test checks for valid bounds."""
-#     for _ in range(1000):
-#         for label in ['r', 'eta', 'b', 'nu']:
-#             lower, upper = get_bounds(label)
-#             value = get_value((lower, upper))
-#             np.testing.assert_equal(lower < value < upper, True)
+
+def test_6():
+    """This test checks for valid bounds."""
+    for _ in range(1000):
+        for label in ['alpha', 'beta', 'eta']:
+            lower, upper = get_bounds(label)
+            value = get_value((lower, upper))
+            np.testing.assert_equal(lower < value < upper, True)

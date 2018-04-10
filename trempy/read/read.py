@@ -43,7 +43,7 @@ def read(fname):
             # We need to allow for additional information about the potential estimation
             # parameters.
             if group in ['PREFERENCES']:
-                dict_[group][flag] = process_coefficient_line(list_, value, flag)
+                dict_[group][flag] = process_coefficient_line(list_, value)
             elif group in ['QUESTIONS']:
                 dict_[group][flag] = process_question_line(list_, value)
             else:
@@ -56,8 +56,17 @@ def process_question_line(list_, value):
     """This function processes a question line."""
     if len(list_) == 2:
         cutoffs = (-HUGE_FLOAT, HUGE_FLOAT)
+    elif len(list_) == 4:
+        is_fixed = True
+        cutoffs = process_bounds_cutoffs(list_[3])
     elif len(list_) == 3:
-        cutoffs = process_bounds_cutoffs(list_[2])
+        is_fixed = (list_[2] == '!')
+
+        if not is_fixed:
+            cutoffs = process_bounds_cutoffs(list_[2])
+        else:
+            cutoffs =[-HUGE_FLOAT, HUGE_FLOAT]
+
     else:
         raise NotImplementedError
 
@@ -81,7 +90,7 @@ def process_bounds_cutoffs(bounds, label=None):
     return bounds
 
 
-def process_coefficient_line(list_, value, label):
+def process_coefficient_line(list_, value):
     """This function processes a coefficient line and extracts the relevant information. We also
     impose the default values for the bounds here."""
     label = list_[0]

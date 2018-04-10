@@ -2,17 +2,29 @@
 import sys
 sys.path.insert(0, '../../')
 
-#import numpy as np
+import numpy as np
 
 from trempy import estimate
 from trempy import simulate
 
 from trempy.clsModel import ModelCls
 
+from trempy.tests.test_auxiliary import random_dict
+from trempy.shared.shared_auxiliary import print_init_dict
+from trempy.tests.test_auxiliary import get_random_init
+from trempy.read.read import read
+from trempy.shared.shared_auxiliary import dist_class_attributes
+from trempy import simulate
 
-model_obj = ModelCls('model.trempy.ini')
+
+for _ in range(1):
+    get_random_init()
+    simulate('test.trempy.ini')
+
+# TODO: UNit tests for random simulation and printing.
+#model_obj = ModelCls('model.trempy.ini')
 #simulate('model.trempy.ini')
-estimate('model.trempy.ini')
+#estimate('model.trempy.ini')
 # sys.exit('exit')
 # if True:
 #

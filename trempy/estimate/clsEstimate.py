@@ -1,5 +1,5 @@
 """This module contains the class to manage the model estimation."""
-from trempy.shared.shared import criterion_function
+from trempy.shared.shared_auxiliary import criterion_function
 #from interalpy.estimate.estimate_auxiliary import char_floats
 #from interalpy.custom_exceptions import MaxfunError
 #from interalpy.logging.clsLogger import logger_obj
