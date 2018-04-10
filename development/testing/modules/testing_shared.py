@@ -5,9 +5,6 @@ import sys
 import os
 sys.path.insert(0, '../../../')
 
-import matplotlib
-matplotlib.use('Agg')
-
 import numpy as np
 
 from trempy import simulate, estimate
