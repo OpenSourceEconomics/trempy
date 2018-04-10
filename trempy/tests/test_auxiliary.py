@@ -82,14 +82,21 @@ def random_dict(constr):
 
     # We sample valid estimation requests.
     dict_['ESTIMATION'] = dict()
-    dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-LBFGSB'])
+    dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-BFGS'])
     dict_['ESTIMATION']['detailed'] = 'True'
     dict_['ESTIMATION']['start'] = np.random.choice(['auto', 'init'])
     dict_['ESTIMATION']['agents'] = np.random.randint(1, sim_agents)
     dict_['ESTIMATION']['maxfun'] = np.random.randint(1, 10)
     dict_['ESTIMATION']['file'] = fname + '.trempy.pkl'
 
+
     return dict_
+
+
+def get_rmse():
+    """This function returns the RMSE from the information file."""
+    stat = float(shlex.split(linecache.getline('compare.trempy.info', 7))[2])
+    return stat
 
 
 def get_bounds(label):

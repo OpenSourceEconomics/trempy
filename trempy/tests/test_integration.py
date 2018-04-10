@@ -15,7 +15,7 @@ def test_1():
     for _ in range(5):
         get_random_init()
         simulate('test.trempy.ini')
-#        estimate('test.trempy.ini')
+        estimate('test.trempy.ini')
 #
 # def test_3():
 #     """This test ensures that using the same initialization file for a simulation and a single
