@@ -1,7 +1,11 @@
 """This module contains some configuration information."""
 import os
 
+import seaborn as sns
 import numpy as np
+
+sns.set(color_codes=True)
+
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 #TEST_RESOURCES_DIR = PACKAGE_DIR + '/tests/material'

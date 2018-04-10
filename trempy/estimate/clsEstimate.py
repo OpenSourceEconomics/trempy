@@ -1,10 +1,9 @@
 """This module contains the class to manage the model estimation."""
 from trempy.shared.shared_auxiliary import criterion_function
-#from interalpy.estimate.estimate_auxiliary import char_floats
-#from interalpy.custom_exceptions import MaxfunError
+from trempy.estimate.estimate_auxiliary import char_floats
 #from interalpy.logging.clsLogger import logger_obj
-#from interalpy.config_interalpy import PARA_LABELS
 
+from trempy.custom_exceptions import MaxfunError
 from trempy.config_trempy import HUGE_FLOAT
 from trempy.shared.clsBase import BaseCls
 
@@ -34,7 +33,9 @@ class EstimateClass(BaseCls):
         self.attr['f_start'] = HUGE_FLOAT
         self.attr['f_step'] = HUGE_FLOAT
 
-        #self._logging_start()
+        self.attr['paras_label'] = ['alpha', 'beta', 'eta'] + questions
+
+        self._logging_start()
 
     def evaluate(self, x_optim_free_current):
         """This method allows to evaluate the criterion function during an estimation"""
@@ -48,7 +49,6 @@ class EstimateClass(BaseCls):
         paras_obj.set_values('optim', 'free', x_optim_free_current)
         x_optim_all_current = paras_obj.get_values('optim', 'all')
         x_econ_all_current = paras_obj.get_values('econ', 'all')
-        print(x_econ_all_current)
         fval = criterion_function(df, questions, cutoffs, *x_econ_all_current)
 
         self._update_evaluation(fval, x_econ_all_current, x_optim_all_current)
@@ -88,7 +88,7 @@ class EstimateClass(BaseCls):
         df = self.attr['df']
 
         # Construct auxiliary objects
-        est_agents = df['Participant.code'].nunique()
+        est_agents = df['Individual'].nunique()
 
         with open('est.interalpy.log', 'w') as outfile:
             outfile.write('\n ESTIMATION SETUP\n')
@@ -109,6 +109,10 @@ class EstimateClass(BaseCls):
 
     def _logging_evaluation(self, is_stop, x_econ_all_current, x_optim_all_current):
         """This methods manages all issues related to the logging of the estimation."""
+        # Distribute attributes
+        para_labels = self.attr['paras_label']
+        questions = self.attr['questions']
+
         # Update class attributes
         with open('est.interalpy.info', 'w') as outfile:
             fmt_ = '{:>10}    '+ '{:<10}    ' +'{:>25}    ' * 3
@@ -123,9 +127,9 @@ class EstimateClass(BaseCls):
             outfile.write('\n {:<25}\n\n'.format('Economic Parameters'))
             line = ['Identifier', 'Label',  'Start', 'Step', 'Current']
             outfile.write(fmt_.format(*line) + '\n\n')
-            for i, _ in enumerate(range(NUM_PARAS)):
+            for i, _ in enumerate(range(len(questions) + 3)):
                 line = [i]
-                line += [PARA_LABELS[i]]
+                line += [para_labels[i]]
                 line += char_floats(self.attr['x_econ_all_start'][i])
                 line += char_floats(self.attr['x_econ_all_step'][i])
                 line += char_floats(self.attr['x_econ_all_current'][i])
@@ -149,13 +153,13 @@ class EstimateClass(BaseCls):
             line = ['Identifier','Label', 'Economic', 'Optimizer']
             outfile.write(fmt_.format(*line) + '\n\n')
 
-            for i, _ in enumerate(range(NUM_PARAS)):
+            for i, _ in enumerate(range(len(questions) + 3)):
                 line = [i]
-                line += [PARA_LABELS[i]]
-                line+= char_floats([x_econ_all_current[i], x_optim_all_current[i]])
+                line += [para_labels[i]]
+                line += char_floats([x_econ_all_current[i], x_optim_all_current[i]])
                 outfile.write(fmt_.format(*line) + '\n')
             # We need to keep track of captured warnings.
-            logger_obj.flush(outfile)
+            #logger_obj.flush(outfile)
 
         # We can determine the estimation if the number of requested function evaluations is
         # reached.

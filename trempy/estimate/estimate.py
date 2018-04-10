@@ -1,25 +1,26 @@
 #!/usr/bin/env python
-from functools import partial
 import copy
 
+from scipy.optimize import fmin_bfgs
 import pandas as pd
-import numpy as np
 
-from trempy.estimate.estimate_auxiliary import write_info_estimation
-from trempy.simulate.simulate import simulate_estimation
-from trempy.shared.shared_auxiliary import criterion_function
 from trempy.shared.shared_auxiliary import dist_class_attributes
-from trempy.clsModel import ModelCls
+from trempy.estimate.estimate_auxiliary import estimate_simulate
+from trempy.estimate.estimate_auxiliary import estimate_cleanup
 from trempy.estimate.clsEstimate import EstimateClass
+from trempy.custom_exceptions import MaxfunError
+from trempy.clsModel import ModelCls
 
 
 def estimate(fname):
     """This function estimates the model by the method of maximum likelihood."""
+    estimate_cleanup()
 
     model_obj = ModelCls(fname)
 
-    est_file, questions, paras_obj, start, cutoffs, maxfun = dist_class_attributes(model_obj,
-        'est_file', 'questions', 'paras_obj', 'start', 'cutoffs', 'maxfun')
+    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed = \
+        dist_class_attributes(model_obj, 'est_file', 'questions', 'paras_obj', 'start',
+            'cutoffs', 'maxfun', 'est_detailed')
 
     # Some initial setup
     df_obs = pd.read_pickle(est_file)
@@ -30,67 +31,45 @@ def estimate(fname):
     cond = df_obs['Question'].isin(questions)
     df_obs = df_obs[cond]
 
-    x_optim_free_start = paras_obj.get_values('optim', 'free')
-    print(x_optim_free_start)
-
     estimate_obj = EstimateClass(df_obs, cutoffs, questions, copy.deepcopy(paras_obj), maxfun)
 
+    # We lock in an evaluation at the starting values as not all optimizers actually start there.
+    x_optim_free_start = paras_obj.get_values('optim', 'free')
     estimate_obj.evaluate(x_optim_free_start)
 
-    raise AssertionError
-
-    # Construction of starting values
-    if start == 'init':
-        paras_start = paras_obj.get_values('econ', ['alpha', 'beta', 'eta'] + questions)
-    elif start == 'auto':
-        paras_start = []
-        for label in ['alpha', 'beta', 'eta']:
-            value, is_fixed = paras_obj.get_para(label)[:2]
-            if is_fixed:
-                continue
-
-            paras_start += [value]
-
-        for q in questions:
-            q = int(q)
-            paras_start += [np.sqrt(np.var(df_obs['Compensation'].loc[slice(None), slice(q, q)]))]
-
-    else:
-        raise NotImplementedError
-
-    # Add parameter bounds
-    paras_bounds = []
-    for label in ['alpha', 'beta', 'eta'] + questions:
-        paras_bounds += [paras_obj.get_para(label)[2]]
-
-    # Taking stock of initial distribution
-    # paras_si = paras_obj.get_values('econ', ['alpha', 'beta', 'eta'] + questions)
-    # simulate_estimation('start', questions, cutoffs, paras_simulation)
-    cutoffs = None
+    # We simulate a sample at the starting point.
+    if est_detailed:
+        estimate_simulate('start', x_optim_free_start, model_obj, df_obs)
 
     # Optimization of likelihood function
-    criterion_function = partial(likelihood, df_obs, questions, cutoffs)
-    if False:
-        rslt = fmin_l_bfgs_b(criterion_function, paras_start, bounds=bounds, approx_grad=True,
-                maxfun=1)
+    if maxfun > 1:
+        try:
+            opt = fmin_bfgs(estimate_obj.evaluate, x_optim_free_start, maxiter=maxfun)
+        except MaxfunError:
+            # We are were faced with a serious estimation request.
+            opt = dict()
+            opt['message'] = 'Optimization reached maximum number of function evaluations.'
+            opt['success'] = False
     else:
-        criterion_function(paras_start)
-        #rslt = []
-        #rslt += [paras_start]
-        #rslt += [criterion_function(paras_start)]
+        # We are not faced with a serious estimation request.
+        opt = dict()
+        opt['message'] = 'Single evaluation of criterion function at starting values.'
+        opt['success'] = False
 
-    # # Detailed inspection of results
-    # j = 0
-    # paras_simulation = utility_paras_start
-    # for i in range(3):
-    #     if utility_paras_free[i]:
-    #         paras_simulation[i] = rslt[0][j]
-    #         j += 1
-    #
-    # paras_simulation += rslt[0][num_utility_paras_free:]
-    #
-    # df_finish = simulate_estimation('finish', questions, cutoffs, paras_simulation)
-    # write_info_estimation(df_obs, df_finish)
-    #
-    print(rslt)
-    # return rslt[1], rslt[0]
+    # Now we can wrap up all estimation related tasks.
+    estimate_obj.finish(opt)
+
+    # We simulate a sample at the stopping point.
+    if est_detailed:
+        x_econ_all_step = estimate_obj.get_attr('x_econ_all_step')
+        paras_obj.set_values('econ', 'all', x_econ_all_step)
+        x_optim_free_step = paras_obj.get_values('optim', 'free')
+        estimate_simulate('stop', x_optim_free_step, model_obj, df_obs)
+
+    # We only return the best value of the criterion function and the corresponding parameter
+    # vector.
+    rslt = list()
+    rslt.append(estimate_obj.get_attr('f_step'))
+    rslt.append(estimate_obj.get_attr('x_econ_all_step'))
+
+    return rslt

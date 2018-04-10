@@ -7,7 +7,7 @@ from scipy.stats import norm
 from scipy import optimize
 import numpy as np
 
-from trempy.shared.shared_constants import HUGE_FLOAT
+from trempy.shared.shared_constants import HUGE_FLOAT, TINY_FLOAT
 
 
 def criterion_function(df, questions, cutoffs, *args):
@@ -18,8 +18,6 @@ def criterion_function(df, questions, cutoffs, *args):
     alpha, beta, eta = args[:3]
     sds = args[3:]
 
-    # TODO: SHould this be done somewhere else.
-    df['Question'] = df['Question'].astype(str)
 
     repeat = []
     for q in questions:
@@ -50,14 +48,15 @@ def criterion_function(df, questions, cutoffs, *args):
         contribs += (df_subset['is_truncated'] * df_subset['likl_trunc'] + (1.0 - df_subset[
             'is_truncated']) * df_subset['likl_not_trunc']).values.tolist()
 
-    rslt = -np.mean(np.clip(np.log(sorted(contribs)), -HUGE_FLOAT, HUGE_FLOAT))
+    # TODO: This needs to be logged somwhere
+    rslt = -np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
 
     return rslt
 
 
 def print_init_dict(dict_, fname='test.trempy.ini'):
     """This function prints an initialization dictionary."""
-    keys = ['PREFERENCES', 'QUESTIONS', 'SIMULATION', 'ESTIMATION']
+    keys = ['PREFERENCES', 'QUESTIONS', 'CUTOFFS', 'SIMULATION', 'ESTIMATION']
     questions = list(dict_['QUESTIONS'].keys())
 
     with open(fname, 'w') as outfile:
@@ -75,10 +74,14 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 if label in ['detailed']:
                     info = str(info)
 
-                if label in ['alpha', 'beta', 'eta']:
+                if label in ['alpha', 'beta', 'eta'] + questions and key_ != 'CUTOFFS':
                     line, str_ = format_coefficient_line(label, info, str_)
-                elif label in questions:
-                    line, str_ = format_question_line(label, info, str_)
+                elif label in questions and key_ == 'CUTOFFS':
+                    line, str_ = format_cutoff_line(label, info, str_)
+                    # We do not need to print a [NONE, None] cutoff.
+                    if line.count('None') == 2:
+                        continue
+
                 else:
                     line = [label, info]
 
@@ -87,9 +90,29 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
             outfile.write('\n')
 
 
+def format_cutoff_line(label, info, str_):
+    """This function returns a properly formatted cutoff line."""
+    cutoffs = info
+
+    str_ = '{:<10}'
+    line = [label]
+    for i in range(2):
+        if abs(cutoffs[i]) > HUGE_FLOAT:
+            cutoff = 'None'
+            str_ += '{:>25}'
+        else:
+            cutoff = np.round(cutoffs[i], decimals=4)
+            str_ += '{:25.4f}'
+        line += [cutoff]
+
+    str_ += '\n'
+
+    return line, str_
+
+
 def format_question_line(label, info, str_):
     """This function returns a properly formatted question line."""
-    value, is_fixed, cutoffs = info
+    cutoffs, value, is_fixed, bounds = info
 
     # We need to make sure this is an independent copy as otherwise the bound in the original
     # dictionary are overwritten with the value None.
@@ -105,17 +128,24 @@ def format_question_line(label, info, str_):
 
     # Bounds might be printed or now.
     for i in range(2):
-        value = cutoffs[i]
+        value = bounds[i]
         if abs(value) > HUGE_FLOAT:
-            cutoffs[i] = None
+            bounds[i] = None
         else:
-            cutoffs[i] = np.round(value, decimals=4)
+            bounds[i] = np.round(value, decimals=4)
 
-    if cutoffs.count(None) == 2:
-        cutoffs = ['', '']
-        str_ += '{:}\n'
-    else:
-        str_ += '({:},{:})\n'
+    for i in range(2):
+        if abs(cutoffs[i]) > HUGE_FLOAT:
+            cutoff = None
+        else:
+            cutoff = np.round(cutoffs[i], decimals=4)
+        line += [cutoff]
+
+#    if cutoffs.count(None) == 2:
+#        cutoffs = ['', '']
+#        str_ += '{:}\n'
+#    else:
+#        str_ += '({:},{:})\n'
 
     line += cutoffs
 
@@ -171,56 +201,54 @@ def multiattribute_utility(alpha, beta, eta, x, y):
 
 def expected_utility_a(alpha, beta, eta, lottery):
     """This function calculates the expected utility for lottery A."""
-
-    print(lottery)
-    if lottery == '1':
+    if lottery == 1:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 15, 0) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 20, 0)
-    elif lottery == '2':
+    elif lottery == 2:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 40, 0)
-    elif lottery == '3':
+    elif lottery == 3:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 60, 0) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 80, 0)
-    elif lottery == '4':
+    elif lottery == 4:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 15) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 20)
-    elif lottery == '5':
+    elif lottery == 5:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 40)
-    elif lottery == '6':
+    elif lottery == 6:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 60) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 80)
-    elif lottery == '7':
+    elif lottery == 7:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 15, 25) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 25, 15)
-    elif lottery == '8':
+    elif lottery == 8:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 50) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 50, 30)
-    elif lottery == '9':
+    elif lottery == 9:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 60, 100) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 100, 60)
-    elif lottery == '10':
+    elif lottery == 10:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
                0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 54, 0) +
                        0.50 * multiattribute_utility(alpha, beta, eta, 26, 0))
-    elif lottery == '11':
+    elif lottery == 11:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
                0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 47, 0) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 12, 0))
-    elif lottery == '12':
+    elif lottery == 12:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
                0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 33, 0) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 68, 0))
-    elif lottery == '13':
+    elif lottery == 13:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
                0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 0, 54) +
                        0.50 * multiattribute_utility(alpha, beta, eta, 0, 26))
-    elif lottery == '14':
+    elif lottery == 14:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
                0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 47) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 0, 12))
-    elif lottery == '15':
+    elif lottery == 15:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
                0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 33) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 0, 68))
@@ -232,54 +260,54 @@ def expected_utility_a(alpha, beta, eta, lottery):
 
 def expected_utility_b(alpha, beta, eta, lottery, m):
     """This function calculates the expected utility for lottery B."""
-    if lottery == '1':
+    if lottery == 1:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 10 + m, 0) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 25 + m, 0)
-    elif lottery == '2':
+    elif lottery == 2:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 20 + m, 0) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 50 + m, 0)
-    elif lottery == '3':
+    elif lottery == 3:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 100 + m, 0)
-    elif lottery == '4':
+    elif lottery == 4:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 10 + m) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 25 + m)
-    elif lottery == '5':
+    elif lottery == 5:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 20 + m) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 50 + m)
-    elif lottery == '6':
+    elif lottery == 6:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 100 + m)
-    elif lottery == '7':
+    elif lottery == 7:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 15 + m, 15) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 25 + m, 25)
-    elif lottery == '8':
+    elif lottery == 8:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30 + m, 30) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 50 + m, 50)
-    elif lottery == '9':
+    elif lottery == 9:
         rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 60 + m, 60) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 100 + m, 100)
-    elif lottery == '10':
+    elif lottery == 10:
         rslt = 0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 44 + m, 0) +
                        0.50 * multiattribute_utility(alpha, beta, eta, 16 + m, 0)) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0)
-    elif lottery == '11':
+    elif lottery == 11:
         rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 37 + m, 0) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 2 + m, 0)) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0)
-    elif lottery == '12':
+    elif lottery == 12:
         rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 23 + m, 0) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 58 + m, 0)) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0)
-    elif lottery == '13':
+    elif lottery == 13:
         rslt = 0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 0, 44 + m) +
                        0.50 * multiattribute_utility(alpha, beta, eta, 0, 16 + m)) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m)
-    elif lottery == '14':
+    elif lottery == 14:
         rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 37 + m) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 0, 2 + m)) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m)
-    elif lottery == '15':
+    elif lottery == 15:
         rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 23 + m) +
                        0.20 * multiattribute_utility(alpha, beta, eta, 0, 58 + m)) + \
                0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m)
@@ -320,6 +348,7 @@ def dist_class_attributes(model_obj, *args):
 
     # Finishing
     return ret
+
 
 def get_random_string(size=6):
     """This function samples a random string of varying size."""

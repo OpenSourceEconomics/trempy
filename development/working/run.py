@@ -16,10 +16,15 @@ from trempy.read.read import read
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy import simulate
 
-
+np.random.seed(11)
 for _ in range(1):
     get_random_init()
+    init_dict = read('test.trempy.ini')
+    print_init_dict(init_dict)
+    init_dict = read('test.trempy.ini')
+
     simulate('test.trempy.ini')
+    estimate('test.trempy.ini')
 
 # TODO: UNit tests for random simulation and printing.
 #model_obj = ModelCls('model.trempy.ini')

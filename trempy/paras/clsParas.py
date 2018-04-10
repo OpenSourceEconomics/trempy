@@ -17,19 +17,19 @@ class ParasCls(BaseCls):
 
         self.attr = dict()
 
+        self.attr['para_labels'] = []
         self.attr['para_objs'] = []
 
-        self.attr['para_labels'] = []
         # preference parameters
-        for label in ['alpha', 'eta', 'beta']:
+        for label in ['alpha', 'beta', 'eta']:
             value, is_fixed, bounds = init_dict['PREFERENCES'][label]
             self.attr['para_objs'] += [ParaCls(label, value, is_fixed, bounds)]
             self.attr['para_labels'] += [label]
 
         for label in init_dict['QUESTIONS'].keys():
-            value, cutoffs = init_dict['QUESTIONS'][label]
-            self.attr['para_objs'] += [ParaCls(label, value, False, cutoffs)]
-            self.attr['para_labels'] += [label]
+            value, is_fixed, bounds = init_dict['QUESTIONS'][label]
+            self.attr['para_objs'] += [ParaCls(int(label), value, is_fixed, bounds)]
+            self.attr['para_labels'] += [int(label)]
 
         self.check_integrity()
 
@@ -43,13 +43,15 @@ class ParasCls(BaseCls):
                 rslt = list()
                 for info in ['value', 'is_fixed', 'bounds']:
                     rslt += [para_obj.get_attr(info)]
-                    print(rslt)
                 return rslt
 
         raise TrempyError('parameter not available')
 
     def set_values(self, perspective, which, values):
         """This method allows to directly set the values of the parameters."""
+        # Antibugging
+        np.testing.assert_equal(which in ['all', 'free'], True)
+
         # Distribute class attributes
         para_objs = self.attr['para_objs']
 
@@ -80,6 +82,9 @@ class ParasCls(BaseCls):
 
     def get_values(self, perspective, which):
         """This method allow to directly access the values of the parameters."""
+        # Antibugging
+        np.testing.assert_equal(which in ['all', 'free'], True)
+
         # Distribute class attributes
         para_objs = self.attr['para_objs']
 
@@ -141,14 +146,15 @@ class ParasCls(BaseCls):
     @staticmethod
     def _to_real(value, lower, upper):
         """This function transforms the bounded parameter back to the real line."""
-        if np.isclose(value, lower):
-            value += SMALL_FLOAT
-            logger_obj.record_event(1)
-        elif np.isclose(value, upper):
-            value -= SMALL_FLOAT
-            logger_obj.record_event(1)
-        else:
-            pass
+        # TODO: Reactivate
+        # if np.isclose(value, lower):
+        #     value += SMALL_FLOAT
+        #     logger_obj.record_event(1)
+        # elif np.isclose(value, upper):
+        #     value -= SMALL_FLOAT
+        #     logger_obj.record_event(1)
+        # else:
+        #     pass
 
         interval = upper - lower
         transform = (value - lower) / interval

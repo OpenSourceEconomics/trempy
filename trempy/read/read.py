@@ -38,52 +38,56 @@ def read(fname):
             flag, value = list_[:2]
 
             # Type conversions
-            value = type_conversions(flag, value)
+            if group not in ['CUTOFFS']:
+                value = type_conversions(flag, value)
 
             # We need to allow for additional information about the potential estimation
             # parameters.
-            if group in ['PREFERENCES']:
+            if group in ['PREFERENCES', 'QUESTIONS']:
                 dict_[group][flag] = process_coefficient_line(list_, value)
-            elif group in ['QUESTIONS']:
-                dict_[group][flag] = process_question_line(list_, value)
+            elif group in ['CUTOFFS']:
+                dict_[group][flag] = process_cutoff_line(list_)
             else:
                 dict_[group][flag] = value
+
+    # We want to ensure that the keys to the questions are integers
+    for label in ['QUESTIONS', 'CUTOFFS']:
+        dict_[label] = {int(x): dict_[label][x] for x in dict_[label].keys()}
+
+    # We do some modifications on the cutoff values. Instead of None, we will simply use
+    # HUGE_FLOAT and we fill up any missing cutoff values.
+    questions = dict_['QUESTIONS'].keys()
+    for q in questions:
+        if q not in dict_['CUTOFFS'].keys():
+            dict_['CUTOFFS'][q] = [-HUGE_FLOAT, HUGE_FLOAT]
+        else:
+            for i in range(2):
+                if dict_['CUTOFFS'][q][i] is None:
+                    dict_['CUTOFFS'][q][i] = (-1)**i * -HUGE_FLOAT
 
     return dict_
 
 
-def process_question_line(list_, value):
-    """This function processes a question line."""
-    if len(list_) == 2:
-        cutoffs = (-HUGE_FLOAT, HUGE_FLOAT)
-    elif len(list_) == 4:
-        is_fixed = True
-        cutoffs = process_bounds_cutoffs(list_[3])
-    elif len(list_) == 3:
-        is_fixed = (list_[2] == '!')
-
-        if not is_fixed:
-            cutoffs = process_bounds_cutoffs(list_[2])
+def process_cutoff_line(list_):
+    """This function processes a cutoff line."""
+    cutoffs = []
+    for i in [1, 2]:
+        if list_[i] == 'None':
+            cutoffs += [None]
         else:
-            cutoffs =[-HUGE_FLOAT, HUGE_FLOAT]
+            cutoffs += [float(list_[i])]
 
-    else:
-        raise NotImplementedError
-
-    return value, cutoffs
+    return cutoffs
 
 
-def process_bounds_cutoffs(bounds, label=None):
+def process_bounds_cutoffs(bounds, label):
     """This function extracts the proper bounds."""
     bounds = bounds.replace(')', '')
     bounds = bounds.replace('(', '')
     bounds = bounds.split(',')
     for i in range(2):
         if bounds[i] == 'None':
-            if label is None:
-                bounds[i] = -HUGE_FLOAT
-            else:
-                bounds[i] = DEFAULT_BOUNDS[label][i]
+            bounds[i] = DEFAULT_BOUNDS[label][i]
         else:
             bounds[i] = float(bounds[i])
 

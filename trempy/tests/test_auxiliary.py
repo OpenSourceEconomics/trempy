@@ -25,9 +25,11 @@ def random_dict(constr):
     dict_ = dict()
 
     # Initial setup to ensure constraints across options.
-    num_questions = np.random.randint(2, 10)
+    num_questions = np.random.randint(2, 14)
     sim_agents = np.random.randint(2, 10)
     fname = get_random_string()
+
+    questions = np.random.choice(range(1, 16), size=num_questions, replace=False)
     is_fixed = np.random.choice(['True', 'False'], size=num_questions + 3)
 
     # We need to ensure at least one parameter is free for a valid estimation request.
@@ -59,12 +61,18 @@ def random_dict(constr):
     # It is time to sample the questions.
     dict_['QUESTIONS'] = dict()
 
-    questions = np.random.choice(range(100), size=num_questions, replace=False)
-
-    values = np.random.uniform(0.05, 0.5, size=num_questions)
     for i, q in enumerate(questions):
-        cutoffs = get_cutoffs()
-        dict_['QUESTIONS'][q] = (values[i], is_fixed[i + 3], cutoffs)
+        bounds = get_bounds(None)
+        value = get_value(bounds)
+        dict_['QUESTIONS'][q] = (value, is_fixed[i + 3], bounds)
+
+    # We now add some cutoff values.
+    dict_['CUTOFFS'] = dict()
+    for q in questions:
+        if np.random.choice([True, False]):
+            continue
+        else:
+            dict_['CUTOFFS'][q] = get_cutoffs()
 
     # We now turn to all simulation details.
     dict_['SIMULATION'] = dict()
@@ -75,7 +83,7 @@ def random_dict(constr):
     # We sample valid estimation requests.
     dict_['ESTIMATION'] = dict()
     dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-LBFGSB'])
-    dict_['ESTIMATION']['detailed'] = np.random.choice(['True', 'False'])
+    dict_['ESTIMATION']['detailed'] = 'True'
     dict_['ESTIMATION']['start'] = np.random.choice(['auto', 'init'])
     dict_['ESTIMATION']['agents'] = np.random.randint(1, sim_agents)
     dict_['ESTIMATION']['maxfun'] = np.random.randint(1, 10)
@@ -92,7 +100,11 @@ def get_bounds(label):
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
         upper = lower + wedge
     elif label in ['beta']:
-        lower = float(np.random.uniform(0.00, 4.99 - wedge))
+        lower = float(np.random.uniform(0.00, 0.98 - wedge))
+        upper = lower + wedge
+    # These are the cutoff values.
+    elif label is None:
+        lower = float(np.random.uniform(0.01, 0.98 - wedge))
         upper = lower + wedge
     else:
         raise TrempyError('flawed request for bounds')

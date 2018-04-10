@@ -1,4 +1,5 @@
 """This module includes the specification of the model."""
+from trempy.shared.shared_auxiliary import print_init_dict
 from trempy.paras.clsParas import ParasCls
 from trempy.shared.clsBase import BaseCls
 from trempy.read.read import read
@@ -17,6 +18,9 @@ class ModelCls(BaseCls):
 
         # Parameters
         self.attr['paras_obj'] = paras_obj
+
+        # Cutoffs
+        self.attr['cutoffs'] = init_dict['CUTOFFS']
 
         # Simulation
         self.attr['sim_agents'] = init_dict['SIMULATION']['agents']
@@ -45,22 +49,36 @@ class ModelCls(BaseCls):
         self.attr['questions'] = sorted(questions)
         self.attr['num_questions'] = len(questions)
 
-        cutoffs = dict()
-        for q in questions:
-            cutoffs[q] = paras_obj.get_para(q)[2]
-        self.attr['cutoffs'] = cutoffs
+    def update(self, perspective, which, values):
+        """This method updates the estimation parameters."""
+        # Distribute class attributes
+        paras_obj = self.attr['paras_obj']
 
+        paras_obj.set_values(perspective, which, values)
 
-    def write_out(self):
-        """This method creats a initialization dictionary of the current class instance."""
-
+    def write_out(self, fname):
+        """This method creates a initialization dictionary of the current class instance."""
         init_dict = dict()
 
-        for label in ['PREFERENCES', 'QUESTIONS', 'ESTIMATION', 'SIMULATION']:
+        for label in ['PREFERENCES', 'QUESTIONS', 'CUTOFFS',  'ESTIMATION', 'SIMULATION']:
             init_dict[label] = dict()
 
+        paras_obj = self.attr['paras_obj']
+        questions = self.attr['questions']
+
+        # Preferences
+        for label in ['alpha', 'beta', 'eta']:
+            init_dict['PREFERENCES'][label] = paras_obj.get_para(label)
+
+        # Questions
+        for q in questions:
+            init_dict['QUESTIONS'][q] = paras_obj.get_para(q)
+
+        # Cutoffs
+        init_dict['CUTOFFS'] = self.attr['cutoffs']
+
         # Estimation
-        init_dict['ESTIMATION']['est_detailed'] = self.attr['est_detailed']
+        init_dict['ESTIMATION']['detailed'] = self.attr['est_detailed']
         init_dict['ESTIMATION']['optimizer'] = self.attr['optimizer']
         init_dict['ESTIMATION']['agents'] = self.attr['est_agents']
         init_dict['ESTIMATION']['file'] = self.attr['est_file']
@@ -72,8 +90,7 @@ class ModelCls(BaseCls):
         init_dict['SIMULATION']['seed'] = self.attr['sim_seed']
         init_dict['SIMULATION']['file'] = self.attr['sim_file']
 
-
-
+        print_init_dict(init_dict, fname)
 
 
 
