@@ -100,7 +100,7 @@ class ParasCls(BaseCls):
                 elif perspective in ['optim']:
                     value = self._to_optimizer(para_obj)
                 else:
-                    raise InteralpyError('misspecified request')
+                    raise TrempyError('misspecified request')
 
                 values += [value]
 
