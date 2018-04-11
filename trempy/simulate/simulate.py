@@ -17,12 +17,11 @@ def simulate(fname):
     sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = dist_class_attributes(model_obj,
         'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs')
 
-
     np.random.seed(sim_seed)
 
+    # First, I simply determine the optimal compensations.
     alpha, beta, eta = paras_obj.get_values('econ', 'all')[:3]
 
-    # First, I simply determine the optimal compensations.
     m_optimal = dict()
     for q in questions:
         m_optimal[q] = determine_optimal_compensation(alpha, beta, eta, q)
