@@ -3,7 +3,9 @@ import shutil
 import copy
 import os
 
+from statsmodels.tools.eval_measures import rmse as get_rmse
 import pandas as pd
+import numpy as np
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.config_trempy import HUGE_FLOAT
@@ -99,6 +101,23 @@ def compare_datasets(which, df_obs, sim_agents, questions):
                 outfile.write(string.format(*info))
 
             outfile.write('\n')
+
+        # TODO: Transform to numpy array and first and then used masked version.
+        mean_obs, mean_sim = [], []
+        for i, q in enumerate(questions):
+
+            is_nan = []
+            is_nan += [np.isnan(stats['obs'][i][2])]
+            is_nan += [np.isnan(stats['sim'][i][2])]
+
+            if np.any(is_nan):
+                continue
+            mean_obs += [stats['obs'][i][2]]
+            mean_sim += [stats['sim'][i][2]]
+
+        rmse = get_rmse(mean_obs, mean_sim)
+
+        outfile.write('{:>15}'.format('RMSE') + '{:15.5f}'.format(rmse))
 
 
 def char_floats(floats):

@@ -1,4 +1,4 @@
-
+"""This module contains the custom exceptions for the package."""
 
 class MaxfunError(Exception):
     """This custom exception is raised if the maximum number of function evaluations is reached."""

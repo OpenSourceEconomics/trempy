@@ -5,11 +5,6 @@ SMALL_FLOAT = 10e-10
 HUGE_FLOAT = 10e+20
 TINY_FLOAT = 10e-20
 
-# We are strict in enforcing data types throughout.
-DATA_DTYPES = dict()
-DATA_DTYPES.update({'Participant.code': str, 'Question': np.int, 'x': np.float,  'y': np.float})
-DATA_DTYPES.update({'I1': np.float, 'I2': np.float, 'm': np.float, 'D': np.int})
-
 # We want to be strict about any problems due to floating-point errors.
 np.seterr(all='raise')
 

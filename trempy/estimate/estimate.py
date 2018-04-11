@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import shutil
 import copy
 
 from scipy.optimize import fmin_bfgs
@@ -65,6 +66,7 @@ def estimate(fname):
         paras_obj.set_values('econ', 'all', x_econ_all_step)
         x_optim_free_step = paras_obj.get_values('optim', 'free')
         estimate_simulate('stop', x_optim_free_step, model_obj, df_obs)
+        shutil.copy('stop/compare.trempy.info', 'compare.trempy.info')
 
     # We only return the best value of the criterion function and the corresponding parameter
     # vector.

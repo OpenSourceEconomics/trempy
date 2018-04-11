@@ -89,14 +89,31 @@ def random_dict(constr):
     dict_['ESTIMATION']['maxfun'] = np.random.randint(1, 10)
     dict_['ESTIMATION']['file'] = fname + '.trempy.pkl'
 
+    # Now we need to impose possible constraints.
+    if constr is not None:
+        if 'maxfun' in constr.keys():
+            dict_['ESTIMATION']['maxfun'] = constr['maxfun']
+
+        if 'num_agents' in constr.keys():
+            dict_['SIMULATION']['agents'] = constr['num_agents']
+            dict_['ESTIMATION']['agents'] = constr['num_agents']
+
+        if 'est_file' in constr.keys():
+            dict_['ESTIMATION']['file'] = constr['est_file']
+
+        if 'detailed' in constr.keys():
+            dict_['ESTIMATION']['detailed'] = constr['detailed']
 
     return dict_
 
 
 def get_rmse():
     """This function returns the RMSE from the information file."""
-    stat = float(shlex.split(linecache.getline('compare.trempy.info', 7))[2])
-    return stat
+    with open('compare.trempy.info') as in_file:
+        for line in in_file.readlines():
+            if 'RMSE' in line:
+                stat = float(shlex.split(line)[1])
+                return stat
 
 
 def get_bounds(label):
