@@ -26,7 +26,7 @@ class ParasCls(BaseCls):
             self.attr['para_objs'] += [ParaCls(label, value, is_fixed, bounds)]
             self.attr['para_labels'] += [label]
 
-        for label in init_dict['QUESTIONS'].keys():
+        for label in sorted(init_dict['QUESTIONS'].keys()):
             value, is_fixed, bounds = init_dict['QUESTIONS'][label]
             self.attr['para_objs'] += [ParaCls(int(label), value, is_fixed, bounds)]
             self.attr['para_labels'] += [int(label)]

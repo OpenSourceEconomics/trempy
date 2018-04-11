@@ -141,12 +141,6 @@ def format_question_line(label, info, str_):
             cutoff = np.round(cutoffs[i], decimals=4)
         line += [cutoff]
 
-#    if cutoffs.count(None) == 2:
-#        cutoffs = ['', '']
-#        str_ += '{:}\n'
-#    else:
-#        str_ += '({:},{:})\n'
-
     line += cutoffs
 
     return line, str_
@@ -320,12 +314,13 @@ def expected_utility_b(alpha, beta, eta, lottery, m):
 def determine_optimal_compensation(alpha, beta, eta, lottery):
     """This function determine the optimal compensation that ensures the equality of the expected
     utilities."""
-    def criterion_function(alpha, beta, eta, lottery, m):
+    def comp_criterion_function(alpha, beta, eta, lottery, m):
         """Criterion function for the root-finding function."""
-        return expected_utility_a(alpha, beta, eta, lottery) - \
-               expected_utility_b(alpha, beta, eta, lottery, m)
+        stat_a = expected_utility_a(alpha, beta, eta, lottery)
+        stat_b = expected_utility_b(alpha, beta, eta, lottery, m)
+        return stat_a - stat_b
 
-    crit_func = partial(criterion_function, alpha, beta, eta, lottery)
+    crit_func = partial(comp_criterion_function, alpha, beta, eta, lottery)
 
     rslt = optimize.brenth(crit_func, 0, 100)
 

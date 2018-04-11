@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 """This module contains the capabilities to simulate the model."""
-import shutil
-import os
-
 import pandas as pd
 import numpy as np
 
@@ -20,15 +17,15 @@ def simulate(fname):
     sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = dist_class_attributes(model_obj,
         'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs')
 
+
+    np.random.seed(sim_seed)
+
     alpha, beta, eta = paras_obj.get_values('econ', 'all')[:3]
 
     # First, I simply determine the optimal compensations.
     m_optimal = dict()
     for q in questions:
         m_optimal[q] = determine_optimal_compensation(alpha, beta, eta, q)
-
-    np.random.seed(sim_seed)
-
 
     stands = paras_obj.get_values('econ', 'all')[3:]
 
@@ -64,7 +61,6 @@ def simulate(fname):
     df_sub = df[abs(df['Compensation']) < 1000]
     cond = df_sub['Question'].isin(questions)
     df_sub = df_sub[cond]
-
 
     fval = criterion_function(df_sub, questions, cutoffs, *x_econ_all_current)
 

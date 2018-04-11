@@ -1,76 +1,83 @@
 #!/usr/bin/env python
-"""This script is the first take at a regression test setup."""
-import argparse
+"""This module is the first attempt to start some regression tests."""
 import json
-import sys
 
 import numpy as np
 
-sys.path.insert(0, '../modules')
+from trempy.shared.shared_auxiliary import dist_class_attributes
+from trempy.shared.shared_auxiliary import criterion_function
+from auxiliary_tests import distribute_command_line_arguments
+from trempy.tests.test_regression import run_regression_test
+from trempy.tests.test_auxiliary import get_random_init
+from auxiliary_tests import process_command_line_arguments
+from trempy.config_trempy import TEST_RESOURCES_DIR
+from auxiliary_tests import send_notification
+from trempy.clsModel import ModelCls
+from auxiliary_tests import cleanup
+from trempy import simulate
 
-from testing_shared import create_random_init
-from testing_shared import run_test_case
-from testing_shared import cleanup
 
-
-def create(num_tests):
-    """This function creates a new regression vault."""
+def create_regression_vault(num_tests):
+    """This function creates a set of regression tests."""
     np.random.seed(123)
 
     tests = []
     for _ in range(num_tests):
 
-        # Initialize test case
-        init_dict = create_random_init()
+        print('\n ... creating test ' + str(_))
 
-        # Run test case
-        fval = run_test_case(init_dict)
+        # Create and process initialization file
+        init_dict = get_random_init()
+        model_obj = ModelCls('test.trempy.ini')
+        df = simulate('test.trempy.ini')
 
-        # Record test case
-        tests += [[init_dict, fval]]
+        # We want to ensure that the keys to the questions are strings. Otherwise, serialization
+        # fails.
+        for label in ['QUESTIONS', 'CUTOFFS']:
+            init_dict[label] = {str(x): init_dict[label][x] for x in init_dict[label].keys()}
 
-    with open('created_vault.interalpy.json', 'w') as outfile:
-        json.dump(tests, outfile)
+        # Distribute class attributes for further processing.
+        paras_obj, questions, cutoffs = dist_class_attributes(model_obj, 'paras_obj', 'questions',
+            'cutoffs')
+
+        x_econ_all = paras_obj.get_values('econ', 'all')
+        stat = criterion_function(df, questions, cutoffs, *x_econ_all)
+
+        tests += [(init_dict, stat)]
+
+        cleanup()
+
+    json.dump(tests, open('regression_vault.trempy.json', 'w'))
 
 
-def check(num_tests):
-    """This function checks the regression vault."""
-    with open('regression_vault.interalpy.json') as infile:
-        tests = json.load(infile)
+def check_regression_vault(num_tests):
+    """This function checks an existing regression tests."""
+    fname = TEST_RESOURCES_DIR + '/regression_vault.trempy.json'
+    tests = json.load(open(fname, 'r'))
 
-    for i in range(num_tests):
+    for i, test in enumerate(tests[:num_tests]):
+        try:
+            run_regression_test(test)
+        except Exception:
+            send_notification('regression', is_failed=True, count=i)
+            raise SystemError
 
-        # Distribute test case
-        init_dict, stat = tests[i]
+        cleanup()
 
-        # For some reason the serialization results in string keys for the cutoff values.
-        questions = list(init_dict['cutoffs'].keys())
-        for key_ in questions:
-            init_dict['cutoffs'][int(key_)] = init_dict['cutoffs'][key_]
+    send_notification('regression', is_failed=False, num_tests=num_tests)
 
-        # Run test case
-        fval = run_test_case(init_dict)
 
-        # Check test case
-        np.testing.assert_equal(fval, stat)
+def run(args):
+    """Create or check the regression tests."""
+    args = distribute_command_line_arguments(args)
+    if args['is_check']:
+        check_regression_vault(args['num_tests'])
+    else:
+        create_regression_vault(args['num_tests'])
 
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser('Run regression testing')
+    args = process_command_line_arguments('regression')
 
-    parser.add_argument('--request', action='store', dest='request', help='task to perform',
-                        required=True, choices=['check', 'create'])
-
-    parser.add_argument('--tests', action='store', dest='num_tests', type=int, required=True,
-                        help='number of tests')
-
-    args = parser.parse_args()
-
-    if args.request == 'create':
-        create(args.num_tests)
-        cleanup(is_create=True)
-    elif args.request == 'check':
-        check(args.num_tests)
-        cleanup()
-
+    run(args)

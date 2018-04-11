@@ -28,7 +28,7 @@ def estimate_cleanup():
 def estimate_simulate(which, points, model_obj, df_obs):
     """This function allows to easily simulate samples at the beginning and the end of the
     estimation."""
-    sim_agents, questions = dist_class_attributes(model_obj, 'sim_agents', 'questions')
+    questions = dist_class_attributes(model_obj, 'questions')
 
     os.mkdir(which)
     os.chdir(which)
@@ -40,12 +40,12 @@ def estimate_simulate(which, points, model_obj, df_obs):
     sim_model.write_out(which + '.trempy.ini')
     simulate(which + '.trempy.ini')
 
-    compare_datasets(which, df_obs, sim_agents, questions)
+    compare_datasets(which, df_obs, questions)
 
     os.chdir('../')
 
 
-def compare_datasets(which, df_obs, sim_agents, questions):
+def compare_datasets(which, df_obs, questions):
     """This function compares the estimation dataset with a simulated dataset using the estimated
     parameter vector."""
     df_sim = pd.read_pickle(which + '.trempy.pkl')
@@ -117,7 +117,7 @@ def compare_datasets(which, df_obs, sim_agents, questions):
 
         rmse = get_rmse(mean_obs, mean_sim)
 
-        outfile.write('{:>15}'.format('RMSE') + '{:15.5f}'.format(rmse))
+        outfile.write('{:>15}'.format('RMSE') + '{:15.5f}\n'.format(rmse))
 
 
 def char_floats(floats):

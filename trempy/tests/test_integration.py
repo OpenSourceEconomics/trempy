@@ -15,10 +15,10 @@ def test_1():
         estimate('test.trempy.ini')
 
 
-def test_3():
+def test_2():
     """This test ensures that using the same initialization file for a simulation and a single
     evaluation of the criterion function result in the very same simulated sample at the stop of
-    the estimation"""
+    the estimation."""
     constr = dict()
     constr['num_agents'] = np.random.randint(2, 10)
     constr['detailed'] = 'True'

@@ -1,5 +1,10 @@
 """This module contains some configuration information."""
+import os
+
 import numpy as np
+
+PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEST_RESOURCES_DIR = PACKAGE_DIR + '/tests'
 
 SMALL_FLOAT = 10e-10
 HUGE_FLOAT = 10e+20
