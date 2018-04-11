@@ -1,7 +1,12 @@
 """This module contains some configuration information."""
+import sys
 import os
 
 import numpy as np
+
+# We only support Python 3.
+# TODO: This needs to be checked properly.
+#np.testing.assert_equal(sys.executable[0], '3')
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_RESOURCES_DIR = PACKAGE_DIR + '/tests'

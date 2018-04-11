@@ -13,8 +13,8 @@ from trempy.config_trempy import HUGE_FLOAT
 
 def get_random_init(constr=None):
     """This function prints a random dictionary."""
-    if constr == None:
-        constr=dict()
+    if constr is None:
+        constr = dict()
     init_dict = random_dict(constr)
     print_init_dict(init_dict)
     return init_dict

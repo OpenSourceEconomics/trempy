@@ -2,10 +2,8 @@
 import numpy as np
 
 from trempy.custom_exceptions import TrempyError
-#from interalpy.logging.clsLogger import logger_obj
-#from interalpy.config_interalpy import SMALL_FLOAT
+from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
-#from interalpy.config_interalpy import NUM_PARAS
 from trempy.shared.clsBase import BaseCls
 from trempy.paras.clsPara import ParaCls
 
@@ -146,15 +144,14 @@ class ParasCls(BaseCls):
     @staticmethod
     def _to_real(value, lower, upper):
         """This function transforms the bounded parameter back to the real line."""
-        # TODO: Reactivate
-        # if np.isclose(value, lower):
-        #     value += SMALL_FLOAT
-        #     logger_obj.record_event(1)
-        # elif np.isclose(value, upper):
-        #     value -= SMALL_FLOAT
-        #     logger_obj.record_event(1)
-        # else:
-        #     pass
+        if np.isclose(value, lower):
+            value += SMALL_FLOAT
+        #    logger_obj.record_event(1)
+        elif np.isclose(value, upper):
+            value -= SMALL_FLOAT
+        #    logger_obj.record_event(1)
+        else:
+            pass
 
         interval = upper - lower
         transform = (value - lower) / interval

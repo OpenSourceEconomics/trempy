@@ -117,7 +117,8 @@ def compare_datasets(which, df_obs, questions):
 
         rmse = get_rmse(mean_obs, mean_sim)
 
-        outfile.write('{:>15}'.format('RMSE') + '{:15.5f}\n'.format(rmse))
+        line = '{:>15}'.format('RMSE') + '{:15.5f}\n'.format(rmse)
+        outfile.write(line)
 
 
 def char_floats(floats):

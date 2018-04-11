@@ -90,7 +90,7 @@ class EstimateClass(BaseCls):
         # Construct auxiliary objects
         est_agents = df['Individual'].nunique()
 
-        with open('est.interalpy.log', 'w') as outfile:
+        with open('est.trempy.log', 'w') as outfile:
             outfile.write('\n ESTIMATION SETUP\n')
 
             fmt_ = '\n Agents {:>14}\n'
@@ -114,14 +114,14 @@ class EstimateClass(BaseCls):
         questions = self.attr['questions']
 
         # Update class attributes
-        with open('est.interalpy.info', 'w') as outfile:
-            fmt_ = '{:>10}    '+ '{:<10}    ' +'{:>25}    ' * 3
+        with open('est.trempy.info', 'w') as outfile:
+            fmt_ = ' {:>10}    ' + '{:<10}    ' +'{:>25}    ' * 3
 
             # Write out information about criterion function
             outfile.write('\n {:<25}\n\n'.format('Criterion Function'))
-            outfile.write(fmt_.format(*['','Start', 'Step', 'Current', '']) + '\n\n')
+            outfile.write(fmt_.format(*['', '', 'Start', 'Step', 'Current', '']) + '\n\n')
             args = (self.attr['f_start'], self.attr['f_step'], self.attr['f_current'])
-            line = [''] + char_floats(args) + ['']
+            line = ['', ''] + char_floats(args) + ['']
             outfile.write(fmt_.format(*line) + '\n\n')
 
             outfile.write('\n {:<25}\n\n'.format('Economic Parameters'))
@@ -140,7 +140,7 @@ class EstimateClass(BaseCls):
             outfile.write(fmt_.format(*['Number of Evaluations', self.attr['num_eval']]))
             outfile.write(fmt_.format(*['Number of Steps', self.attr['num_step']]))
 
-        with open('est.interalpy.log', 'a') as outfile:
+        with open('est.trempy.log', 'a') as outfile:
 
             outfile.write('\n\n')
             fmt_ = '\n EVALUATION {:>10}  STEP {:>10}\n'
@@ -169,10 +169,10 @@ class EstimateClass(BaseCls):
     @staticmethod
     def finish(opt):
         """This method collects all operations to wrap up an estimation."""
-        with open('est.interalpy.info', 'a') as outfile:
+        with open('est.trempy.info', 'a') as outfile:
             outfile.write('\n {:<25}'.format('TERMINATED'))
 
-        with open('est.interalpy.log', 'a') as outfile:
+        with open('est.trempy.log', 'a') as outfile:
             outfile.write('\n {:<25}\n'.format('OPTIMIZER RETURN'))
             outfile.write('\n Message    {:<25}'.format(opt['message']))
             outfile.write('\n Success    {:<25}'.format(str(opt['success'])))

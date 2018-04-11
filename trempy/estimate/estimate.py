@@ -2,7 +2,7 @@
 import shutil
 import copy
 
-from scipy.optimize import fmin_bfgs
+from scipy.optimize import minimize
 import pandas as pd
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
@@ -44,8 +44,10 @@ def estimate(fname):
 
     # Optimization of likelihood function
     if maxfun > 1:
+        options = None
         try:
-            opt = fmin_bfgs(estimate_obj.evaluate, x_optim_free_start, maxiter=maxfun)
+            opt = minimize(estimate_obj.evaluate, x_optim_free_start, method='BFGS',
+                    options=options)
         except MaxfunError:
             # We are were faced with a serious estimation request.
             opt = dict()
