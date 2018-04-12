@@ -6,7 +6,7 @@ import numpy as np
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.shared.shared_auxiliary import criterion_function
 from trempy.shared.shared_auxiliary import print_init_dict
-from trempy.config_trempy import TEST_RESOURCES_DIR
+from trempy.config_trempy import PACKAGE_DIR
 from trempy.clsModel import ModelCls
 from trempy import simulate
 
@@ -33,7 +33,7 @@ def run_regression_test(test):
 
 def test_1():
     """This test simply runs a small sample of the regression test battery."""
-    tests = pkl.load(open(TEST_RESOURCES_DIR + '/regression_vault.trempy.pkl', 'rb') )
+    tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb') )
 
     for test in tests[:5]:
         run_regression_test(test)

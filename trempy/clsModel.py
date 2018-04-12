@@ -39,6 +39,17 @@ class ModelCls(BaseCls):
         self.attr['maxfun'] = init_dict['ESTIMATION']['maxfun']
         self.attr['start'] = init_dict['ESTIMATION']['start']
 
+        # Optimizer options
+        self.attr['opt_options'] = dict()
+
+        self.attr['opt_options']['SCIPY-BFGS'] = dict()
+        self.attr['opt_options']['SCIPY-BFGS']['gtol'] = init_dict['SCIPY-BFGS']['gtol']
+        self.attr['opt_options']['SCIPY-BFGS']['eps'] = init_dict['SCIPY-BFGS']['eps']
+
+        self.attr['opt_options']['SCIPY-POWELL'] = dict()
+        self.attr['opt_options']['SCIPY-POWELL']['xtol'] = init_dict['SCIPY-POWELL']['xtol']
+        self.attr['opt_options']['SCIPY-POWELL']['ftol'] = init_dict['SCIPY-POWELL']['ftol']
+
         para_objs = paras_obj.get_attr('para_objs')
 
         questions = []
@@ -96,6 +107,15 @@ class ModelCls(BaseCls):
         init_dict['SIMULATION']['seed'] = self.attr['sim_seed']
         init_dict['SIMULATION']['file'] = self.attr['sim_file']
 
+        # Optimizer options
+        init_dict['SCIPY-BFGS'] = dict()
+        init_dict['SCIPY-BFGS']['gtol'] = self.attr['opt_options']['SCIPY-BFGS']['gtol']
+        init_dict['SCIPY-BFGS']['eps'] = self.attr['opt_options']['SCIPY-BFGS']['eps']
+
+        init_dict['SCIPY-POWELL'] = dict()
+        init_dict['SCIPY-POWELL']['xtol'] = self.attr['opt_options']['SCIPY-POWELL']['xtol']
+        init_dict['SCIPY-POWELL']['ftol'] = self.attr['opt_options']['SCIPY-POWELL']['ftol']
+
         print_init_dict(init_dict, fname)
 
     # TODO: Flesh out tests
@@ -103,8 +123,8 @@ class ModelCls(BaseCls):
         """This method checks the integrity of the class instance."""
         # Distribute class attributes for further processing.
         paras_obj, sim_seed, sim_agents, sim_file, est_agents, maxfun, est_file, \
-            questions = dist_class_attributes(self, 'paras_obj', 'sim_seed',
-                'sim_agents', 'sim_file', 'est_agents', 'maxfun', 'est_file', 'questions')
+            questions = dist_class_attributes(self, 'paras_obj', 'sim_seed', 'sim_agents',
+            'sim_file', 'est_agents', 'maxfun', 'est_file', 'questions')
 
         # We restrict the identifiers for the questions between 1 and 16
         np.testing.assert_equal(0 < min(questions) < max(questions) < 16, True)

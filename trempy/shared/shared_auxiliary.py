@@ -58,7 +58,10 @@ def criterion_function(df, questions, cutoffs, *args):
 
 def print_init_dict(dict_, fname='test.trempy.ini'):
     """This function prints an initialization dictionary."""
-    keys = ['PREFERENCES', 'QUESTIONS', 'CUTOFFS', 'SIMULATION', 'ESTIMATION']
+    keys = []
+    keys += ['PREFERENCES', 'QUESTIONS', 'CUTOFFS', 'SIMULATION', 'ESTIMATION']
+    keys += ['SCIPY-BFGS', 'SCIPY-POWELL']
+
     questions = list(dict_['QUESTIONS'].keys())
 
     with open(fname, 'w') as outfile:

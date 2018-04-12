@@ -8,7 +8,6 @@ import numpy as np
 np.testing.assert_equal(sys.version_info[0], 3)
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_RESOURCES_DIR = PACKAGE_DIR + '/tests'
 
 SMALL_FLOAT = 10e-10
 HUGE_FLOAT = 10e+20

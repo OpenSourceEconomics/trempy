@@ -71,12 +71,21 @@ def random_dict(constr):
 
     # We sample valid estimation requests.
     dict_['ESTIMATION'] = dict()
-    dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-BFGS'])
-    dict_['ESTIMATION']['detailed'] = 'True'
+    dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-BFGS', 'SCIPY-POWELL'])
+    dict_['ESTIMATION']['detailed'] = True
     dict_['ESTIMATION']['start'] = np.random.choice(['auto', 'init'])
     dict_['ESTIMATION']['agents'] = np.random.randint(1, sim_agents)
     dict_['ESTIMATION']['maxfun'] = np.random.randint(1, 10)
     dict_['ESTIMATION']['file'] = fname + '.trempy.pkl'
+
+    # We sample optimizer options.
+    dict_['SCIPY-BFGS'] = dict()
+    dict_['SCIPY-BFGS']['gtol'] = np.random.lognormal()
+    dict_['SCIPY-BFGS']['eps'] = np.random.lognormal()
+
+    dict_['SCIPY-POWELL'] = dict()
+    dict_['SCIPY-POWELL']['xtol'] = np.random.lognormal()
+    dict_['SCIPY-POWELL']['ftol'] = np.random.lognormal()
 
     # Now we need to impose possible constraints.
     if constr is not None:

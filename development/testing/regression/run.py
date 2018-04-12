@@ -11,7 +11,7 @@ from auxiliary_tests import distribute_command_line_arguments
 from trempy.tests.test_regression import run_regression_test
 from trempy.tests.test_auxiliary import get_random_init
 from auxiliary_tests import process_command_line_arguments
-from trempy.config_trempy import TEST_RESOURCES_DIR
+from trempy.config_trempy import PACKAGE_DIR
 from auxiliary_tests import send_notification
 from trempy.clsModel import ModelCls
 from auxiliary_tests import cleanup
@@ -48,7 +48,7 @@ def create_regression_vault(num_tests):
 
 def check_regression_vault(num_tests):
     """This function checks an existing regression tests."""
-    fname = TEST_RESOURCES_DIR + '/regression_vault.trempy.pkl'
+    fname = PACKAGE_DIR + '/tests/regression_vault.trempy.pkl'
     tests = pkl.load(open(fname, 'rb'))
 
     for i, test in enumerate(tests[:num_tests]):
@@ -71,7 +71,7 @@ def run(args):
     else:
         create_regression_vault(args['num_tests'])
         if args['is_update']:
-            shutil.copy('regression_vault.trempy.pkl', TEST_RESOURCES_DIR)
+            shutil.copy('regression_vault.trempy.pkl', PACKAGE_DIR + '/tests')
 
 
 if __name__ == '__main__':

@@ -10,6 +10,7 @@ from trempy.estimate.estimate_auxiliary import estimate_simulate
 from trempy.estimate.estimate_auxiliary import estimate_cleanup
 from trempy.estimate.clsEstimate import EstimateClass
 from trempy.custom_exceptions import MaxfunError
+from trempy.custom_exceptions import TrempyError
 from trempy.clsModel import ModelCls
 
 
@@ -19,9 +20,9 @@ def estimate(fname):
 
     model_obj = ModelCls(fname)
 
-    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed = \
+    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer = \
         dist_class_attributes(model_obj, 'est_file', 'questions', 'paras_obj', 'start',
-            'cutoffs', 'maxfun', 'est_detailed')
+            'cutoffs', 'maxfun', 'est_detailed', 'opt_options', 'optimizer')
 
     # Some initial setup
     df_obs = pd.read_pickle(est_file)
@@ -44,12 +45,24 @@ def estimate(fname):
 
     # Optimization of likelihood function
     if maxfun > 1:
-        options = None
+
+        options = dict()
+
+        if optimizer == 'SCIPY-BFGS':
+            options['gtol'] = opt_options['SCIPY-BFGS']['gtol']
+            options['eps'] = opt_options['SCIPY-BFGS']['eps']
+            method = 'BFGS'
+        elif optimizer == 'SCIPY-POWELL':
+            options['ftol'] = opt_options['SCIPY-POWELL']['ftol']
+            options['xtol'] = opt_options['SCIPY-POWELL']['xtol']
+            method = 'POWELL'
+        else:
+            raise TrempyError('flawed choice of optimization method')
+
         try:
-            opt = minimize(estimate_obj.evaluate, x_optim_free_start, method='BFGS',
-                    options=options)
+            opt = minimize(estimate_obj.evaluate, x_optim_free_start, method=method,
+                options=options)
         except MaxfunError:
-            # We are were faced with a serious estimation request.
             opt = dict()
             opt['message'] = 'Optimization reached maximum number of function evaluations.'
             opt['success'] = False

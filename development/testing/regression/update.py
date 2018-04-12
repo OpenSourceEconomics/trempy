@@ -4,7 +4,7 @@ import subprocess
 import shutil
 import sys
 
-from interalpy.config_interalpy import PACKAGE_DIR
+from trempy.config_trempy import PACKAGE_DIR
 
 PYTHON_EXEC = sys.executable
 NUM_TESTS = 10000
@@ -15,7 +15,7 @@ cmd = PYTHON_EXEC + ' run.py --request create --tests ' + str(NUM_TESTS)
 subprocess.check_call(cmd, shell=True)
 
 # We integrate it in the package.
-shutil.copy('regression_vault.interalpy.json', PACKAGE_DIR + '/tests/material')
+shutil.copy('regression_vault.trempy.pkl', PACKAGE_DIR + '/tests')
 
 # We immediately check the new vault. Problems can arise here if the randomness is not properly
 # controlled for.
