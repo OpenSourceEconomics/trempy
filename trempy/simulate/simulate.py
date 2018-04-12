@@ -93,4 +93,4 @@ def write_info(df, questions, likl, m_optimal, fname):
 
         outfile.write('\n')
 
-        outfile.write('Criterion Function: ' + '{:16.5f}'.format(likl) + '\n\n')
+        outfile.write('Criterion Function: ' + '{:25.5f}'.format(likl) + '\n\n')

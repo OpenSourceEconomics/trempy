@@ -73,7 +73,9 @@ def random_dict(constr):
     dict_['ESTIMATION'] = dict()
     dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-BFGS', 'SCIPY-POWELL'])
     dict_['ESTIMATION']['detailed'] = True
-    dict_['ESTIMATION']['start'] = np.random.choice(['auto', 'init'])
+    # TODO: Adding automatic starting values requires additional care when the values in fact are
+    # outside the bounds.
+    dict_['ESTIMATION']['start'] = np.random.choice(['init'])
     dict_['ESTIMATION']['agents'] = np.random.randint(1, sim_agents)
     dict_['ESTIMATION']['maxfun'] = np.random.randint(1, 10)
     dict_['ESTIMATION']['file'] = fname + '.trempy.pkl'

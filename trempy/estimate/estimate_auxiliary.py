@@ -13,6 +13,27 @@ from trempy.simulate.simulate import simulate
 from trempy.config_trempy import HUGE_FLOAT
 
 
+def get_automatic_starting_values(paras_obj, df_obs, questions):
+    """This method updates the container for the parameters with the automatic starting values."""
+    x_econ_free_start = []
+
+    for label in ['alpha', 'beta', 'eta'] + questions:
+        value, is_fixed, bounds = paras_obj.get_para(label)
+
+        if is_fixed:
+            continue
+        else:
+            if label in ['alpha', 'beta', 'eta']:
+                x_econ_free_start += [0.5]
+            else:
+                df_mask = df_obs['Compensation'].mask(df_obs['Compensation'] == NEVER_SWITCHERS)
+                x_econ_free_start += [df_mask.loc[slice(None), label].std()]
+
+    paras_obj.set_values('econ', 'free', x_econ_free_start)
+
+    return paras_obj
+
+
 def estimate_cleanup():
     """This function ensures that we start the estimation with a clean slate."""
     # We remove the directories that contain the simulated choice menus at the start.

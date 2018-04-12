@@ -10,6 +10,7 @@ from trempy.estimate.estimate_auxiliary import estimate_cleanup
 from trempy.estimate.clsEstimate import EstimateClass
 from trempy.custom_exceptions import MaxfunError
 from trempy.custom_exceptions import TrempyError
+from trempy.estimate.estimate_auxiliary import get_automatic_starting_values
 from trempy.process.process import process
 from trempy.clsModel import ModelCls
 
@@ -30,6 +31,9 @@ def estimate(fname):
     estimate_obj = EstimateClass(df_obs, cutoffs, questions, copy.deepcopy(paras_obj), maxfun)
 
     # We lock in an evaluation at the starting values as not all optimizers actually start there.
+    if start in ['auto']:
+        paras_obj = get_automatic_starting_values(paras_obj, df_obs, questions)
+
     x_optim_free_start = paras_obj.get_values('optim', 'free')
     estimate_obj.evaluate(x_optim_free_start)
 

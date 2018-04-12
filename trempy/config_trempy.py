@@ -19,7 +19,8 @@ NEVER_SWITCHERS = 9999
 QUESTIONS_ALL = range(1, 16)
 
 # We want to be strict about any problems due to floating-point errors.
-np.seterr(all='raise')
+# TODO: Turn back on, requires special care with rv.pdf
+#np.seterr(all='raise')
 
 # We need to impose some bounds on selected estimation parameters. The bounds are included in the
 # package's admissible values. We need to make sure that zero is an admissible value.

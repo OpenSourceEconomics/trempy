@@ -8,8 +8,7 @@ from trempy import estimate
 from trempy import simulate
 from trempy.tests.test_auxiliary import get_random_init, get_rmse
 
-np.random.seed(1232)
-#init_dict = get_random_init()
-simulate('model.trempy.ini')
-f, _ = estimate('model.trempy.ini')
-np.testing.assert_equal(f, 0.040195110313460951)
+np.random.seed(1423)
+init_dict = get_random_init()
+simulate('test.trempy.ini')
+estimate('test.trempy.ini')
