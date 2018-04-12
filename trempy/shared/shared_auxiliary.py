@@ -7,7 +7,9 @@ from scipy.stats import norm
 from scipy import optimize
 import numpy as np
 
-from trempy.shared.shared_constants import HUGE_FLOAT, TINY_FLOAT
+from trempy.shared.shared_constants import HUGE_FLOAT
+from trempy.shared.shared_constants import TINY_FLOAT
+from trempy.config_trempy import DEFAULT_BOUNDS
 
 
 def criterion_function(df, questions, cutoffs, *args):
@@ -77,7 +79,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 if label in ['alpha', 'beta', 'eta'] + questions and key_ != 'CUTOFFS':
                     line, str_ = format_coefficient_line(label, info, str_)
                 elif label in questions and key_ == 'CUTOFFS':
-                    line, str_ = format_cutoff_line(label, info, str_)
+                    line, str_ = format_cutoff_line(label, info)
                     # We do not need to print a [NONE, None] cutoff.
                     if line.count('None') == 2:
                         continue
@@ -90,7 +92,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
             outfile.write('\n')
 
 
-def format_cutoff_line(label, info, str_):
+def format_cutoff_line(label, info):
     """This function returns a properly formatted cutoff line."""
     cutoffs = info
 
@@ -110,42 +112,6 @@ def format_cutoff_line(label, info, str_):
     return line, str_
 
 
-def format_question_line(label, info, str_):
-    """This function returns a properly formatted question line."""
-    cutoffs, value, is_fixed, bounds = info
-
-    # We need to make sure this is an independent copy as otherwise the bound in the original
-    # dictionary are overwritten with the value None.
-    cutoffs = copy.deepcopy(cutoffs)
-
-    line = []
-    line += [label, value]
-
-    if is_fixed == 'True':
-        line += ['!']
-    else:
-        line += ['']
-
-    # Bounds might be printed or now.
-    for i in range(2):
-        value = bounds[i]
-        if abs(value) > HUGE_FLOAT:
-            bounds[i] = None
-        else:
-            bounds[i] = np.round(value, decimals=4)
-
-    for i in range(2):
-        if abs(cutoffs[i]) > HUGE_FLOAT:
-            cutoff = None
-        else:
-            cutoff = np.round(cutoffs[i], decimals=4)
-        line += [cutoff]
-
-    line += cutoffs
-
-    return line, str_
-
-
 def format_coefficient_line(label, info, str_):
     """This function returns a properly formatted coefficient line."""
     value, is_fixed, bounds = info
@@ -157,7 +123,7 @@ def format_coefficient_line(label, info, str_):
     line = []
     line += [label, value]
 
-    if is_fixed == 'True':
+    if is_fixed is True:
         line += ['!']
     else:
         line += ['']
@@ -165,7 +131,7 @@ def format_coefficient_line(label, info, str_):
     # Bounds might be printed or now.
     for i in range(2):
         value = bounds[i]
-        if abs(value) > HUGE_FLOAT:
+        if value == DEFAULT_BOUNDS[label][i]:
             bounds[i] = None
         else:
             bounds[i] = np.round(value, decimals=4)

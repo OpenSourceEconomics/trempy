@@ -1,5 +1,4 @@
 """This module contains auxiliary functions for the test runs."""
-import linecache
 import shlex
 
 import numpy as np
@@ -7,8 +6,7 @@ import numpy as np
 from trempy.shared.shared_auxiliary import get_random_string
 from trempy.shared.shared_auxiliary import print_init_dict
 from trempy.custom_exceptions import TrempyError
-#from interalpy.config_interalpy import NUM_PARAS
-from trempy.config_trempy import HUGE_FLOAT
+from trempy.config_trempy import DEFAULT_BOUNDS
 
 
 def get_random_init(constr=None):
@@ -30,7 +28,7 @@ def random_dict(constr):
     fname = get_random_string()
 
     questions = np.random.choice(range(1, 16), size=num_questions, replace=False)
-    is_fixed = np.random.choice(['True', 'False'], size=num_questions + 3)
+    is_fixed = np.random.choice([True, False], size=num_questions + 3)
 
     # We need to ensure at least one parameter is free for a valid estimation request.
     if is_fixed.tolist().count('False') == 0:
@@ -42,29 +40,20 @@ def random_dict(constr):
 
     values = list()
     for i, label in enumerate(['alpha', 'beta', 'eta']):
-        values += [get_value(bounds[i])]
-
-    # We want to include the case where the bounds are not specified by the user. In this case
-    # the default bounds are relevant.
-    probs = [0.2, 0.8]
-    for bound in bounds:
-        if np.random.choice([True, False], p=probs):
-            bound[0] = -np.inf
-        if np.random.choice([True, False], p=probs):
-            bound[1] = np.inf
+        values += [get_value(bounds[i], label)]
 
     # We start with sampling all preference parameters.
     dict_['PREFERENCES'] = dict()
     for i, label in enumerate(['alpha', 'beta', 'eta']):
-         dict_['PREFERENCES'][label] = (values[i], is_fixed[i], bounds[i])
+         dict_['PREFERENCES'][label] = [values[i], is_fixed[i], bounds[i]]
 
     # It is time to sample the questions.
     dict_['QUESTIONS'] = dict()
 
     for i, q in enumerate(questions):
-        bounds = get_bounds(None)
-        value = get_value(bounds)
-        dict_['QUESTIONS'][q] = (value, is_fixed[i + 3], bounds)
+        bounds = get_bounds(q)
+        value = get_value(bounds, q)
+        dict_['QUESTIONS'][q] = [value, is_fixed[i + 3], bounds]
 
     # We now add some cutoff values.
     dict_['CUTOFFS'] = dict()
@@ -126,22 +115,32 @@ def get_bounds(label):
     elif label in ['beta']:
         lower = float(np.random.uniform(0.00, 0.98 - wedge))
         upper = lower + wedge
-    # These are the cutoff values.
-    elif label is None:
+    elif label in range(1, 16):
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
         upper = lower + wedge
     else:
         raise TrempyError('flawed request for bounds')
+
+    # We want to check the case of the default bounds as well.
+    if np.random.choice([True, False], p=[0.1, 0.9]):
+        lower = DEFAULT_BOUNDS[label][0]
+    if np.random.choice([True, False], p=[0.1, 0.9]):
+        upper = DEFAULT_BOUNDS[label][1]
 
     bounds = [float(lower), float(upper)]
 
     return bounds
 
 
-def get_value(bounds):
+def get_value(bounds, label):
     """This function returns a value for the parameter that honors the bounds."""
     lower, upper = bounds
-    value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+
+    if label in ['alpha', 'beta', 'eta']:
+        value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+    else:
+        upper = min(upper, 10)
+        value = float(np.random.uniform(lower + 0.01, upper - 0.01))
 
     return value
 

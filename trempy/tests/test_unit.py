@@ -1,4 +1,6 @@
 """This module contains some unit tests."""
+import filecmp
+
 import numpy as np
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
@@ -55,5 +57,16 @@ def test_4():
     for _ in range(1000):
         for label in ['alpha', 'beta', 'eta']:
             lower, upper = get_bounds(label)
-            value = get_value((lower, upper))
+            value = get_value((lower, upper), label)
             np.testing.assert_equal(lower < value < upper, True)
+
+
+def test_5():
+    """This test ensures that the original and printed version of the initialization file are
+    identical."""
+    get_random_init()
+    simulate('test.trempy.ini')
+    model_obj = ModelCls('test.trempy.ini')
+    model_obj.write_out('alt.trempy.ini')
+
+    np.testing.assert_equal(filecmp.cmp('test.trempy.ini', 'alt.trempy.ini'), True)

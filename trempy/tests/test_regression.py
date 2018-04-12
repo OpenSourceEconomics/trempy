@@ -1,5 +1,5 @@
 """This module contains some integration tests."""
-import json
+import pickle as pkl
 
 import numpy as np
 
@@ -33,8 +33,7 @@ def run_regression_test(test):
 
 def test_1():
     """This test simply runs a small sample of the regression test battery."""
-    with open(TEST_RESOURCES_DIR + '/regression_vault.trempy.json', 'r') as infile:
-        tests = json.load(infile)
+    tests = pkl.load(open(TEST_RESOURCES_DIR + '/regression_vault.trempy.pkl', 'rb') )
 
     for test in tests[:5]:
         run_regression_test(test)

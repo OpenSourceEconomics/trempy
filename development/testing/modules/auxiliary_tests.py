@@ -30,6 +30,11 @@ def distribute_command_line_arguments(args):
     except AttributeError:
         pass
 
+    try:
+        rslt['is_update'] = args.is_update
+    except AttributeError:
+        pass
+
     rslt['is_check'] = rslt['request'] in ['check', 'investigate']
 
     return rslt
@@ -49,7 +54,7 @@ def process_command_line_arguments(which):
         is_request, is_hours, is_seed = True, True, True
     elif which == 'regression':
         msg = 'Test package for regressions'
-        is_request, is_test = True, True
+        is_request, is_test, is_update = True, True, True
     elif which == 'property':
         msg = 'Property testing of package'
         is_request , is_seed, is_hours = True, True, True
@@ -75,6 +80,10 @@ def process_command_line_arguments(which):
     if is_test:
         parser.add_argument('--tests', action='store', dest='num_tests', required=True, type=int,
                             help='number of tests')
+
+    if is_update:
+        parser.add_argument('--update', action='store_true', dest='is_update', required=False,
+                            help='update regression vault')
 
     return parser.parse_args()
 

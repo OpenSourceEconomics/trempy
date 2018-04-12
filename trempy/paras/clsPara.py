@@ -24,13 +24,11 @@ class ParaCls(BaseCls):
         lower, upper = self.attr['bounds']
         is_fixed = self.attr['is_fixed']
         value = self.attr['value']
-        label = self.attr['label']
 
         # Check several conditions that need to hold true at all times.
         cond = is_fixed in [True, False]
         np.testing.assert_equal(cond, True)
 
-        # Check whether the utility parameters are within their specified bounds.
-        if label in ['alpha', 'beta', 'eta']:
-            cond = lower - SMALL_FLOAT <= value <= upper + SMALL_FLOAT
-            np.testing.assert_equal(cond, True)
+        # Check whether the parameters are within their specified bounds.
+        cond = lower - SMALL_FLOAT <= value <= upper + SMALL_FLOAT
+        np.testing.assert_equal(cond, True)

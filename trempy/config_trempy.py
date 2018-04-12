@@ -5,8 +5,7 @@ import os
 import numpy as np
 
 # We only support Python 3.
-# TODO: This needs to be checked properly.
-#np.testing.assert_equal(sys.executable[0], '3')
+np.testing.assert_equal(sys.version_info[0], 3)
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_RESOURCES_DIR = PACKAGE_DIR + '/tests'
@@ -22,5 +21,8 @@ np.seterr(all='raise')
 # package's admissible values.
 DEFAULT_BOUNDS = dict()
 DEFAULT_BOUNDS['alpha'] = [0.01, 0.99]
-DEFAULT_BOUNDS['beta'] = [0.01, 5.00]
+DEFAULT_BOUNDS['beta'] = [0.01, 0.99]
 DEFAULT_BOUNDS['eta'] = [0.01, 0.99]
+
+for q in range(1, 16):
+    DEFAULT_BOUNDS[q] = [0.01, 100]

@@ -80,7 +80,7 @@ def process_cutoff_line(list_):
     return cutoffs
 
 
-def process_bounds_cutoffs(bounds, label):
+def process_bounds(bounds, label):
     """This function extracts the proper bounds."""
     bounds = bounds.replace(')', '')
     bounds = bounds.replace('(', '')
@@ -97,18 +97,21 @@ def process_bounds_cutoffs(bounds, label):
 def process_coefficient_line(list_, value):
     """This function processes a coefficient line and extracts the relevant information. We also
     impose the default values for the bounds here."""
-    label = list_[0]
+    try:
+        label = int(list_[0])
+    except ValueError:
+        label = list_[0]
 
     if len(list_) == 2:
         is_fixed, bounds = False, DEFAULT_BOUNDS[label]
     elif len(list_) == 4:
         is_fixed = True
-        bounds = process_bounds_cutoffs(list_[3], label)
+        bounds = process_bounds(list_[3], label)
     elif len(list_) == 3:
         is_fixed = (list_[2] == '!')
 
         if not is_fixed:
-            bounds = process_bounds_cutoffs(list_[2], label)
+            bounds = process_bounds(list_[2], label)
         else:
             bounds = DEFAULT_BOUNDS[label]
 

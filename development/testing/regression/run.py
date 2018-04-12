@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """This module is the first attempt to start some regression tests."""
-import json
+import pickle as pkl
+import shutil
 
 import numpy as np
 
@@ -31,11 +32,6 @@ def create_regression_vault(num_tests):
         model_obj = ModelCls('test.trempy.ini')
         df = simulate('test.trempy.ini')
 
-        # We want to ensure that the keys to the questions are strings. Otherwise, serialization
-        # fails.
-        for label in ['QUESTIONS', 'CUTOFFS']:
-            init_dict[label] = {str(x): init_dict[label][x] for x in init_dict[label].keys()}
-
         # Distribute class attributes for further processing.
         paras_obj, questions, cutoffs = dist_class_attributes(model_obj, 'paras_obj', 'questions',
             'cutoffs')
@@ -47,13 +43,13 @@ def create_regression_vault(num_tests):
 
         cleanup()
 
-    json.dump(tests, open('regression_vault.trempy.json', 'w'))
+    pkl.dump(tests, open('regression_vault.trempy.pkl', 'wb'))
 
 
 def check_regression_vault(num_tests):
     """This function checks an existing regression tests."""
-    fname = TEST_RESOURCES_DIR + '/regression_vault.trempy.json'
-    tests = json.load(open(fname, 'r'))
+    fname = TEST_RESOURCES_DIR + '/regression_vault.trempy.pkl'
+    tests = pkl.load(open(fname, 'rb'))
 
     for i, test in enumerate(tests[:num_tests]):
         try:
@@ -74,6 +70,8 @@ def run(args):
         check_regression_vault(args['num_tests'])
     else:
         create_regression_vault(args['num_tests'])
+        if args['is_update']:
+            shutil.copy('regression_vault.trempy.pkl', TEST_RESOURCES_DIR)
 
 
 if __name__ == '__main__':
