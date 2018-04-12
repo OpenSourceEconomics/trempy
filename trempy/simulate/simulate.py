@@ -3,9 +3,10 @@
 import pandas as pd
 import numpy as np
 
-from trempy.shared.shared_auxiliary import determine_optimal_compensation
+from trempy.shared.shared_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.shared.shared_auxiliary import criterion_function
+from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.clsModel import ModelCls
 
 
@@ -22,9 +23,7 @@ def simulate(fname):
     # First, I simply determine the optimal compensations.
     alpha, beta, eta = paras_obj.get_values('econ', 'all')[:3]
 
-    m_optimal = dict()
-    for q in questions:
-        m_optimal[q] = determine_optimal_compensation(alpha, beta, eta, q)
+    m_optimal = get_optimal_compensations(questions, alpha, beta, eta)
 
     stands = paras_obj.get_values('econ', 'all')[3:]
 
@@ -39,7 +38,7 @@ def simulate(fname):
             if m_latent < lower_cutoff:
                 m_observed = lower_cutoff
             elif m_latent > upper_cutoff:
-                m_observed = 9999
+                m_observed = NEVER_SWITCHERS
 
             data += [[i, q, m_observed]]
 
@@ -54,14 +53,7 @@ def simulate(fname):
 
     x_econ_all_current = paras_obj.get_values('econ', 'all')
 
-    # TODO: This needs to be removed ...
-    # We drop all individuals that never switch between lotteries and restrict attention to a
-    # subset of individuals.
-    df_sub = df[abs(df['Compensation']) < 1000]
-    cond = df_sub['Question'].isin(questions)
-    df_sub = df_sub[cond]
-
-    fval = criterion_function(df_sub, questions, cutoffs, *x_econ_all_current)
+    fval = criterion_function(df, questions, cutoffs, *x_econ_all_current)
 
     write_info(df, questions, fval, m_optimal, sim_file + '.trempy.info')
 
@@ -70,7 +62,7 @@ def simulate(fname):
 
 def write_info(df, questions, likl, m_optimal, fname):
     """This function writes out some basic information about the simulated dataset."""
-    df_sim = df['Compensation'].mask(df['Compensation'] == 9999)
+    df_sim = df['Compensation'].mask(df['Compensation'] == NEVER_SWITCHERS)
 
     with open(fname, 'w') as outfile:
 

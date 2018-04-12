@@ -8,8 +8,9 @@ import pandas as pd
 import numpy as np
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
-from trempy.config_trempy import HUGE_FLOAT
+from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.simulate.simulate import simulate
+from trempy.config_trempy import HUGE_FLOAT
 
 
 def estimate_cleanup():
@@ -50,8 +51,8 @@ def compare_datasets(which, df_obs, questions):
     parameter vector."""
     df_sim = pd.read_pickle(which + '.trempy.pkl')
 
-    df_sim_masked = df_sim['Compensation'].mask(df_sim['Compensation'] == 9999)
-    df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'] == 9999)
+    df_sim_masked = df_sim['Compensation'].mask(df_sim['Compensation'] == NEVER_SWITCHERS)
+    df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'] == NEVER_SWITCHERS)
 
     stats = dict()
     stats['sim'] = []

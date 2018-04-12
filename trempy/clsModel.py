@@ -118,14 +118,15 @@ class ModelCls(BaseCls):
 
         print_init_dict(init_dict, fname)
 
-    # TODO: Flesh out tests
     def _check_integrity(self):
         """This method checks the integrity of the class instance."""
         # Distribute class attributes for further processing.
         paras_obj, sim_seed, sim_agents, sim_file, est_agents, maxfun, est_file, \
-            questions = dist_class_attributes(self, 'paras_obj', 'sim_seed', 'sim_agents',
-            'sim_file', 'est_agents', 'maxfun', 'est_file', 'questions')
+            questions, start = dist_class_attributes(self, 'paras_obj', 'sim_seed', 'sim_agents',
+            'sim_file', 'est_agents', 'maxfun', 'est_file', 'questions', 'start')
 
         # We restrict the identifiers for the questions between 1 and 16
-        np.testing.assert_equal(0 < min(questions) < max(questions) < 16, True)
+        np.testing.assert_equal(0 < min(questions) <= max(questions) < 16, True)
 
+        # We have to alternative how to start the estimation.
+        np.testing.assert_equal(start in ['init', 'auto'], True)

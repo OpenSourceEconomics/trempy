@@ -4,7 +4,9 @@ import os
 
 import numpy as np
 
+from trempy.custom_exceptions import TrempyError
 from trempy.config_trempy import DEFAULT_BOUNDS
+from trempy.config_trempy import QUESTIONS_ALL
 from trempy.config_trempy import HUGE_FLOAT
 
 
@@ -41,6 +43,10 @@ def read(fname):
             if group not in ['CUTOFFS']:
                 value = type_conversions(flag, value)
 
+            # We need to make sure questions and cutoffs are not duplicated.
+            if flag in dict_[group].keys():
+                raise TrempyError('duplicated information')
+
             # We need to allow for additional information about the potential estimation
             # parameters.
             if group in ['PREFERENCES', 'QUESTIONS']:
@@ -50,14 +56,17 @@ def read(fname):
             else:
                 dict_[group][flag] = value
 
+    # We allow for initialization files where no CUTOFFS are specified.
+    if "CUTOFFS" not in dict_.keys():
+        dict_['CUTOFFS'] = dict()
+
     # We want to ensure that the keys to the questions are integers
     for label in ['QUESTIONS', 'CUTOFFS']:
         dict_[label] = {int(x): dict_[label][x] for x in dict_[label].keys()}
 
     # We do some modifications on the cutoff values. Instead of None, we will simply use
-    # HUGE_FLOAT and we fill up any missing cutoff values.
-    questions = dict_['QUESTIONS'].keys()
-    for q in questions:
+    # HUGE_FLOAT and we fill up any missing cutoff values for any possible questions..
+    for q in QUESTIONS_ALL:
         if q not in dict_['CUTOFFS'].keys():
             dict_['CUTOFFS'][q] = [-HUGE_FLOAT, HUGE_FLOAT]
         else:

@@ -88,7 +88,7 @@ class EstimateClass(BaseCls):
         df = self.attr['df']
 
         # Construct auxiliary objects
-        est_agents = df['Individual'].nunique()
+        est_agents = df.index.get_level_values(0).nunique()
 
         with open('est.trempy.log', 'w') as outfile:
             outfile.write('\n ESTIMATION SETUP\n')

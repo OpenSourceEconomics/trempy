@@ -3,7 +3,6 @@ import shutil
 import copy
 
 from scipy.optimize import minimize
-import pandas as pd
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.estimate.estimate_auxiliary import estimate_simulate
@@ -11,6 +10,7 @@ from trempy.estimate.estimate_auxiliary import estimate_cleanup
 from trempy.estimate.clsEstimate import EstimateClass
 from trempy.custom_exceptions import MaxfunError
 from trempy.custom_exceptions import TrempyError
+from trempy.process.process import process
 from trempy.clsModel import ModelCls
 
 
@@ -20,18 +20,12 @@ def estimate(fname):
 
     model_obj = ModelCls(fname)
 
-    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer = \
+    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, est_agents = \
         dist_class_attributes(model_obj, 'est_file', 'questions', 'paras_obj', 'start',
-            'cutoffs', 'maxfun', 'est_detailed', 'opt_options', 'optimizer')
+            'cutoffs', 'maxfun', 'est_detailed', 'opt_options', 'optimizer', 'est_agents')
 
     # Some initial setup
-    df_obs = pd.read_pickle(est_file)
-
-    # We drop all individuals that never switch between lotteries and restrict attention to a
-    # subset of individuals.
-    df_obs = df_obs[abs(df_obs['Compensation']) < 1000]
-    cond = df_obs['Question'].isin(questions)
-    df_obs = df_obs[cond]
+    df_obs = process(est_file, questions, est_agents)
 
     estimate_obj = EstimateClass(df_obs, cutoffs, questions, copy.deepcopy(paras_obj), maxfun)
 

@@ -2,58 +2,69 @@ from functools import partial
 import string
 import copy
 
-from scipy.stats import truncnorm
 from scipy.stats import norm
 from scipy import optimize
 import numpy as np
 
 from trempy.shared.shared_constants import HUGE_FLOAT
 from trempy.shared.shared_constants import TINY_FLOAT
+from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
 
 
 def criterion_function(df, questions, cutoffs, *args):
-    """This function calculates the likelihood."""
-    # TODO: This treats the dataset input as the final version, a lot of information is deduced
-    # from this.
-
+    """This function calculates the likelihood of the observed sample."""
+    # Distribute parameters
     alpha, beta, eta = args[:3]
     sds = args[3:]
 
 
-    repeat = []
-    for q in questions:
-        repeat += [df['Question'][df['Question'] == q].count()]
-
-    m_optimal = []
-    for q in questions:
-        m_optimal += [determine_optimal_compensation(alpha, beta, eta, q)]
+    m_optimal = get_optimal_compensations(questions, alpha, beta, eta)
 
     contribs = []
 
     for i, q in enumerate(questions):
-
-        df_subset = df[df['Question'] == q].copy()
-
+        df_subset = df.loc[(slice(None), q), "Compensation"].copy().to_frame('Compensation')
         lower_cutoff, upper_cutoff = cutoffs[q]
-        df_subset['is_truncated'] = df_subset['Compensation'] == lower_cutoff
+
+        # TODO: This is way to clumsy.
+        df_subset['is_not'] = df_subset['Compensation'].between(lower_cutoff, NEVER_SWITCHERS,
+            inclusive=False)
+        df_subset['is_upper'] = df_subset['Compensation'] == NEVER_SWITCHERS
+        df_subset['is_lower'] = df_subset['Compensation'] == lower_cutoff
 
         rv = norm(loc=0.00, scale=sds[i])
-        rv_trunc = truncnorm(-HUGE_FLOAT, upper_cutoff, loc=0.00, scale=sds[i])
+        m_subset = np.repeat(m_optimal[q], sum(df_subset['is_not']), axis=0)
 
-        m_subset = np.repeat(m_optimal[i], len(df_subset), axis=0)
+        # Calculate likelihoods
+        arg = df_subset['Compensation'][df_subset['is_not']] - m_subset
 
-        df_subset['likl_not_trunc'] = rv_trunc.pdf(df_subset['Compensation'] - m_subset)
+        df_subset['likl_not'] = np.nan
+        df_subset['likl_not'] = df_subset['likl_not'].mask(df_subset['is_not'] == False)
 
-        df_subset['likl_trunc'] = rv.cdf(lower_cutoff)
+        df_subset['likl_not'].loc[df_subset['is_not']] = rv.pdf(arg)
+        df_subset['likl_upper'] = 1.0 - rv.cdf(upper_cutoff)
+        df_subset['likl_lower'] = rv.cdf(lower_cutoff)
 
-        contribs += (df_subset['is_truncated'] * df_subset['likl_trunc'] + (1.0 - df_subset[
-            'is_truncated']) * df_subset['likl_not_trunc']).values.tolist()
+        df_subset['likl'] = 0.0
+        df_subset['likl'][df_subset['is_upper']] = df_subset['likl_upper'][df_subset['is_upper']]
 
-    # TODO: This needs to be logged somwhere
+        df_subset['likl'][df_subset['is_lower']] = df_subset['likl_lower'][df_subset['is_lower']]
+
+        df_subset['likl'][df_subset['is_not']] = df_subset['likl_not'][df_subset['is_not']]
+        contribs += df_subset['likl'].values.tolist()
+
     rslt = -np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
 
     return rslt
+
+
+def get_optimal_compensations(questions, alpha, beta, eta):
+    """This function returns the optimal compensations for all questions."""
+    m_optimal = dict()
+    for q in questions:
+        m_optimal[q] = determine_optimal_compensation(alpha, beta, eta, q)
+    return m_optimal
 
 
 def print_init_dict(dict_, fname='test.trempy.ini'):
@@ -66,6 +77,11 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
 
     with open(fname, 'w') as outfile:
         for key_ in keys:
+
+            # We do not ned to print the CUTOFFS block if none are specified.
+            if key_ in ['CUTOFFS']:
+                if len(dict_['CUTOFFS']) == 0:
+                    continue
             outfile.write(key_ + '\n\n')
             for label in sorted(dict_[key_].keys()):
                 info = dict_[key_][label]
@@ -81,7 +97,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
 
                 if label in ['alpha', 'beta', 'eta'] + questions and key_ != 'CUTOFFS':
                     line, str_ = format_coefficient_line(label, info, str_)
-                elif label in questions and key_ == 'CUTOFFS':
+                elif key_ in ['CUTOFFS']:
                     line, str_ = format_cutoff_line(label, info)
                     # We do not need to print a [NONE, None] cutoff.
                     if line.count('None') == 2:
