@@ -6,11 +6,6 @@ from trempy.tests.test_auxiliary import get_rmse
 from trempy import simulate
 from trempy import estimate
 
-# TODO:
-#
-#   Add test for scripts
-#
-
 
 def test_1():
     """This test simply runs the core workflow of simulation and estimation."""

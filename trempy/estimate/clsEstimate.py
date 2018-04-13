@@ -1,7 +1,7 @@
 """This module contains the class to manage the model estimation."""
 from trempy.shared.shared_auxiliary import criterion_function
 from trempy.estimate.estimate_auxiliary import char_floats
-#from interalpy.logging.clsLogger import logger_obj
+from trempy.logging.clsLogger import logger_obj
 
 from trempy.custom_exceptions import MaxfunError
 from trempy.config_trempy import HUGE_FLOAT
@@ -159,7 +159,7 @@ class EstimateClass(BaseCls):
                 line += char_floats([x_econ_all_current[i], x_optim_all_current[i]])
                 outfile.write(fmt_.format(*line) + '\n')
             # We need to keep track of captured warnings.
-            #logger_obj.flush(outfile)
+            logger_obj.flush(outfile)
 
         # We can determine the estimation if the number of requested function evaluations is
         # reached.

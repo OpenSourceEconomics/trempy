@@ -47,7 +47,7 @@ def cleanup():
 
 def process_command_line_arguments(which):
     """This function processes the command line arguments for the test battery."""
-    is_request, is_hours, is_seed, is_test = False, False, False, False
+    is_request, is_hours, is_seed, is_test, is_update = False, False, False, False, False
 
     if which == 'robustness':
         msg = 'Test robustness of package'
@@ -144,6 +144,6 @@ def send_notification(which, **kwargs):
     mail_obj.set_attr('message', message)
 
     if which == 'property':
-        mail_obj.set_attr('attachment', 'property.interalpy.info')
+        mail_obj.set_attr('attachment', 'property.trempy.info')
     mail_obj.lock()
     mail_obj.send()

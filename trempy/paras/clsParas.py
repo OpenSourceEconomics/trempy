@@ -2,6 +2,7 @@
 import numpy as np
 
 from trempy.custom_exceptions import TrempyError
+from trempy.logging.clsLogger import logger_obj
 from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 from trempy.shared.clsBase import BaseCls
@@ -137,7 +138,7 @@ class ParasCls(BaseCls):
             exponential = np.exp(-val)
         except (OverflowError, FloatingPointError) as _:
             exponential = HUGE_FLOAT
-            logger_obj.record_event(2)
+            logger_obj.record_event(1)
         interval = upper - lower
         return lower + interval / (1 + exponential)
 
@@ -146,10 +147,10 @@ class ParasCls(BaseCls):
         """This function transforms the bounded parameter back to the real line."""
         if np.isclose(value, lower):
             value += SMALL_FLOAT
-        #    logger_obj.record_event(1)
+            logger_obj.record_event(0)
         elif np.isclose(value, upper):
             value -= SMALL_FLOAT
-        #    logger_obj.record_event(1)
+            logger_obj.record_event(0)
         else:
             pass
 

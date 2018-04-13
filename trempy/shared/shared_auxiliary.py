@@ -6,10 +6,10 @@ from scipy.stats import norm
 from scipy import optimize
 import numpy as np
 
-from trempy.shared.shared_constants import HUGE_FLOAT
-from trempy.shared.shared_constants import TINY_FLOAT
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
+from trempy.config_trempy import TINY_FLOAT
+from trempy.config_trempy import HUGE_FLOAT
 
 
 def criterion_function(df, questions, cutoffs, *args):
@@ -18,43 +18,36 @@ def criterion_function(df, questions, cutoffs, *args):
     alpha, beta, eta = args[:3]
     sds = args[3:]
 
-
     m_optimal = get_optimal_compensations(questions, alpha, beta, eta)
 
     contribs = []
 
     for i, q in enumerate(questions):
         df_subset = df.loc[(slice(None), q), "Compensation"].copy().to_frame('Compensation')
-        lower_cutoff, upper_cutoff = cutoffs[q]
+        lower, upper = cutoffs[q]
 
-        # TODO: This is way to clumsy.
-        df_subset['is_not'] = df_subset['Compensation'].between(lower_cutoff, NEVER_SWITCHERS,
-            inclusive=False)
-        df_subset['is_upper'] = df_subset['Compensation'].isin([NEVER_SWITCHERS])
-        df_subset['is_lower'] = df_subset['Compensation'].isin([lower_cutoff])
+        is_not = df_subset['Compensation'].between(lower, upper, inclusive=False)
+        is_upper = df_subset['Compensation'].isin([NEVER_SWITCHERS])
+        is_lower = df_subset['Compensation'].isin([lower])
 
         rv = norm(loc=0.00, scale=sds[i])
-        m_subset = np.repeat(m_optimal[q], sum(df_subset['is_not']), axis=0)
+        m_subset = np.repeat(m_optimal[q], sum(is_not), axis=0)
 
         # Calculate likelihoods
-        arg = df_subset['Compensation'].loc[df_subset['is_not'], :] - m_subset
+        arg = df_subset['Compensation'].loc[is_not, :] - m_subset
 
         df_subset['likl_not'] = np.nan
-        df_subset['likl_not'] = df_subset['likl_not'].mask(~df_subset['is_not'])
+        df_subset['likl_not'] = df_subset['likl_not'].mask(~is_not)
 
-
-        df_subset['likl_not'].loc[df_subset['is_not'], :] = rv.pdf(arg)
-
-        df_subset['likl_upper'] = 1.0 - rv.cdf(upper_cutoff)
-        df_subset['likl_lower'] = rv.cdf(lower_cutoff)
+        df_subset['likl_not'].loc[is_not, :] = rv.pdf(arg)
+        df_subset['likl_upper'] = 1.0 - rv.cdf(upper)
+        df_subset['likl_lower'] = rv.cdf(lower)
 
         df_subset['likl'] = 0.0
-        df_subset['likl'][df_subset['is_upper']] = df_subset['likl_upper'].loc[df_subset[
-            'is_upper']]
+        df_subset['likl'][is_upper] = df_subset['likl_upper'].loc[is_upper]
+        df_subset['likl'][is_lower] = df_subset['likl_lower'].loc[is_lower]
+        df_subset['likl'][is_not] = df_subset['likl_not'].loc[is_not]
 
-        df_subset['likl'][df_subset['is_lower']] = df_subset['likl_lower'].loc[df_subset['is_lower']]
-
-        df_subset['likl'][df_subset['is_not']] = df_subset['likl_not'].loc[df_subset['is_not']]
         contribs += df_subset['likl'].values.tolist()
 
     rslt = -np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
@@ -121,7 +114,7 @@ def format_cutoff_line(label, info):
     str_ = '{:<10}'
     line = [label]
     for i in range(2):
-        if abs(cutoffs[i]) > HUGE_FLOAT:
+        if abs(cutoffs[i]) == HUGE_FLOAT:
             cutoff = 'None'
             str_ += '{:>25}'
         else:
