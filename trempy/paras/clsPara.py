@@ -31,6 +31,4 @@ class ParaCls(BaseCls):
 
         # Check whether the parameters are within their specified bounds.
         cond = lower - SMALL_FLOAT <= value <= upper + SMALL_FLOAT
-        if cond is False:
-            print('flaw')
         np.testing.assert_equal(cond, True)

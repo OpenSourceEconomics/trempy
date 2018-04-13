@@ -27,6 +27,7 @@ def test_2():
     constr = dict()
     constr['num_agents'] = np.random.randint(2, 10)
     constr['detailed'] = 'True'
+    constr['start'] = 'init'
     constr['maxfun'] = 1
 
     for _ in range(5):

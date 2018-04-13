@@ -72,10 +72,8 @@ def random_dict(constr):
     # We sample valid estimation requests.
     dict_['ESTIMATION'] = dict()
     dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-BFGS', 'SCIPY-POWELL'])
-    dict_['ESTIMATION']['detailed'] = True
-    # TODO: Adding automatic starting values requires additional care when the values in fact are
-    # outside the bounds.
-    dict_['ESTIMATION']['start'] = np.random.choice(['init'])
+    dict_['ESTIMATION']['detailed'] = np.random.choice([True, False], p=[0.9, 0.1])
+    dict_['ESTIMATION']['start'] = np.random.choice(['init', 'auto'])
     dict_['ESTIMATION']['agents'] = np.random.randint(1, sim_agents)
     dict_['ESTIMATION']['maxfun'] = np.random.randint(1, 10)
     dict_['ESTIMATION']['file'] = fname + '.trempy.pkl'
@@ -103,6 +101,9 @@ def random_dict(constr):
 
         if 'detailed' in constr.keys():
             dict_['ESTIMATION']['detailed'] = constr['detailed']
+
+        if 'start' in constr.keys():
+            dict_['ESTIMATION']['start'] = constr['start']
 
     return dict_
 

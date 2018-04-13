@@ -175,7 +175,7 @@ def multiattribute_utility(alpha, beta, eta, x, y):
     """This function calculates the multiattribute utility."""
     u_x = single_attribute_utility(alpha, x)
     u_y = single_attribute_utility(alpha, y)
-    return ((beta * u_x + (1 - beta) * u_y) ** (1 - eta)) / (1 - eta)
+    return ((u_x + beta * u_y) ** (1 - eta)) / (1 - eta)
 
 
 def expected_utility_a(alpha, beta, eta, lottery):

@@ -10,11 +10,25 @@ import numpy as np
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.simulate.simulate import simulate
+from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
 
 def get_automatic_starting_values(paras_obj, df_obs, questions):
     """This method updates the container for the parameters with the automatic starting values."""
+    def _adjust_bounds(value, bounds):
+        """This function simply adjusts the starting values to meet the requirements of the
+        bounds."""
+        lower, upper = bounds
+        if value <= bounds[0]:
+            value = lower + 2 * SMALL_FLOAT
+        elif value >= bounds[1]:
+            value = upper - 2 * SMALL_FLOAT
+        else:
+            pass
+
+        return value
+
     x_econ_free_start = []
 
     for label in ['alpha', 'beta', 'eta'] + questions:
@@ -24,10 +38,15 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
             continue
         else:
             if label in ['alpha', 'beta', 'eta']:
-                x_econ_free_start += [0.5]
+                x_econ_free_start += [_adjust_bounds(0.5, bounds)]
             else:
                 df_mask = df_obs['Compensation'].mask(df_obs['Compensation'] == NEVER_SWITCHERS)
-                x_econ_free_start += [df_mask.loc[slice(None), label].std()]
+                value = df_mask.loc[slice(None), label].std()
+                # If there are no individuals observed without truncation we start with 0.1.
+                if pd.isnull(value):
+                    x_econ_free_start += [_adjust_bounds(0.1, bounds)]
+                else:
+                    x_econ_free_start += [_adjust_bounds(value, bounds)]
 
     paras_obj.set_values('econ', 'free', x_econ_free_start)
 
@@ -76,15 +95,19 @@ def compare_datasets(which, df_obs, questions):
     df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'] == NEVER_SWITCHERS)
 
     stats = dict()
-    stats['sim'] = []
+    stats['sim'] = dict()
     for q in questions:
         num_obs = df_sim.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stats['sim'] += [[num_obs] + df_sim_masked.loc[slice(None), slice(q, q)].describe().tolist()]
+        stats['sim'][q] = [num_obs] + df_sim_masked.loc[slice(None), slice(q, q)].describe(
 
-    stats['obs'] = []
+        ).tolist()
+
+    stats['obs'] = dict()
     for q in questions:
         num_obs = df_obs.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stats['obs'] += [[num_obs] + df_obs_masked.loc[slice(None), slice(q, q)].describe().tolist()]
+        stats['obs'][q] = [num_obs] + df_obs_masked.loc[slice(None), slice(q, q)].describe(
+
+        ).tolist()
 
     with open('compare.trempy.info', 'w') as outfile:
 
@@ -98,7 +121,7 @@ def compare_datasets(which, df_obs, questions):
         outfile.write(string.format(*label))
         outfile.write('\n')
 
-        for i, q in enumerate(questions):
+        for q in questions:
 
             for key_ in ['obs', 'sim']:
 
@@ -107,38 +130,31 @@ def compare_datasets(which, df_obs, questions):
                 elif key_ == 'sim':
                     label = 'Simulated'
 
-                info = [label, q] + stats[key_][i]
+                info = [label, q] + stats[key_][q]
 
-                for j in range(len(info)):
-                    if pd.isnull(info[j]):
-                        info[j] = '{:>15}'.format('---')
+                for i in range(len(info)):
+                    if pd.isnull(info[i]):
+                        info[i] = '{:>15}'.format('---')
                         continue
 
-                    if j in [1, 2, 3]:
-                        info[j] = '{:d}'.format(int(info[j]))
+                    if i in [1, 2, 3]:
+                        info[i] = '{:d}'.format(int(info[i]))
 
-                    if j in [4, 5, 6, 7, 8, 9, 10]:
-                        info[j] = '{:15.5f}'.format(info[j])
+                    if i in [4, 5, 6, 7, 8, 9, 10]:
+                        info[i] = '{:15.5f}'.format(info[i])
 
                 outfile.write(string.format(*info))
 
             outfile.write('\n')
 
-        # TODO: Transform to numpy array and first and then used masked version.
-        mean_obs, mean_sim = [], []
+        # We calculate the RMSE based on all mean compensations.
+        np_stats = np.tile(np.nan, (len(questions), 2))
         for i, q in enumerate(questions):
+            for j, label in enumerate(['obs', 'sim']):
+                np_stats[i, j] = stats[label][q][2]
+        np_stats = np_stats[~np.isnan(np_stats).any(axis=1)]
 
-            is_nan = []
-            is_nan += [np.isnan(stats['obs'][i][2])]
-            is_nan += [np.isnan(stats['sim'][i][2])]
-
-            if np.any(is_nan):
-                continue
-            mean_obs += [stats['obs'][i][2]]
-            mean_sim += [stats['sim'][i][2]]
-
-        rmse = get_rmse(mean_obs, mean_sim)
-
+        rmse = get_rmse(*np_stats.T)
         line = '{:>15}'.format('RMSE') + '{:15.5f}\n'.format(rmse)
         outfile.write(line)
 
