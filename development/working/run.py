@@ -11,7 +11,7 @@ import os
 
 np.random.seed(2)
 for _ in range(1):
-    os.system('git clean -d -f')
-    get_random_init()
-    simulate('test.trempy.ini')
+    #os.system('git clean -d -f')
+    #get_random_init()
+    #simulate('test.trempy.ini')
     estimate('test.trempy.ini')

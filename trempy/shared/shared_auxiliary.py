@@ -30,28 +30,31 @@ def criterion_function(df, questions, cutoffs, *args):
         # TODO: This is way to clumsy.
         df_subset['is_not'] = df_subset['Compensation'].between(lower_cutoff, NEVER_SWITCHERS,
             inclusive=False)
-        df_subset['is_upper'] = df_subset['Compensation'] == NEVER_SWITCHERS
-        df_subset['is_lower'] = df_subset['Compensation'] == lower_cutoff
+        df_subset['is_upper'] = df_subset['Compensation'].isin([NEVER_SWITCHERS])
+        df_subset['is_lower'] = df_subset['Compensation'].isin([lower_cutoff])
 
         rv = norm(loc=0.00, scale=sds[i])
         m_subset = np.repeat(m_optimal[q], sum(df_subset['is_not']), axis=0)
 
         # Calculate likelihoods
-        arg = df_subset['Compensation'][df_subset['is_not']] - m_subset
+        arg = df_subset['Compensation'].loc[df_subset['is_not'], :] - m_subset
 
         df_subset['likl_not'] = np.nan
-        df_subset['likl_not'] = df_subset['likl_not'].mask(df_subset['is_not'] == False)
+        df_subset['likl_not'] = df_subset['likl_not'].mask(~df_subset['is_not'])
 
-        df_subset['likl_not'].loc[df_subset['is_not']] = rv.pdf(arg)
+
+        df_subset['likl_not'].loc[df_subset['is_not'], :] = rv.pdf(arg)
+
         df_subset['likl_upper'] = 1.0 - rv.cdf(upper_cutoff)
         df_subset['likl_lower'] = rv.cdf(lower_cutoff)
 
         df_subset['likl'] = 0.0
-        df_subset['likl'][df_subset['is_upper']] = df_subset['likl_upper'][df_subset['is_upper']]
+        df_subset['likl'][df_subset['is_upper']] = df_subset['likl_upper'].loc[df_subset[
+            'is_upper']]
 
-        df_subset['likl'][df_subset['is_lower']] = df_subset['likl_lower'][df_subset['is_lower']]
+        df_subset['likl'][df_subset['is_lower']] = df_subset['likl_lower'].loc[df_subset['is_lower']]
 
-        df_subset['likl'][df_subset['is_not']] = df_subset['likl_not'][df_subset['is_not']]
+        df_subset['likl'][df_subset['is_not']] = df_subset['likl_not'].loc[df_subset['is_not']]
         contribs += df_subset['likl'].values.tolist()
 
     rslt = -np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))

@@ -21,12 +21,12 @@ def estimate(fname):
 
     model_obj = ModelCls(fname)
 
-    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, est_agents = \
-        dist_class_attributes(model_obj, 'est_file', 'questions', 'paras_obj', 'start',
-            'cutoffs', 'maxfun', 'est_detailed', 'opt_options', 'optimizer', 'est_agents')
+    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
+        est_agents = dist_class_attributes(model_obj, 'est_file', 'questions', 'paras_obj',
+            'start', 'cutoffs', 'maxfun', 'est_detailed', 'opt_options', 'optimizer', 'est_agents')
 
     # Some initial setup
-    df_obs = process(est_file, questions, est_agents)
+    df_obs = process(est_file, questions, est_agents, cutoffs)
 
     estimate_obj = EstimateClass(df_obs, cutoffs, questions, copy.deepcopy(paras_obj), maxfun)
 

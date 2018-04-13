@@ -5,6 +5,7 @@ import os
 
 from trempy.estimate.estimate import estimate
 from trempy.clsModel import ModelCls
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser('Run estimation')
@@ -15,9 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--init', action='store', dest='fname', type=str,
         help='initialization file', default='model.trempy.ini')
 
-
     args = parser.parse_args()
-
 
     base_init = args.fname
 
