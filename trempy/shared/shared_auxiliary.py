@@ -1,3 +1,4 @@
+"""This module constain functions that are used throughout the package."""
 from functools import partial
 import string
 import copy
@@ -70,15 +71,16 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
     keys += ['SCIPY-BFGS', 'SCIPY-POWELL']
 
     questions = list(dict_['QUESTIONS'].keys())
+    is_cutoffs = False
 
     with open(fname, 'w') as outfile:
         for key_ in keys:
 
-            # We do not ned to print the CUTOFFS block if none are specified.
-            if key_ in ['CUTOFFS']:
-                if len(dict_['CUTOFFS']) == 0:
-                    continue
-            outfile.write(key_ + '\n\n')
+            # We do not ned to print the CUTOFFS block if none are specified. So we first check
+            # below if there is any need.
+            if key_ not in ['CUTOFFS']:
+                outfile.write(key_ + '\n\n')
+
             for label in sorted(dict_[key_].keys()):
                 info = dict_[key_][label]
 
@@ -98,6 +100,9 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                     # We do not need to print a [NONE, None] cutoff.
                     if line.count('None') == 2:
                         continue
+                    if not is_cutoffs:
+                        is_cutoffs = True
+                        outfile.write(key_ + '\n\n')
 
                 else:
                     line = [label, info]
@@ -114,7 +119,7 @@ def format_cutoff_line(label, info):
     str_ = '{:<10}'
     line = [label]
     for i in range(2):
-        if abs(cutoffs[i]) == HUGE_FLOAT:
+        if abs(cutoffs[i]) >= HUGE_FLOAT:
             cutoff = 'None'
             str_ += '{:>25}'
         else:

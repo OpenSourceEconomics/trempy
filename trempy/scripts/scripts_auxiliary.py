@@ -11,6 +11,7 @@ def process_command_line_arguments(which):
         is_single, is_start, is_init = [True] * 3
     elif which == 'simulate':
         msg = 'Run simulation'
+        is_init = True
     elif which == 'update':
         msg = 'Update initialization file'
         is_init = True

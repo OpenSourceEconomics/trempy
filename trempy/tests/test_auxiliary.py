@@ -7,6 +7,7 @@ from trempy.shared.shared_auxiliary import get_random_string
 from trempy.shared.shared_auxiliary import print_init_dict
 from trempy.custom_exceptions import TrempyError
 from trempy.config_trempy import DEFAULT_BOUNDS
+from trempy.config_trempy import HUGE_FLOAT
 
 
 def get_random_init(constr=None):
@@ -163,7 +164,7 @@ def get_cutoffs():
     upper = np.random.uniform(0.01, 5.0)
 
     cutoffs = []
-    cutoffs += [np.random.choice([lower, -np.inf], p=[0.8, 0.2])]
-    cutoffs += [np.random.choice([upper, np.inf], p=[0.8, 0.2])]
+    cutoffs += [np.random.choice([lower, -HUGE_FLOAT], p=[0.8, 0.2])]
+    cutoffs += [np.random.choice([upper, HUGE_FLOAT], p=[0.8, 0.2])]
 
     return cutoffs

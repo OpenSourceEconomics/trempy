@@ -5,7 +5,7 @@ from trempy.scripts.scripts_auxiliary import process_command_line_arguments
 from trempy.simulate.simulate import simulate
 
 
-def run():
+def run(args):
     """This function allows to start a simulation."""
     args = distribute_command_line_arguments(args)
 
