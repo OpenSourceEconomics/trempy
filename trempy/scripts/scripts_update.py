@@ -1,20 +1,14 @@
 #!/usr/bin/env python
-import argparse
 import shlex
 
+from trempy.scripts.scripts_auxiliary import distribute_command_line_arguments
+from trempy.scripts.scripts_auxiliary import process_command_line_arguments
 from trempy.clsModel import ModelCls
 
-if __name__ == '__main__':
 
-
-    parser = argparse.ArgumentParser('Update initialization file')
-
-    parser.add_argument('--init', action='store', dest='fname', type=str,
-        help='initialization file', default='model.trempy.ini')
-
-
-    args = parser.parse_args()
-    fname = args.fname
+def run(args):
+    """This function updates the initialization file."""
+    args = distribute_command_line_arguments(args)
 
     x_econ_all_step = []
 
@@ -32,7 +26,14 @@ if __name__ == '__main__':
             except ValueError:
                 pass
 
-    model_obj = ModelCls(fname)
+    model_obj = ModelCls(args['fname'])
     model_obj.update('econ', 'all', x_econ_all_step)
-    model_obj.write_out(fname)
+    model_obj.write_out(args['fname'])
+
+
+if __name__ == '__main__':
+
+    args = process_command_line_arguments('update')
+
+    run(args)
 

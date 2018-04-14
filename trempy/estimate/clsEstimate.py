@@ -1,4 +1,6 @@
 """This module contains the class to manage the model estimation."""
+import os
+
 from trempy.shared.shared_auxiliary import criterion_function
 from trempy.estimate.estimate_auxiliary import char_floats
 from trempy.logging.clsLogger import logger_obj
@@ -64,7 +66,6 @@ class EstimateClass(BaseCls):
         self.attr['num_eval'] += 1
 
         # Determine special events
-        is_stop = (self.attr['max_eval'] == self.attr['num_eval']) and (self.attr['max_eval'] > 1)
         is_start = self.attr['num_eval'] == 1
         is_step = fval < self.attr['f_step']
 
@@ -79,7 +80,7 @@ class EstimateClass(BaseCls):
             self.attr['f_step'] = fval
             self.attr['num_step'] += 1
 
-        self._logging_evaluation(is_stop, x_econ_all_current, x_optim_all_current)
+        self._logging_evaluation(x_econ_all_current, x_optim_all_current)
 
     def _logging_start(self):
         """This method records some basic properties of the estimation at the beginning."""
@@ -107,7 +108,7 @@ class EstimateClass(BaseCls):
                 line = [i] + char_floats(bounds)
                 outfile.write(fmt_.format(*line) + '\n')
 
-    def _logging_evaluation(self, is_stop, x_econ_all_current, x_optim_all_current):
+    def _logging_evaluation(self, x_econ_all_current, x_optim_all_current):
         """This methods manages all issues related to the logging of the estimation."""
         # Distribute attributes
         para_labels = self.attr['paras_label']
@@ -162,8 +163,13 @@ class EstimateClass(BaseCls):
             logger_obj.flush(outfile)
 
         # We can determine the estimation if the number of requested function evaluations is
-        # reached.
+        # reached or the user requests a stop.
+        is_finish = (self.attr['max_eval'] == self.attr['num_eval']) and (self.attr['max_eval'] > 1)
+        is_stop =  os.path.exists('.stop.trempy.scratch')
+        if is_finish:
+            raise MaxfunError
         if is_stop:
+            os.remove('.stop.trempy.scratch')
             raise MaxfunError
 
     @staticmethod

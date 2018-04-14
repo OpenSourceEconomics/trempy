@@ -329,5 +329,5 @@ def dist_class_attributes(model_obj, *args):
 def get_random_string(size=6):
     """This function samples a random string of varying size."""
     chars = list(string.ascii_lowercase)
-    str_ = ''.join(np.random.choice(chars) for x in range(size))
+    str_ = ''.join(np.random.choice(chars) for _ in range(size))
     return str_

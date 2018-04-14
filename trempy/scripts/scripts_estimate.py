@@ -1,30 +1,33 @@
 #!/usr/bin/env python
 """This script allows to run an estimation from the command line."""
-import argparse
 import os
 
+from trempy.scripts.scripts_auxiliary import distribute_command_line_arguments
+from trempy.scripts.scripts_auxiliary import process_command_line_arguments
 from trempy.estimate.estimate import estimate
 from trempy.clsModel import ModelCls
 
+
+def run(args):
+    """This function allows to start an estimation."""
+    args = distribute_command_line_arguments(args)
+
+    model_obj = ModelCls(args['init'])
+
+    if args['is_single']:
+        model_obj.set_attr('maxfun', 1)
+
+    if args['start'] is not None:
+        model_obj.set_attr('start', args['start'])
+
+    model_obj.write_out('.tmp.trempy.ini')
+    estimate('.tmp.trempy.ini')
+    os.remove('.tmp.trempy.ini')
+
+
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser('Run estimation')
+    args = process_command_line_arguments('estimation')
 
-    parser.add_argument('--single', action='store_true', dest='is_single', required=False,
-        help='single evaluation at starting values')
+    run(args)
 
-    parser.add_argument('--init', action='store', dest='fname', type=str,
-        help='initialization file', default='model.trempy.ini')
-
-    args = parser.parse_args()
-
-    base_init = args.fname
-
-    if args.is_single:
-        model_obj = ModelCls(base_init)
-        model_obj.set_attr('maxfun', 1)
-        model_obj.write_out('.tmp.trempy.ini')
-        estimate('.tmp.trempy.ini')
-        os.remove('.tmp.trempy.ini')
-    else:
-        estimate(base_init)

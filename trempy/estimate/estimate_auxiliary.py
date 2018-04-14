@@ -1,12 +1,15 @@
 """This module contains function solely related to the estimation of the model."""
+from functools import partial
 import shutil
 import copy
 import os
 
 from statsmodels.tools.eval_measures import rmse as get_rmse
+from scipy.optimize import minimize
 import pandas as pd
 import numpy as np
 
+from trempy.shared.shared_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.simulate.simulate import simulate
@@ -31,6 +34,53 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
     x_econ_free_start = []
 
+    def _criterion_function(questions, m_optimal_obs, start_fixed, start_utility_paras, paras):
+        """This will be the criterion function."""
+        utility_cand = []
+        j = 0
+        for i in range(3):
+            if start_fixed[i]:
+                utility_cand += [start_utility_paras[i]]
+            else:
+                utility_cand += [paras[j]]
+                j += 1
+
+        m_optimal_cand = get_optimal_compensations(questions, *utility_cand)
+        m_optimal_cand = np.array([m_optimal_cand[q] for q in questions])
+
+        # We need to ensure that we only compare values if the mean is not missing.
+        np_stats = np.tile(np.nan, (len(questions), 2))
+        for i, q in enumerate(questions):
+            np_stats[i, :] = [m_optimal_obs[i], m_optimal_cand[i]]
+        np_stats = np_stats[~np.isnan(np_stats).any(axis=1)]
+
+        stat = np.mean((np_stats[:, 0] - np_stats[:, 1]) ** 2)
+
+        return stat
+
+    # TODO: How to deal with missing values
+    m_optimal_obs = []
+    for q in questions:
+        df_mask = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
+        m_optimal_obs += [df_mask.loc[slice(None), q].mean()]
+    m_optimal_obs = np.array(m_optimal_obs)
+
+    start_utility_paras = paras_obj.get_values('econ', 'all')[:3]
+    start_paras, start_bounds, start_fixed = [], [], []
+    for label in ['alpha', 'beta', 'eta']:
+        value, is_fixed, bounds = paras_obj.get_para(label)
+        start_fixed += [is_fixed]
+
+        if is_fixed:
+            continue
+        start_paras += [value]
+        start_bounds += [bounds]
+    print(start_paras, start_bounds)
+    func = partial(_criterion_function, questions, m_optimal_obs, start_fixed, start_utility_paras)
+    opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)
+
+    utility_opt = opt['x'].tolist()
+
     for label in ['alpha', 'beta', 'eta'] + questions:
         value, is_fixed, bounds = paras_obj.get_para(label)
 
@@ -38,7 +88,7 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
             continue
         else:
             if label in ['alpha', 'beta', 'eta']:
-                x_econ_free_start += [_adjust_bounds(0.5, bounds)]
+                x_econ_free_start += [_adjust_bounds(utility_opt.pop(0), bounds)]
             else:
                 df_mask = df_obs['Compensation'].mask(df_obs['Compensation'] == NEVER_SWITCHERS)
                 value = df_mask.loc[slice(None), label].std()
@@ -61,7 +111,7 @@ def estimate_cleanup():
             shutil.rmtree(dirname)
 
     # We remove the information from earlier estimation runs.
-    for fname in ['est.trempy.info', 'est.trempy.log']:
+    for fname in ['est.trempy.info', 'est.trempy.log', '.stop.trempy.scratch']:
         if os.path.exists(fname):
             os.remove(fname)
 

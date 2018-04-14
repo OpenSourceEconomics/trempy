@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 """This script allows to run an simulation from the command line."""
-import argparse
-
+from trempy.scripts.scripts_auxiliary import distribute_command_line_arguments
+from trempy.scripts.scripts_auxiliary import process_command_line_arguments
 from trempy.simulate.simulate import simulate
+
+
+def run():
+    """This function allows to start a simulation."""
+    args = distribute_command_line_arguments(args)
+
+    simulate(args['init'])
+
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser('Run simulation')
+    args = process_command_line_arguments('simulation')
 
-    parser.add_argument('--init', action='store', dest='fname', type=str,
-        help='initialization file', default='model.trempy.ini')
-
-
-    args = parser.parse_args()
-
-    simulate(args.fname)
+    run(args)
