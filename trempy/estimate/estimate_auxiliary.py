@@ -58,7 +58,7 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
         return stat
 
-    # TODO: How to deal with missing values
+    # TODO: Cleanup
     m_optimal_obs = []
     for q in questions:
         df_mask = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
@@ -75,7 +75,7 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
             continue
         start_paras += [value]
         start_bounds += [bounds]
-    print(start_paras, start_bounds)
+
     func = partial(_criterion_function, questions, m_optimal_obs, start_fixed, start_utility_paras)
     opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)
 
