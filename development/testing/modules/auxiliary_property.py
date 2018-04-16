@@ -91,7 +91,7 @@ def print_rslt_ext(start, timeout, rslt, err_msg):
 
 
 def finish(rslt):
-    """This function simply finalized the logging."""
+    """This function simply finalizes the logging."""
     # We want to record the overall performance.
     num_tests_total, num_success = 0, 0
     for module in sorted(rslt.keys()):

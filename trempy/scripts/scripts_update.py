@@ -26,9 +26,9 @@ def run(args):
             except ValueError:
                 pass
 
-    model_obj = ModelCls(args['fname'])
+    model_obj = ModelCls(args['init'])
     model_obj.update('econ', 'all', x_econ_all_step)
-    model_obj.write_out(args['fname'])
+    model_obj.write_out(args['init'])
 
 
 if __name__ == '__main__':

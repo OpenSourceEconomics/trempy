@@ -4,6 +4,8 @@ import filecmp
 import numpy as np
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
+from trempy.shared.shared_auxiliary import expected_utility_a
+from trempy.shared.shared_auxiliary import expected_utility_b
 from trempy.tests.test_auxiliary import get_random_init
 from trempy.tests.test_auxiliary import get_bounds
 from trempy.tests.test_auxiliary import get_value
@@ -70,3 +72,15 @@ def test_5():
     model_obj.write_out('alt.trempy.ini')
 
     np.testing.assert_equal(filecmp.cmp('test.trempy.ini', 'alt.trempy.ini'), True)
+
+
+def test_6():
+    """This test ensures that the two lotteries yield the same expected utility within questions
+    for the special case of risk neutrality."""
+    alpha, beta, eta = 0, 0, 0
+    questions = range(1, 16)
+
+    for q in questions:
+        eu_a = expected_utility_a(alpha, beta, eta, q)
+        eu_b = expected_utility_b(alpha, beta, eta, q, 0)
+        np.testing.assert_equal(eu_a, eu_b)

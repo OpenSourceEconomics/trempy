@@ -134,7 +134,7 @@ def process_cases(list_):
 
     if not is_empty:
         is_group = list_[0].isupper()
-        is_comment = list_[0] == '#'
+        is_comment = list_[0][0] == '#'
     else:
         is_group = False
         is_comment = False

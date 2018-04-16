@@ -2,7 +2,7 @@
 import numpy as np
 
 from trempy.custom_exceptions import TrempyError
-from trempy.logging.clsLogger import logger_obj
+from trempy.record.clsLogger import logger_obj
 from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 from trempy.shared.clsBase import BaseCls

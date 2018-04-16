@@ -3,7 +3,7 @@ import os
 
 from trempy.shared.shared_auxiliary import criterion_function
 from trempy.estimate.estimate_auxiliary import char_floats
-from trempy.logging.clsLogger import logger_obj
+from trempy.record.clsLogger import logger_obj
 
 from trempy.custom_exceptions import MaxfunError
 from trempy.config_trempy import HUGE_FLOAT

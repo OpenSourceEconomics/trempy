@@ -31,16 +31,13 @@ def criterion_function(df, questions, cutoffs, *args):
         is_upper = df_subset['Compensation'].isin([NEVER_SWITCHERS])
         is_lower = df_subset['Compensation'].isin([lower])
 
-        rv = norm(loc=0.00, scale=sds[i])
-        m_subset = np.repeat(m_optimal[q], sum(is_not), axis=0)
+        rv = norm(loc=m_optimal[q], scale=sds[i])
 
         # Calculate likelihoods
-        arg = df_subset['Compensation'].loc[is_not, :] - m_subset
-
         df_subset['likl_not'] = np.nan
         df_subset['likl_not'] = df_subset['likl_not'].mask(~is_not)
 
-        df_subset['likl_not'].loc[is_not, :] = rv.pdf(arg)
+        df_subset['likl_not'].loc[is_not, :] = rv.pdf(df_subset['Compensation'].loc[is_not, :])
         df_subset['likl_upper'] = 1.0 - rv.cdf(upper)
         df_subset['likl_lower'] = rv.cdf(lower)
 
@@ -169,7 +166,15 @@ def format_coefficient_line(label, info, str_):
 
 def single_attribute_utility(alpha, x):
     """This function calculates the state utility."""
-    return (x ** (1 - alpha)) / (1 - alpha)
+    # We need to ensure that zero is not raised to a negative number.
+    if x == 0.0:
+        return 0.00
+
+    if alpha == 1:
+        rslt = np.log(x)
+    else:
+        rslt = (x ** (1 - alpha)) / (1 - alpha)
+    return rslt
 
 
 def multiattribute_utility(alpha, beta, eta, x, y):
