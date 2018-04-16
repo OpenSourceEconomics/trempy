@@ -26,9 +26,9 @@ np.seterr(divide='raise', over='raise', invalid='raise', under='ignore')
 # We need to impose some bounds on selected estimation parameters. The bounds are included in the
 # package's admissible values. We need to make sure that zero is an admissible value.
 DEFAULT_BOUNDS = dict()
-DEFAULT_BOUNDS['alpha'] = [0.00, 2]
-DEFAULT_BOUNDS['beta'] = [0.00, 0.99]
-DEFAULT_BOUNDS['eta'] = [0.00, 0.99]
+DEFAULT_BOUNDS['alpha'] = [-5.00, 5.00]
+DEFAULT_BOUNDS['beta'] = [0.00, 5.00]
+DEFAULT_BOUNDS['eta'] = [0.00, 1.00]
 
 for q in QUESTIONS_ALL:
     DEFAULT_BOUNDS[q] = [0.01, 100]

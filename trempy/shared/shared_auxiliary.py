@@ -9,6 +9,7 @@ import numpy as np
 
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
+from trempy.record.clsLogger import logger_obj
 from trempy.config_trempy import TINY_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
@@ -22,7 +23,6 @@ def criterion_function(df, questions, cutoffs, *args):
     m_optimal = get_optimal_compensations(questions, alpha, beta, eta)
 
     contribs = []
-
     for i, q in enumerate(questions):
         df_subset = df.loc[(slice(None), q), "Compensation"].copy().to_frame('Compensation')
         lower, upper = cutoffs[q]
@@ -174,6 +174,9 @@ def single_attribute_utility(alpha, x):
         rslt = np.log(x)
     else:
         rslt = (x ** (1 - alpha)) / (1 - alpha)
+
+    rslt += 100000
+
     return rslt
 
 
@@ -181,7 +184,14 @@ def multiattribute_utility(alpha, beta, eta, x, y):
     """This function calculates the multiattribute utility."""
     u_x = single_attribute_utility(alpha, x)
     u_y = single_attribute_utility(alpha, y)
-    return ((u_x + beta * u_y) ** (1 - eta)) / (1 - eta)
+
+    arg = ((u_x + beta * u_y) ** (1 - eta)) / (1 - eta)
+    if eta == 1:
+        rslt = np.log(arg)
+    else:
+        rslt = arg
+
+    return rslt
 
 
 def expected_utility_a(alpha, beta, eta, lottery):
@@ -305,17 +315,32 @@ def expected_utility_b(alpha, beta, eta, lottery, m):
 def determine_optimal_compensation(alpha, beta, eta, lottery):
     """This function determine the optimal compensation that ensures the equality of the expected
     utilities."""
-    def comp_criterion_function(alpha, beta, eta, lottery, m):
+    def comp_criterion_function(alpha, beta, eta, lottery, version, m):
         """Criterion function for the root-finding function."""
         stat_a = expected_utility_a(alpha, beta, eta, lottery)
         stat_b = expected_utility_b(alpha, beta, eta, lottery, m)
-        return stat_a - stat_b
 
-    crit_func = partial(comp_criterion_function, alpha, beta, eta, lottery)
+        if version == 'brenth':
+            stat = stat_a - stat_b
+        elif version == 'grid':
+            stat = (stat_a - stat_b) ** 2
+        else:
+            raise NotImplementedError
+        return stat
 
-    rslt = optimize.brenth(crit_func, 0, 100)
+    # For some parametrization our first choice fails as f(a) and f(b) must have different
+    # signs. If that is the case, we use a simple grid search as backup.
+    try:
+        crit_func = partial(comp_criterion_function, alpha, beta, eta, lottery, 'brenth')
+        m_opt = optimize.brenth(crit_func, 0, 100)
+    except ValueError:
+        crit_func = partial(comp_criterion_function, alpha, beta, eta, lottery, 'grid')
+        crit_func = np.vectorize(crit_func)
+        grid = np.linspace(0, 100, num=5000, endpoint=True)
+        m_opt = grid[np.argmin(crit_func(grid))]
+        logger_obj.record_event(2)
 
-    return rslt
+    return m_opt
 
 
 def dist_class_attributes(model_obj, *args):

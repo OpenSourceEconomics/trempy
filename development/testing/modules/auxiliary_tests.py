@@ -114,12 +114,12 @@ def send_notification(which, **kwargs):
     hostname = socket.gethostname()
 
     if which == 'property':
-        subject = ' INTERALPY: Property Testing'
+        subject = ' TREMPY: Property Testing'
         message = ' A ' + hours + ' hour run of the testing battery on @' + hostname + \
                   ' is completed.'
 
     elif which == 'robustness':
-        subject = ' INTERALPY: Robustness Testing'
+        subject = ' TREMPY: Robustness Testing'
         if not is_failed:
             message = ' A ' + hours + ' hour run of the testing battery on @' + hostname + \
                       ' is completed. In total we ran ' + num_tests + ' tests.'
@@ -128,7 +128,7 @@ def send_notification(which, **kwargs):
             message = ' Failure during robustness testing on @' + hostname + ' for test ' + \
                       seed + ' failed.'
     elif which == 'regression':
-        subject = ' INTERALPY: Regression Testing'
+        subject = ' TREMPY: Regression Testing'
         if is_failed:
             message = 'Failure during regression testing on @' + hostname + ' for test ' + \
                       count + '.'
