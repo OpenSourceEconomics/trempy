@@ -7,4 +7,4 @@
 #PBS -M eisenhauer@policy-lab.org
 
 cd $PBS_O_WORKDIR
-~/.envs/interalpy/bin/python run.py 
+~/.envs/trempy/bin/python run.py 
