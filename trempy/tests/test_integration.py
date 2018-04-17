@@ -38,7 +38,13 @@ def test_2():
 
 
 def test_3():
-    """This test runs flake8 to ensure the code quality."""
+    """This test runs flake8 to ensure the code quality. However, this is only relevant during
+    development."""
+    try:
+        import flake8    # noqa: F401
+    except ImportError:
+        return None
+
     cwd = os.getcwd()
     os.chdir(PACKAGE_DIR)
     try:
