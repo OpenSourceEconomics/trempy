@@ -7,4 +7,4 @@
 #PBS -M eisenhauer@policy-lab.org
 
 cd $PBS_O_WORKDIR
-~/.envs/trempy/bin/python run.py --request run --hours 15
+~/.envs/trempy/bin/python run.py --request run --hours 0.1
