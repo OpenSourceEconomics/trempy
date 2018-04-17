@@ -1,4 +1,4 @@
-"""This module constain functions that are used throughout the package."""
+"""This module contains functions that are used throughout the package."""
 from functools import partial
 import string
 import copy
@@ -186,7 +186,14 @@ def multiattribute_utility(alpha, beta, eta, x, y):
     u_x = single_attribute_utility(alpha, x)
     u_y = single_attribute_utility(alpha, y)
 
-    arg = ((beta * u_x + (1 - beta) * u_y) ** (1 - eta)) / (1 - eta)
+    # In a very small number of cases a FloatingPointError is raised. This is not well understood
+    # at this point and need to be revisited.
+    try:
+        arg = ((beta * u_x + (1.0 - beta) * u_y) ** (1.0 - eta)) / (1.0 - eta)
+    except FloatingPointError:
+        logger_obj.record_event(3)
+        arg = 0.0
+
     if eta == 1:
         rslt = np.log(arg)
     else:

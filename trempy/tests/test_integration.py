@@ -1,8 +1,13 @@
 """This module contains some integration tests."""
+from subprocess import CalledProcessError
+import subprocess
+import os
+
 import numpy as np
 
 from trempy.tests.test_auxiliary import get_random_init
 from trempy.tests.test_auxiliary import get_rmse
+from trempy.config_trempy import PACKAGE_DIR
 from trempy import simulate
 from trempy import estimate
 
@@ -30,3 +35,15 @@ def test_2():
         simulate('test.trempy.ini')
         estimate('test.trempy.ini')
         np.testing.assert_equal(get_rmse(), 0.0)
+
+
+def test_3():
+    """This test runs flake8 to ensure the code quality."""
+    cwd = os.getcwd()
+    os.chdir(PACKAGE_DIR)
+    try:
+        subprocess.check_call(['flake8'])
+        os.chdir(cwd)
+    except CalledProcessError:
+        os.chdir(cwd)
+        raise CalledProcessError
