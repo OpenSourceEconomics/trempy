@@ -105,5 +105,3 @@ def finish(rslt):
         outfile.write(string.format(*['Total', num_success]))
 
         outfile.write('\n TERMINATED')
-
-

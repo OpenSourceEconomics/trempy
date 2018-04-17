@@ -46,7 +46,7 @@ def random_dict(constr):
     # We start with sampling all preference parameters.
     dict_['PREFERENCES'] = dict()
     for i, label in enumerate(['alpha', 'beta', 'eta']):
-         dict_['PREFERENCES'][label] = [values[i], is_fixed[i], bounds[i]]
+        dict_['PREFERENCES'][label] = [values[i], is_fixed[i], bounds[i]]
 
     # It is time to sample the questions.
     dict_['QUESTIONS'] = dict()

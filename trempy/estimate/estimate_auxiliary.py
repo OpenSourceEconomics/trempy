@@ -32,8 +32,6 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
         return value
 
-    x_econ_free_start = []
-
     def _criterion_function(questions, m_optimal_obs, start_fixed, start_utility_paras, paras):
         """This will be the criterion function."""
         utility_cand = []
@@ -50,7 +48,7 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
         # We need to ensure that we only compare values if the mean is not missing.
         np_stats = np.tile(np.nan, (len(questions), 2))
-        for i, q in enumerate(questions):
+        for i, _ in enumerate(questions):
             np_stats[i, :] = [m_optimal_obs[i], m_optimal_cand[i]]
         np_stats = np_stats[~np.isnan(np_stats).any(axis=1)]
 
@@ -58,13 +56,23 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
         return stat
 
-    # TODO: Cleanup
+    # During testing it might occur that we in fact run an estimation on a dataset that does not
+    # contain any interior observations for any question. This results in a failure of the
+    # automatic determination of the starting values and is thus ruled out here from the
+    # beginning. In that case, we simply use the starting values from the initialization file.
+    cond = df_obs['Compensation'].isin([NEVER_SWITCHERS])
+    if df_obs['Compensation'].mask(cond).isnull().all():
+        return paras_obj
+
+    # We first get the observed average compensation from the data.
     m_optimal_obs = []
     for q in questions:
         df_mask = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
         m_optimal_obs += [df_mask.loc[slice(None), q].mean()]
     m_optimal_obs = np.array(m_optimal_obs)
 
+    # Now we gather information about the utility parameters and prepare for the interface to the
+    # optimization algorithm.
     start_utility_paras = paras_obj.get_values('econ', 'all')[:3]
     start_paras, start_bounds, start_fixed = [], [], []
     for label in ['alpha', 'beta', 'eta']:
@@ -76,11 +84,12 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
         start_paras += [value]
         start_bounds += [bounds]
 
+    # We minimize the squared distance between the observed and theoretical average compensations.
     func = partial(_criterion_function, questions, m_optimal_obs, start_fixed, start_utility_paras)
-    opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)
+    utility_opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)['x'].tolist()
 
-    utility_opt = opt['x'].tolist()
-
+    # We construct the relevant set of free economic starting values.
+    x_econ_free_start = []
     for label in ['alpha', 'beta', 'eta'] + questions:
         value, is_fixed, bounds = paras_obj.get_para(label)
 
@@ -90,9 +99,10 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
             if label in ['alpha', 'beta', 'eta']:
                 x_econ_free_start += [_adjust_bounds(utility_opt.pop(0), bounds)]
             else:
-                df_mask = df_obs['Compensation'].mask(df_obs['Compensation'] == NEVER_SWITCHERS)
-                value = df_mask.loc[slice(None), label].std()
-                # If there are no individuals observed without truncation we start with 0.1.
+                cond = df_obs['Compensation'].isin([NEVER_SWITCHERS])
+                value = df_obs['Compensation'].mask(cond).loc[slice(None), label].std()
+                # If there are no individuals observed without truncation for a particular
+                # question, we start with 0.1.
                 if pd.isnull(value):
                     x_econ_free_start += [_adjust_bounds(0.1, bounds)]
                 else:
@@ -141,23 +151,21 @@ def compare_datasets(which, df_obs, questions):
     parameter vector."""
     df_sim = pd.read_pickle(which + '.trempy.pkl')
 
-    df_sim_masked = df_sim['Compensation'].mask(df_sim['Compensation'] == NEVER_SWITCHERS)
-    df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'] == NEVER_SWITCHERS)
+    df_sim_masked = df_sim['Compensation'].mask(df_sim['Compensation'].isin([NEVER_SWITCHERS]))
+    df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
 
     stats = dict()
     stats['sim'] = dict()
     for q in questions:
         num_obs = df_sim.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stats['sim'][q] = [num_obs] + df_sim_masked.loc[slice(None), slice(q, q)].describe(
-
-        ).tolist()
+        stat = df_sim_masked.loc[slice(None), slice(q, q)].describe().tolist()
+        stats['sim'][q] = [num_obs] + stat
 
     stats['obs'] = dict()
     for q in questions:
         num_obs = df_obs.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stats['obs'][q] = [num_obs] + df_obs_masked.loc[slice(None), slice(q, q)].describe(
-
-        ).tolist()
+        stat = df_obs_masked.loc[slice(None), slice(q, q)].describe().tolist()
+        stats['obs'][q] = [num_obs] + stat
 
     with open('compare.trempy.info', 'w') as outfile:
 
@@ -204,8 +212,14 @@ def compare_datasets(which, df_obs, questions):
                 np_stats[i, j] = stats[label][q][2]
         np_stats = np_stats[~np.isnan(np_stats).any(axis=1)]
 
-        rmse = get_rmse(*np_stats.T)
-        line = '{:>15}'.format('RMSE') + '{:15.5f}\n'.format(rmse)
+        # During testing it might occur that there are no interior observations for any
+        # questions.
+        if np_stats.size == 0:
+            rmse = '---'
+        else:
+            rmse = '{:15.5f}\n'.format(get_rmse(*np_stats.T))
+
+        line = '{:>15}'.format('RMSE') + '{:>15}\n'.format(rmse)
         outfile.write(line)
 
 

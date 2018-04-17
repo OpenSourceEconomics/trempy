@@ -116,7 +116,7 @@ class EstimateClass(BaseCls):
 
         # Update class attributes
         with open('est.trempy.info', 'w') as outfile:
-            fmt_ = ' {:>10}    ' + '{:<10}    ' +'{:>25}    ' * 3
+            fmt_ = ' {:>10}    ' + '{:<10}    ' + '{:>25}    ' * 3
 
             # Write out information about criterion function
             outfile.write('\n {:<25}\n\n'.format('Criterion Function'))
@@ -151,7 +151,7 @@ class EstimateClass(BaseCls):
             outfile.write(fmt_.format(char_floats(self.attr['f_current'])[0]))
 
             fmt_ = ' {:>10}   ' + '{:<10}   ' + '{:>25}    ' * 2
-            line = ['Identifier','Label', 'Economic', 'Optimizer']
+            line = ['Identifier', 'Label', 'Economic', 'Optimizer']
             outfile.write(fmt_.format(*line) + '\n\n')
 
             for i, _ in enumerate(range(len(questions) + 3)):
@@ -165,7 +165,7 @@ class EstimateClass(BaseCls):
         # We can determine the estimation if the number of requested function evaluations is
         # reached or the user requests a stop.
         is_finish = (self.attr['max_eval'] == self.attr['num_eval']) and (self.attr['max_eval'] > 1)
-        is_stop =  os.path.exists('.stop.trempy.scratch')
+        is_stop = os.path.exists('.stop.trempy.scratch')
         if is_finish:
             raise MaxfunError
         if is_stop:
@@ -183,5 +183,3 @@ class EstimateClass(BaseCls):
             outfile.write('\n Message    {:<25}'.format(opt['message']))
             outfile.write('\n Success    {:<25}'.format(str(opt['success'])))
             outfile.write('\n')
-
-

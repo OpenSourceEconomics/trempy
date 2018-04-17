@@ -57,7 +57,7 @@ def process_command_line_arguments(which):
         is_request, is_test, is_update = True, True, True
     elif which == 'property':
         msg = 'Property testing of package'
-        is_request , is_seed, is_hours = True, True, True
+        is_request, is_seed, is_hours = True, True, True
     else:
         raise NotImplementedError
 

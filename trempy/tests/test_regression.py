@@ -22,8 +22,8 @@ def run_regression_test(test):
     df = simulate('test.trempy.ini')
 
     # Distribute class attributes for further processing.
-    paras_obj, questions, cutoffs = dist_class_attributes(model_obj, 'paras_obj', "questions",
-        'cutoffs')
+    args = [model_obj, 'paras_obj', "questions", 'cutoffs']
+    paras_obj, questions, cutoffs = dist_class_attributes(*args)
 
     x_econ_all = paras_obj.get_values('econ', 'all')
     stat = criterion_function(df, questions, cutoffs, *x_econ_all)
@@ -33,7 +33,6 @@ def run_regression_test(test):
 
 def test_1():
     """This test simply runs a small sample of the regression test battery."""
-    tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb') )
-
+    tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb'))
     for test in tests[:5]:
         run_regression_test(test)

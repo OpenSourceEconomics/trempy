@@ -121,9 +121,12 @@ class ModelCls(BaseCls):
     def _check_integrity(self):
         """This method checks the integrity of the class instance."""
         # Distribute class attributes for further processing.
-        paras_obj, sim_seed, sim_agents, sim_file, est_agents, maxfun, est_file, \
-            questions, start = dist_class_attributes(self, 'paras_obj', 'sim_seed', 'sim_agents',
-            'sim_file', 'est_agents', 'maxfun', 'est_file', 'questions', 'start')
+        args = []
+        args += ['paras_obj', 'sim_seed', 'sim_agents', 'sim_file', 'est_agents', 'maxfun']
+        args += ['est_file', 'questions', 'start']
+
+        paras_obj, sim_seed, sim_agents, sim_file, est_agents, maxfun, est_file, questions, \
+            start = dist_class_attributes(self, *args)
 
         # We restrict the identifiers for the questions between 1 and 16
         np.testing.assert_equal(0 < min(questions) <= max(questions) < 16, True)

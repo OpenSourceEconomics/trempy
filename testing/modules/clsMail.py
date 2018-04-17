@@ -26,8 +26,6 @@ import copy
 import json
 import os
 
-from trempy.custom_exceptions import TrempyError
-
 
 class MailCls(object):
     """ This class is used to manage the sending of the notification after a

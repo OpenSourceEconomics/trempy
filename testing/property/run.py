@@ -27,7 +27,7 @@ def choose_module(inp_dict):
     for module in inp_dict.keys():
         prob_dist = np.append(prob_dist, len(inp_dict[module]))
     prob_dist = prob_dist / np.sum(prob_dist)
-    return np.random.choice(list(inp_dict.keys()),p=prob_dist)
+    return np.random.choice(list(inp_dict.keys()), p=prob_dist)
 
 
 def run(args):
@@ -47,9 +47,8 @@ def run(args):
     if args['is_check']:
         np.random.seed(args['seed'])
         module = choose_module(test_dict)
-        test = np.random.choice(test_dict[module])      
+        test = np.random.choice(test_dict[module])
         run_property_test(module, test)
-
 
     else:
         err_msg = []
@@ -66,7 +65,7 @@ def run(args):
             np.random.seed(seed)
             module = choose_module(test_dict)
             test = np.random.choice(test_dict[module])
-            
+
             try:
                 run_property_test(module, test, dirname)
                 rslt[module][test][0] += 1

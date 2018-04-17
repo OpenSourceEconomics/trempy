@@ -15,8 +15,9 @@ def simulate(fname):
 
     model_obj = ModelCls(fname)
 
-    sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = dist_class_attributes(model_obj,
-        'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs')
+    args = []
+    args += [model_obj, 'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs']
+    sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = dist_class_attributes(*args)
 
     np.random.seed(sim_seed)
 

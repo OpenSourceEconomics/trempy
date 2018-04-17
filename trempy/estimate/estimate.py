@@ -21,9 +21,12 @@ def estimate(fname):
 
     model_obj = ModelCls(fname)
 
+    args = []
+    args += [model_obj, 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs', 'maxfun']
+    args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents']
+
     est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
-        est_agents = dist_class_attributes(model_obj, 'est_file', 'questions', 'paras_obj',
-            'start', 'cutoffs', 'maxfun', 'est_detailed', 'opt_options', 'optimizer', 'est_agents')
+        est_agents = dist_class_attributes(*args)
 
     # Some initial setup
     df_obs = process(est_file, questions, est_agents, cutoffs)
@@ -59,7 +62,7 @@ def estimate(fname):
 
         try:
             opt = minimize(estimate_obj.evaluate, x_optim_free_start, method=method,
-                options=options)
+                           options=options)
         except MaxfunError:
             opt = dict()
             opt['message'] = 'Optimization reached maximum number of function evaluations.'

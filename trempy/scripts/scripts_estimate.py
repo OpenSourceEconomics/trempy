@@ -30,4 +30,3 @@ if __name__ == '__main__':
     args = process_command_line_arguments('estimate')
 
     run(args)
-

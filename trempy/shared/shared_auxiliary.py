@@ -175,6 +175,7 @@ def single_attribute_utility(alpha, x):
     else:
         rslt = (x ** (1 - alpha)) / (1 - alpha)
 
+    # This scaling rules out problems with negative utility levels.
     rslt += 100000
 
     return rslt
@@ -185,7 +186,7 @@ def multiattribute_utility(alpha, beta, eta, x, y):
     u_x = single_attribute_utility(alpha, x)
     u_y = single_attribute_utility(alpha, y)
 
-    arg = ((u_x + beta * u_y) ** (1 - eta)) / (1 - eta)
+    arg = ((beta * u_x + (1 - beta) * u_y) ** (1 - eta)) / (1 - eta)
     if eta == 1:
         rslt = np.log(arg)
     else:

@@ -44,6 +44,3 @@ if request['robustness']['run']:
     cmd = PYTHON_EXEC + ' run.py --request run --hours ' + str(request['robustness']['hours'])
     subprocess.check_call(cmd, shell=True)
     os.chdir('../')
-
-
-

@@ -24,15 +24,15 @@ def process_command_line_arguments(which):
 
     if is_single:
         parser.add_argument('--single', action='store_true', dest='is_single', required=False,
-            help='single evaluation at starting values')
+                            help='single evaluation at starting values')
 
     if is_init:
         parser.add_argument('--init', action='store', dest='init', type=str,
-            help='initialization file', default='model.trempy.ini')
+                            help='initialization file', default='model.trempy.ini')
 
     if is_start:
         parser.add_argument('--start', action='store', dest='start', help='starting values',
-            choices=['auto', 'init'])
+                            choices=['auto', 'init'])
 
     return parser.parse_args()
 
