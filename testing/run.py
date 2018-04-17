@@ -9,11 +9,11 @@ request = dict()
 
 request['property'] = dict()
 request['property']['run'] = True
-request['property']['hours'] = 0.01
+request['property']['hours'] = 12
 
 request['regression'] = dict()
 request['regression']['run'] = True
-request['regression']['tests'] = 1
+request['regression']['tests'] = 1000
 
 ####################################################################################################
 ####################################################################################################
