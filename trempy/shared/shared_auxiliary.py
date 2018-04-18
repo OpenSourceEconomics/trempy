@@ -175,9 +175,6 @@ def single_attribute_utility(alpha, x):
     else:
         rslt = (x ** (1 - alpha)) / (1 - alpha)
 
-    # This scaling rules out problems with negative utility levels.
-    rslt += 100000
-
     return rslt
 
 
