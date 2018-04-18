@@ -114,7 +114,9 @@ def get_rmse():
     with open('compare.trempy.info') as in_file:
         for line in in_file.readlines():
             if 'RMSE' in line:
-                stat = float(shlex.split(line)[1])
+                stat = shlex.split(line)[1]
+                if stat in ['---']:
+                    stat = float(stat)
                 return stat
 
 
