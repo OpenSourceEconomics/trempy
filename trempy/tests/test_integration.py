@@ -34,7 +34,14 @@ def test_2():
         get_random_init(constr)
         simulate('test.trempy.ini')
         estimate('test.trempy.ini')
-        np.testing.assert_equal(get_rmse(), 0.0)
+        stat = get_rmse()
+
+        # In a number of rare instances, we might not have any interior observations for any
+        # questions.
+        if stat in ['---']:
+            pass
+        else:
+            np.testing.assert_equal(stat, 0.0)
 
 
 def test_3():
