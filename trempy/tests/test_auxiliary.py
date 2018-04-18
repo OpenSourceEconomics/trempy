@@ -115,7 +115,7 @@ def get_rmse():
         for line in in_file.readlines():
             if 'RMSE' in line:
                 stat = shlex.split(line)[1]
-                if stat in ['---']:
+                if stat not in ['---']:
                     stat = float(stat)
                 return stat
 
