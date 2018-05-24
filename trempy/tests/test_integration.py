@@ -21,30 +21,6 @@ def test_1():
 
 
 def test_2():
-    """This test ensures that using the same initialization file for a simulation and a single
-    evaluation of the criterion function result in the very same simulated sample at the stop of
-    the estimation."""
-    constr = dict()
-    constr['num_agents'] = np.random.randint(2, 10)
-    constr['detailed'] = 'True'
-    constr['start'] = 'init'
-    constr['maxfun'] = 1
-
-    for _ in range(5):
-        get_random_init(constr)
-        simulate('test.trempy.ini')
-        estimate('test.trempy.ini')
-        stat = get_rmse()
-
-        # In a number of rare instances, we might not have any interior observations for any
-        # questions.
-        if stat in ['---']:
-            pass
-        else:
-            np.testing.assert_equal(stat, 0.0)
-
-
-def test_3():
     """This test runs flake8 to ensure the code quality. However, this is only relevant during
     development."""
     try:
