@@ -176,153 +176,103 @@ def format_coefficient_line(label_internal, info, str_):
     return line, str_
 
 
-def single_attribute_utility(alpha, x):
-    """This function calculates the state utility."""
-    # We need to ensure that zero is not raised to a negative number.
-    if x == 0.0:
-        return 0.00
-
-    if alpha == 1:
-        rslt = np.log(x)
-    else:
-        rslt = (x ** (1 - alpha)) / (1 - alpha)
-
-    return rslt
-
-
-def multiattribute_utility(alpha, beta, eta, x, y):
-    """This function calculates the multiattribute utility."""
-    u_x = single_attribute_utility(alpha, x)
-    u_y = single_attribute_utility(alpha, y)
-
-    # In a very small number of cases a FloatingPointError is raised. This is not well understood
-    # at this point and need to be revisited.
-    try:
-        arg = ((beta * u_x + (1.0 - beta) * u_y) ** (1.0 - eta)) / (1.0 - eta)
-    except FloatingPointError:
-        logger_obj.record_event(3)
-        arg = 0.0
-
-    if eta == 1:
-        rslt = np.log(arg)
-    else:
-        rslt = arg
-
-    return rslt
-
-
-def expected_utility_a(alpha, beta, eta, lottery):
+def expected_utility_a(copula, lottery):
     """This function calculates the expected utility for lottery A."""
     if lottery == 1:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 15, 0) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 20, 0)
+        rslt = 0.50 * copula.evaluate(15, 0) + 0.50 * copula.evaluate(20, 0)
     elif lottery == 2:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 40, 0)
+        rslt = 0.50 * copula.evaluate(30, 0) + 0.50 * copula.evaluate(40, 0)
     elif lottery == 3:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 60, 0) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 80, 0)
+        rslt = 0.50 * copula.evaluate(60, 0) + 0.50 * copula.evaluate(80, 0)
     elif lottery == 4:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 15) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 20)
+        rslt = 0.50 * copula.evaluate(0, 15) + 0.50 * copula.evaluate(0, 20)
     elif lottery == 5:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 40)
+        rslt = 0.50 * copula.evaluate(0, 30) + 0.50 * copula.evaluate(0, 40)
     elif lottery == 6:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 60) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 80)
+        rslt = 0.50 * copula.evaluate(0, 60) + 0.50 * copula.evaluate(0, 80)
     elif lottery == 7:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 15, 25) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 25, 15)
+        rslt = 0.50 * copula.evaluate(15, 25) + 0.50 * copula.evaluate(25, 15)
     elif lottery == 8:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 50) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 50, 30)
+        rslt = 0.50 * copula.evaluate(30, 50) + 0.50 * copula.evaluate(50, 30)
     elif lottery == 9:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 60, 100) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 100, 60)
+        rslt = 0.50 * copula.evaluate(60, 100) + 0.50 * copula.evaluate(100, 60)
     elif lottery == 10:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
-               0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 54, 0) +
-                       0.50 * multiattribute_utility(alpha, beta, eta, 26, 0))
+        rslt = 0.50 * copula.evaluate(30, 0) + \
+               0.50 * (0.50 * copula.evaluate(54, 0) + 0.50 * copula.evaluate(26, 0))
     elif lottery == 11:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
-               0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 47, 0) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 12, 0))
+        rslt = 0.50 * copula.evaluate(30, 0) + \
+               0.50 * (0.80 * copula.evaluate(47, 0) + 0.20 * copula.evaluate(12, 0))
     elif lottery == 12:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30, 0) + \
-               0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 33, 0) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 68, 0))
+        rslt = 0.50 * copula.evaluate(30, 0) + \
+               0.50 * (0.80 * copula.evaluate(33, 0) + 0.20 * copula.evaluate(68, 0))
     elif lottery == 13:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
-               0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 0, 54) +
-                       0.50 * multiattribute_utility(alpha, beta, eta, 0, 26))
+        rslt = 0.50 * copula.evaluate(0, 30) + \
+               0.50 * (0.50 * copula.evaluate(0, 54) + 0.50 * copula.evaluate(0, 26))
     elif lottery == 14:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
-               0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 47) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 0, 12))
+        rslt = 0.50 * copula.evaluate(0, 30) + \
+               0.50 * (0.80 * copula.evaluate(0, 47) + 0.20 * copula.evaluate(0, 12))
     elif lottery == 15:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 30) + \
-               0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 33) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 0, 68))
+        rslt = 0.50 * copula.evaluate(0, 30) + \
+               0.50 * (0.80 * copula.evaluate(0, 33) + 0.20 * copula.evaluate(0, 68))
     else:
         raise AssertionError
 
     return rslt
 
 
-def expected_utility_b(alpha, beta, eta, lottery, m):
+def expected_utility_b(copula, lottery, m):
     """This function calculates the expected utility for lottery B."""
     if lottery == 1:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 10 + m, 0) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 25 + m, 0)
+        rslt = 0.50 * copula.evaluate(10 + m, 0) + \
+               0.50 * copula.evaluate(25 + m, 0)
     elif lottery == 2:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 20 + m, 0) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 50 + m, 0)
+        rslt = 0.50 * copula.evaluate(20 + m, 0) + \
+               0.50 * copula.evaluate(50 + m, 0)
     elif lottery == 3:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 100 + m, 0)
+        rslt = 0.50 * copula.evaluate(40 + m, 0) + \
+               0.50 * copula.evaluate(100 + m, 0)
     elif lottery == 4:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 10 + m) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 25 + m)
+        rslt = 0.50 * copula.evaluate(0, 10 + m) + \
+               0.50 * copula.evaluate(0, 25 + m)
     elif lottery == 5:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 20 + m) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 50 + m)
+        rslt = 0.50 * copula.evaluate(0, 20 + m) + \
+               0.50 * copula.evaluate(0, 50 + m)
     elif lottery == 6:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 100 + m)
+        rslt = 0.50 * copula.evaluate(0, 40 + m) + \
+               0.50 * copula.evaluate(0, 100 + m)
     elif lottery == 7:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 15 + m, 15) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 25 + m, 25)
+        rslt = 0.50 * copula.evaluate(15 + m, 15) + \
+               0.50 * copula.evaluate(25 + m, 25)
     elif lottery == 8:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 30 + m, 30) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 50 + m, 50)
+        rslt = 0.50 * copula.evaluate(30 + m, 30) + \
+               0.50 * copula.evaluate(50 + m, 50)
     elif lottery == 9:
-        rslt = 0.50 * multiattribute_utility(alpha, beta, eta, 60 + m, 60) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 100 + m, 100)
+        rslt = 0.50 * copula.evaluate(60 + m, 60) + \
+               0.50 * copula.evaluate(100 + m, 100)
     elif lottery == 10:
-        rslt = 0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 44 + m, 0) +
-                       0.50 * multiattribute_utility(alpha, beta, eta, 16 + m, 0)) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0)
+        rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0) +
+                       0.50 * copula.evaluate(16 + m, 0)) + \
+               0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 11:
-        rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 37 + m, 0) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 2 + m, 0)) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0)
+        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0) +
+                       0.20 * copula.evaluate(2 + m, 0)) + \
+               0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 12:
-        rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 23 + m, 0) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 58 + m, 0)) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 40 + m, 0)
+        rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0) +
+                       0.20 * copula.evaluate(58 + m, 0)) + \
+               0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 13:
-        rslt = 0.50 * (0.50 * multiattribute_utility(alpha, beta, eta, 0, 44 + m) +
-                       0.50 * multiattribute_utility(alpha, beta, eta, 0, 16 + m)) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m)
+        rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m) +
+                       0.50 * copula.evaluate(0, 16 + m)) + \
+               0.50 * copula.evaluate(0, 40 + m)
     elif lottery == 14:
-        rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 37 + m) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 0, 2 + m)) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m)
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m) +
+                       0.20 * copula.evaluate(0, 2 + m)) + \
+               0.50 * copula.evaluate(0, 40 + m)
     elif lottery == 15:
-        rslt = 0.50 * (0.80 * multiattribute_utility(alpha, beta, eta, 0, 23 + m) +
-                       0.20 * multiattribute_utility(alpha, beta, eta, 0, 58 + m)) + \
-               0.50 * multiattribute_utility(alpha, beta, eta, 0, 40 + m)
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m) +
+                       0.20 * copula.evaluate(0, 58 + m)) + \
+               0.50 * copula.evaluate(0, 40 + m)
     else:
         raise AssertionError
 
