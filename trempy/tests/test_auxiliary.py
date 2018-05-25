@@ -5,6 +5,7 @@ import numpy as np
 
 from trempy.shared.shared_auxiliary import get_random_string
 from trempy.shared.shared_auxiliary import print_init_dict
+from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.custom_exceptions import TrempyError
 from trempy.config_trempy import DEFAULT_BOUNDS
 from trempy.config_trempy import HUGE_FLOAT
@@ -24,6 +25,7 @@ def random_dict(constr):
     dict_ = dict()
 
     # Initial setup to ensure constraints across options.
+    upper_bounds = np.random.random_integers(10, 200, 2)
     num_questions = np.random.randint(2, 14)
     sim_agents = np.random.randint(2, 10)
     fname = get_random_string()
@@ -36,17 +38,26 @@ def random_dict(constr):
         is_fixed[0] = 'False'
 
     bounds = list()
-    for label in ['alpha', 'beta', 'eta']:
+    for label in PREFERENCE_PARAMETERS:
         bounds += [get_bounds(label)]
 
     values = list()
-    for i, label in enumerate(['alpha', 'beta', 'eta']):
+    for i, label in enumerate(PREFERENCE_PARAMETERS):
         values += [get_value(bounds[i], label)]
 
     # We start with sampling all preference parameters.
-    dict_['PREFERENCES'] = dict()
-    for i, label in enumerate(['alpha', 'beta', 'eta']):
-        dict_['PREFERENCES'][label] = [values[i], is_fixed[i], bounds[i]]
+    dict_['UNIATTRIBUTE SELF'], i = dict(), 0
+    dict_['UNIATTRIBUTE SELF']['r_self'] = [values[i], is_fixed[i], bounds[i]]
+    dict_['UNIATTRIBUTE SELF']['max'] = upper_bounds[i]
+
+    dict_['UNIATTRIBUTE OTHER'], i = dict(), 1
+    dict_['UNIATTRIBUTE OTHER']['r_other'] = [values[i], is_fixed[i], bounds[i]]
+    dict_['UNIATTRIBUTE OTHER']['max'] = upper_bounds[i]
+
+    dict_['MULTIATTRIBUTE COPULA'] = dict()
+    for i, label in enumerate(['delta', 'self', 'other']):
+        j = i + 2
+        dict_['MULTIATTRIBUTE COPULA'][label] = [values[j], is_fixed[j], bounds[j]]
 
     # It is time to sample the questions.
     dict_['QUESTIONS'] = dict()
@@ -124,10 +135,10 @@ def get_bounds(label):
     """This function returns a set of valid bounds tailored for each parameter."""
     wedge = float(np.random.uniform(0.03, 0.10))
 
-    if label in ['alpha', 'eta']:
-        lower = float(np.random.uniform(0.01, 0.98 - wedge))
+    if label in ['r_self', 'r_other']:
+        lower = float(np.random.uniform(-5.0, 5.0 - wedge))
         upper = lower + wedge
-    elif label in ['beta']:
+    elif label in ['delta', 'self', 'other']:
         lower = float(np.random.uniform(0.00, 0.98 - wedge))
         upper = lower + wedge
     elif label in range(1, 16):
@@ -151,7 +162,7 @@ def get_value(bounds, label):
     """This function returns a value for the parameter that honors the bounds."""
     lower, upper = bounds
 
-    if label in ['alpha', 'beta', 'eta']:
+    if label in PREFERENCE_PARAMETERS:
         value = float(np.random.uniform(lower + 0.01, upper - 0.01))
     else:
         upper = min(upper, 10)

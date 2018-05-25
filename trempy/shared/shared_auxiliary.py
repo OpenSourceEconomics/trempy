@@ -7,6 +7,7 @@ from scipy.stats import norm
 from scipy import optimize
 import numpy as np
 
+from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
 from trempy.record.clsLogger import logger_obj
@@ -64,8 +65,8 @@ def get_optimal_compensations(questions, alpha, beta, eta):
 def print_init_dict(dict_, fname='test.trempy.ini'):
     """This function prints an initialization dictionary."""
     keys = []
-    keys += ['PREFERENCES', 'QUESTIONS', 'CUTOFFS', 'SIMULATION', 'ESTIMATION']
-    keys += ['SCIPY-BFGS', 'SCIPY-POWELL']
+    keys += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA', 'QUESTIONS']
+    keys += ['CUTOFFS', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS', 'SCIPY-POWELL']
 
     questions = list(dict_['QUESTIONS'].keys())
     is_cutoffs = False
@@ -82,7 +83,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 info = dict_[key_][label]
 
                 str_ = '{:<10}'
-                if label in ['alpha', 'beta', 'eta'] + questions:
+                if label in PREFERENCE_PARAMETERS + questions:
                     str_ += ' {:25.4f} {:>5} '
                 else:
                     str_ += ' {:>25}\n'
@@ -90,7 +91,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 if label in ['detailed']:
                     info = str(info)
 
-                if label in ['alpha', 'beta', 'eta'] + questions and key_ != 'CUTOFFS':
+                if label in PREFERENCE_PARAMETERS + questions and key_ != 'CUTOFFS':
                     line, str_ = format_coefficient_line(label, info, str_)
                 elif key_ in ['CUTOFFS']:
                     line, str_ = format_cutoff_line(label, info)

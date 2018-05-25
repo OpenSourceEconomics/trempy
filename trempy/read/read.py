@@ -9,6 +9,10 @@ from trempy.config_trempy import DEFAULT_BOUNDS
 from trempy.config_trempy import QUESTIONS_ALL
 from trempy.config_trempy import HUGE_FLOAT
 
+ESTIMATION_GROUP = []
+ESTIMATION_GROUP += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
+ESTIMATION_GROUP += ['QUESTIONS']
+
 
 def read(fname):
     """This function reads the initialization file."""
@@ -33,7 +37,7 @@ def read(fname):
 
             # Prepare dictionary
             if is_group:
-                group = list_[0]
+                group = ' '.join(list_)
                 dict_[group] = {}
                 continue
 
@@ -49,7 +53,7 @@ def read(fname):
 
             # We need to allow for additional information about the potential estimation
             # parameters.
-            if group in ['PREFERENCES', 'QUESTIONS']:
+            if group in ESTIMATION_GROUP and flag not in ['max']:
                 dict_[group][flag] = process_coefficient_line(list_, value)
             elif group in ['CUTOFFS']:
                 dict_[group][flag] = process_cutoff_line(list_)
