@@ -25,7 +25,7 @@ def random_dict(constr):
     dict_ = dict()
 
     # Initial setup to ensure constraints across options.
-    upper_bounds = np.random.random_integers(10, 200, 2)
+    upper_bounds = np.random.random_integers(200, 300, 2)
     num_questions = np.random.randint(2, 14)
     sim_agents = np.random.randint(2, 10)
     fname = get_random_string()

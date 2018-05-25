@@ -13,16 +13,17 @@ from trempy.shared.clsBase import BaseCls
 
 class EstimateClass(BaseCls):
     """This class manages all issues about the model estimation."""
-    def __init__(self, df, cutoffs, questions, paras_obj, max_eval):
+    def __init__(self, df, cutoffs, upper, questions, paras_obj, max_eval):
 
         self.attr = dict()
 
         # Initialization attributes
         self.attr['paras_obj'] = paras_obj
-        self.attr['max_eval'] = max_eval
-        self.attr['df'] = df
-        self.attr['cutoffs'] = cutoffs
         self.attr['questions'] = questions
+        self.attr['max_eval'] = max_eval
+        self.attr['cutoffs'] = cutoffs
+        self.attr['upper'] = upper
+        self.attr['df'] = df
 
         # Housekeeping attributes
         self.attr['num_step'] = 0
@@ -44,15 +45,16 @@ class EstimateClass(BaseCls):
         """This method allows to evaluate the criterion function during an estimation"""
         # Distribute class attributes
         paras_obj = self.attr['paras_obj']
-        df = self.attr['df']
-        cutoffs = self.attr['cutoffs']
         questions = self.attr['questions']
+        cutoffs = self.attr['cutoffs']
+        upper = self.attr['upper']
+        df = self.attr['df']
 
         # Construct relevant set of parameters
         paras_obj.set_values('optim', 'free', x_optim_free_current)
         x_optim_all_current = paras_obj.get_values('optim', 'all')
         x_econ_all_current = paras_obj.get_values('econ', 'all')
-        fval = criterion_function(df, questions, cutoffs, *x_econ_all_current)
+        fval = criterion_function(df, questions, cutoffs, upper, *x_econ_all_current)
 
         self._update_evaluation(fval, x_econ_all_current, x_optim_all_current)
 

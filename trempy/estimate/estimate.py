@@ -23,15 +23,16 @@ def estimate(fname):
 
     args = []
     args += [model_obj, 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs', 'maxfun']
-    args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents']
+    args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents', 'upper']
 
     est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
-        est_agents = dist_class_attributes(*args)
+        est_agents, upper = dist_class_attributes(*args)
 
     # Some initial setup
     df_obs = process(est_file, questions, est_agents, cutoffs)
 
-    estimate_obj = EstimateClass(df_obs, cutoffs, questions, copy.deepcopy(paras_obj), maxfun)
+    args = [df_obs, cutoffs, upper, questions, copy.deepcopy(paras_obj), maxfun]
+    estimate_obj = EstimateClass(*args)
 
     # We lock in an evaluation at the starting values as not all optimizers actually start there.
     if start in ['auto']:

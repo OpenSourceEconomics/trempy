@@ -27,17 +27,20 @@ def create_regression_vault(num_tests):
 
         print('\n ... creating test ' + str(_))
 
+        constr = dict()
+        constr['maxfun'] = np.random.random_integers(1, 5)
+
         # Create and process initialization file
-        init_dict = get_random_init()
+        init_dict = get_random_init(constr)
         model_obj = ModelCls('test.trempy.ini')
         df = simulate('test.trempy.ini')
 
         # Distribute class attributes for further processing.
-        args = (model_obj, 'paras_obj', 'questions', 'cutoffs')
-        paras_obj, questions, cutoffs = dist_class_attributes(*args)
+        args = (model_obj, 'paras_obj', 'questions', 'cutoffs', 'upper')
+        paras_obj, questions, upper, cutoffs = dist_class_attributes(*args)
 
         x_econ_all = paras_obj.get_values('econ', 'all')
-        stat = criterion_function(df, questions, cutoffs, *x_econ_all)
+        stat = criterion_function(df, questions, upper, cutoffs, *x_econ_all)
 
         tests += [(init_dict, stat)]
 

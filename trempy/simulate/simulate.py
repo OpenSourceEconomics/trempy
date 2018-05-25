@@ -17,14 +17,16 @@ def simulate(fname):
 
     args = []
     args += [model_obj, 'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs']
-    sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = dist_class_attributes(*args)
+    args += ['upper']
+    sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs, upper = \
+        dist_class_attributes(*args)
 
     np.random.seed(sim_seed)
 
     # First, I simply determine the optimal compensations.
     r_self, r_other, delta, self, other = paras_obj.get_values('econ', 'all')[:5]
 
-    m_optimal = get_optimal_compensations(questions, r_self, r_other, delta, self, other)
+    m_optimal = get_optimal_compensations(questions, upper, r_self, r_other, delta, self, other)
 
     stands = paras_obj.get_values('econ', 'all')[3:]
 
@@ -54,7 +56,7 @@ def simulate(fname):
 
     x_econ_all_current = paras_obj.get_values('econ', 'all')
 
-    fval = criterion_function(df, questions, cutoffs, *x_econ_all_current)
+    fval = criterion_function(df, questions, cutoffs, upper, *x_econ_all_current)
 
     write_info(df, questions, fval, m_optimal, sim_file + '.trempy.info')
 
