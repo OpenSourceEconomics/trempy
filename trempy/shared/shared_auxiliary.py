@@ -7,6 +7,7 @@ from scipy.stats import norm
 from scipy import optimize
 import numpy as np
 
+from trempy.interface.interface_copulpy import get_copula
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
@@ -18,10 +19,10 @@ from trempy.config_trempy import HUGE_FLOAT
 def criterion_function(df, questions, cutoffs, *args):
     """This function calculates the likelihood of the observed sample."""
     # Distribute parameters
-    alpha, beta, eta = args[:3]
-    sds = args[3:]
+    r_self, r_other, delta, self, other = args[:5]
+    sds = args[5:]
 
-    m_optimal = get_optimal_compensations(questions, alpha, beta, eta)
+    m_optimal = get_optimal_compensations(questions, r_self, r_other, delta, self, other)
 
     contribs = []
     for i, q in enumerate(questions):
@@ -54,11 +55,13 @@ def criterion_function(df, questions, cutoffs, *args):
     return rslt
 
 
-def get_optimal_compensations(questions, alpha, beta, eta):
+def get_optimal_compensations(questions, r_self, r_other, delta, self, other):
     """This function returns the optimal compensations for all questions."""
+    copula = get_copula(r_self, r_other, delta, self, other)
+
     m_optimal = dict()
     for q in questions:
-        m_optimal[q] = determine_optimal_compensation(alpha, beta, eta, q)
+        m_optimal[q] = determine_optimal_compensation(copula, q)
     return m_optimal
 
 
@@ -279,13 +282,13 @@ def expected_utility_b(copula, lottery, m):
     return rslt
 
 
-def determine_optimal_compensation(alpha, beta, eta, lottery):
-    """This function determine the optimal compensation that ensures the equality of the expected
-    utilities."""
-    def comp_criterion_function(alpha, beta, eta, lottery, version, m):
+def determine_optimal_compensation(copula, lottery):
+    """This function determines the optimal compensation that ensures the equality of teh
+    expected utilities."""
+    def comp_criterion_function(copula, lottery, version, m):
         """Criterion function for the root-finding function."""
-        stat_a = expected_utility_a(alpha, beta, eta, lottery)
-        stat_b = expected_utility_b(alpha, beta, eta, lottery, m)
+        stat_a = expected_utility_a(copula, lottery)
+        stat_b = expected_utility_b(copula, lottery, m)
 
         if version == 'brenth':
             stat = stat_a - stat_b
@@ -298,12 +301,12 @@ def determine_optimal_compensation(alpha, beta, eta, lottery):
     # For some parametrization our first choice fails as f(a) and f(b) must have different
     # signs. If that is the case, we use a simple grid search as backup.
     try:
-        crit_func = partial(comp_criterion_function, alpha, beta, eta, lottery, 'brenth')
-        m_opt = optimize.brenth(crit_func, 0, 100)
+        crit_func = partial(comp_criterion_function, copula, lottery, 'brenth')
+        m_opt = optimize.brenth(crit_func, 0.00, 100)
     except ValueError:
-        crit_func = partial(comp_criterion_function, alpha, beta, eta, lottery, 'grid')
+        crit_func = partial(comp_criterion_function, copula, lottery, 'grid')
         crit_func = np.vectorize(crit_func)
-        grid = np.linspace(0, 100, num=5000, endpoint=True)
+        grid = np.linspace(0, 100, num=500, endpoint=True)
         m_opt = grid[np.argmin(crit_func(grid))]
         logger_obj.record_event(2)
 

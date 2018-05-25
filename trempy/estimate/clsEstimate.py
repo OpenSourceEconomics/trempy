@@ -5,6 +5,7 @@ from trempy.shared.shared_auxiliary import criterion_function
 from trempy.estimate.estimate_auxiliary import char_floats
 from trempy.record.clsLogger import logger_obj
 
+from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.custom_exceptions import MaxfunError
 from trempy.config_trempy import HUGE_FLOAT
 from trempy.shared.clsBase import BaseCls
@@ -35,7 +36,7 @@ class EstimateClass(BaseCls):
         self.attr['f_start'] = HUGE_FLOAT
         self.attr['f_step'] = HUGE_FLOAT
 
-        self.attr['paras_label'] = ['alpha', 'beta', 'eta'] + questions
+        self.attr['paras_label'] = PREFERENCE_PARAMETERS + questions
 
         self._logging_start()
 
@@ -128,7 +129,7 @@ class EstimateClass(BaseCls):
             outfile.write('\n {:<25}\n\n'.format('Economic Parameters'))
             line = ['Identifier', 'Label',  'Start', 'Step', 'Current']
             outfile.write(fmt_.format(*line) + '\n\n')
-            for i, _ in enumerate(range(len(questions) + 3)):
+            for i, _ in enumerate(range(len(questions) + 5)):
                 line = [i]
                 line += [para_labels[i]]
                 line += char_floats(self.attr['x_econ_all_start'][i])

@@ -11,6 +11,7 @@ import numpy as np
 
 from trempy.shared.shared_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import dist_class_attributes
+from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.simulate.simulate import simulate
 from trempy.config_trempy import SMALL_FLOAT
@@ -36,7 +37,7 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
         """This will be the criterion function."""
         utility_cand = []
         j = 0
-        for i in range(3):
+        for i in range(5):
             if start_fixed[i]:
                 utility_cand += [start_utility_paras[i]]
             else:
@@ -73,9 +74,9 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
     # Now we gather information about the utility parameters and prepare for the interface to the
     # optimization algorithm.
-    start_utility_paras = paras_obj.get_values('econ', 'all')[:3]
+    start_utility_paras = paras_obj.get_values('econ', 'all')[:5]
     start_paras, start_bounds, start_fixed = [], [], []
-    for label in ['alpha', 'beta', 'eta']:
+    for label in PREFERENCE_PARAMETERS:
         value, is_fixed, bounds = paras_obj.get_para(label)
         start_fixed += [is_fixed]
 
@@ -90,13 +91,13 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
     # We construct the relevant set of free economic starting values.
     x_econ_free_start = []
-    for label in ['alpha', 'beta', 'eta'] + questions:
+    for label in PREFERENCE_PARAMETERS + questions:
         value, is_fixed, bounds = paras_obj.get_para(label)
 
         if is_fixed:
             continue
         else:
-            if label in ['alpha', 'beta', 'eta']:
+            if label in PREFERENCE_PARAMETERS:
                 x_econ_free_start += [_adjust_bounds(utility_opt.pop(0), bounds)]
             else:
                 cond = df_obs['Compensation'].isin([NEVER_SWITCHERS])

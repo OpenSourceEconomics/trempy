@@ -24,9 +24,7 @@ def simulate(fname):
     # First, I simply determine the optimal compensations.
     r_self, r_other, delta, self, other = paras_obj.get_values('econ', 'all')[:5]
 
-    print(' ... optimal compenstation is next ')
-    return
-    m_optimal = get_optimal_compensations(questions, alpha, beta, eta)
+    m_optimal = get_optimal_compensations(questions, r_self, r_other, delta, self, other)
 
     stands = paras_obj.get_values('econ', 'all')[3:]
 
