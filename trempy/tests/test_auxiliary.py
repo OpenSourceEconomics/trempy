@@ -47,11 +47,11 @@ def random_dict(constr):
 
     # We start with sampling all preference parameters.
     dict_['UNIATTRIBUTE SELF'], i = dict(), 0
-    dict_['UNIATTRIBUTE SELF']['r_self'] = [values[i], is_fixed[i], bounds[i]]
+    dict_['UNIATTRIBUTE SELF']['r'] = [values[i], is_fixed[i], bounds[i]]
     dict_['UNIATTRIBUTE SELF']['max'] = upper_bounds[i]
 
     dict_['UNIATTRIBUTE OTHER'], i = dict(), 1
-    dict_['UNIATTRIBUTE OTHER']['r_other'] = [values[i], is_fixed[i], bounds[i]]
+    dict_['UNIATTRIBUTE OTHER']['r'] = [values[i], is_fixed[i], bounds[i]]
     dict_['UNIATTRIBUTE OTHER']['max'] = upper_bounds[i]
 
     dict_['MULTIATTRIBUTE COPULA'] = dict()

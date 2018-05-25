@@ -1,6 +1,7 @@
 """This module contains the class for the collection of parameters."""
 import numpy as np
 
+from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.custom_exceptions import TrempyError
 from trempy.record.clsLogger import logger_obj
 from trempy.config_trempy import SMALL_FLOAT
@@ -20,8 +21,15 @@ class ParasCls(BaseCls):
         self.attr['para_objs'] = []
 
         # preference parameters
-        for label in ['alpha', 'beta', 'eta']:
-            value, is_fixed, bounds = init_dict['PREFERENCES'][label]
+        for label in PREFERENCE_PARAMETERS:
+
+            if label in ['r_self']:
+                value, is_fixed, bounds = init_dict['UNIATTRIBUTE SELF']['r']
+            elif label in ['r_other']:
+                value, is_fixed, bounds = init_dict['UNIATTRIBUTE OTHER']['r']
+            else:
+                value, is_fixed, bounds = init_dict['MULTIATTRIBUTE COPULA'][label]
+
             self.attr['para_objs'] += [ParaCls(label, value, is_fixed, bounds)]
             self.attr['para_labels'] += [label]
 

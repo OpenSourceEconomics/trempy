@@ -22,8 +22,10 @@ def simulate(fname):
     np.random.seed(sim_seed)
 
     # First, I simply determine the optimal compensations.
-    alpha, beta, eta = paras_obj.get_values('econ', 'all')[:3]
+    r_self, r_other, delta, self, other = paras_obj.get_values('econ', 'all')[:5]
 
+    print(' ... optimal compenstation is next ')
+    return
     m_optimal = get_optimal_compensations(questions, alpha, beta, eta)
 
     stands = paras_obj.get_values('econ', 'all')[3:]

@@ -54,7 +54,7 @@ def read(fname):
             # We need to allow for additional information about the potential estimation
             # parameters.
             if group in ESTIMATION_GROUP and flag not in ['max']:
-                dict_[group][flag] = process_coefficient_line(list_, value)
+                dict_[group][flag] = process_coefficient_line(group, list_, value)
             elif group in ['CUTOFFS']:
                 dict_[group][flag] = process_cutoff_line(list_)
             else:
@@ -107,7 +107,7 @@ def process_bounds(bounds, label):
     return bounds
 
 
-def process_coefficient_line(list_, value):
+def process_coefficient_line(group, list_, value):
     """This function processes a coefficient line and extracts the relevant information. We also
     impose the default values for the bounds here."""
     try:
@@ -115,18 +115,25 @@ def process_coefficient_line(list_, value):
     except ValueError:
         label = list_[0]
 
+    # We need to adjust the labels
+    label_internal = label
+    if label in ['r'] and 'SELF' in group:
+        label_internal = 'r_self'
+    elif label in ['r'] and 'OTHER' in group:
+        label_internal = 'r_other'
+
     if len(list_) == 2:
-        is_fixed, bounds = False, DEFAULT_BOUNDS[label]
+        is_fixed, bounds = False, DEFAULT_BOUNDS[label_internal]
     elif len(list_) == 4:
         is_fixed = True
-        bounds = process_bounds(list_[3], label)
+        bounds = process_bounds(list_[3], label_internal)
     elif len(list_) == 3:
         is_fixed = (list_[2] == '!')
 
         if not is_fixed:
-            bounds = process_bounds(list_[2], label)
+            bounds = process_bounds(list_[2], label_internal)
         else:
-            bounds = DEFAULT_BOUNDS[label]
+            bounds = DEFAULT_BOUNDS[label_internal]
 
     return value, is_fixed, bounds
 

@@ -3,6 +3,7 @@ import numpy as np
 
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.shared.shared_auxiliary import print_init_dict
+from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.paras.clsParas import ParasCls
 from trempy.shared.clsBase import BaseCls
 from trempy.read.read import read
@@ -21,6 +22,12 @@ class ModelCls(BaseCls):
 
         # Parameters
         self.attr['paras_obj'] = paras_obj
+
+        # Information
+        upper = []
+        upper += [init_dict['UNIATTRIBUTE SELF']['max']]
+        upper += [init_dict['UNIATTRIBUTE OTHER']['max']]
+        self.attr['upper'] = upper
 
         # Cutoffs
         self.attr['cutoffs'] = init_dict['CUTOFFS']
@@ -55,7 +62,7 @@ class ModelCls(BaseCls):
         questions = []
         for para_obj in para_objs:
             label = para_obj.get_attr('label')
-            if label in ['alpha', 'eta', 'beta']:
+            if label in PREFERENCE_PARAMETERS:
                 continue
 
             questions += [label]
@@ -77,15 +84,25 @@ class ModelCls(BaseCls):
         """This method creates a initialization dictionary of the current class instance."""
         init_dict = dict()
 
-        for label in ['PREFERENCES', 'QUESTIONS', 'CUTOFFS',  'ESTIMATION', 'SIMULATION']:
+        labels = []
+        labels += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
+        labels += ['QUESTIONS', 'CUTOFFS', 'ESTIMATION', 'SIMULATION']
+        for label in labels:
             init_dict[label] = dict()
 
         paras_obj = self.attr['paras_obj']
         questions = self.attr['questions']
 
         # Preferences
-        for label in ['alpha', 'beta', 'eta']:
-            init_dict['PREFERENCES'][label] = paras_obj.get_para(label)
+        init_dict['UNIATTRIBUTE SELF']['r'] = paras_obj.get_para('r_self')
+        init_dict['UNIATTRIBUTE SELF']['max'] = self.attr['upper'][0]
+
+        init_dict['UNIATTRIBUTE OTHER']['r'] = paras_obj.get_para('r_other')
+        init_dict['UNIATTRIBUTE OTHER']['max'] = self.attr['upper'][1]
+
+        init_dict['MULTIATTRIBUTE COPULA']['delta'] = paras_obj.get_para('delta')
+        init_dict['MULTIATTRIBUTE COPULA']['self'] = paras_obj.get_para('self')
+        init_dict['MULTIATTRIBUTE COPULA']['other'] = paras_obj.get_para('other')
 
         # Questions
         for q in questions:

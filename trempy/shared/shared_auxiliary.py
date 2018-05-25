@@ -82,8 +82,14 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
             for label in sorted(dict_[key_].keys()):
                 info = dict_[key_][label]
 
+                label_internal = label
+                if label in ['r'] and 'SELF' in key_:
+                    label_internal = 'r_self'
+                elif label in ['r'] and 'OTHER' in key_:
+                    label_internal = 'r_other'
+
                 str_ = '{:<10}'
-                if label in PREFERENCE_PARAMETERS + questions:
+                if label_internal in PREFERENCE_PARAMETERS + questions:
                     str_ += ' {:25.4f} {:>5} '
                 else:
                     str_ += ' {:>25}\n'
@@ -91,8 +97,8 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 if label in ['detailed']:
                     info = str(info)
 
-                if label in PREFERENCE_PARAMETERS + questions and key_ != 'CUTOFFS':
-                    line, str_ = format_coefficient_line(label, info, str_)
+                if label_internal in PREFERENCE_PARAMETERS + questions and key_ != 'CUTOFFS':
+                    line, str_ = format_coefficient_line(label_internal, info, str_)
                 elif key_ in ['CUTOFFS']:
                     line, str_ = format_cutoff_line(label, info)
                     # We do not need to print a [NONE, None] cutoff.
@@ -130,7 +136,7 @@ def format_cutoff_line(label, info):
     return line, str_
 
 
-def format_coefficient_line(label, info, str_):
+def format_coefficient_line(label_internal, info, str_):
     """This function returns a properly formatted coefficient line."""
     value, is_fixed, bounds = info
 
@@ -138,8 +144,13 @@ def format_coefficient_line(label, info, str_):
     # dictionary are overwritten with the value None.
     bounds = copy.deepcopy(bounds)
 
+    # We need to clean up the labels for better readability.
+    label_external = label_internal
+    if label_internal in ['r_other', 'r_self']:
+        label_external = 'r'
+
     line = []
-    line += [label, value]
+    line += [label_external, value]
 
     if is_fixed is True:
         line += ['!']
@@ -149,7 +160,7 @@ def format_coefficient_line(label, info, str_):
     # Bounds might be printed or now.
     for i in range(2):
         value = bounds[i]
-        if value == DEFAULT_BOUNDS[label][i]:
+        if value == DEFAULT_BOUNDS[label_internal][i]:
             bounds[i] = None
         else:
             bounds[i] = np.round(value, decimals=4)
