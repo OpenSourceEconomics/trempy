@@ -33,7 +33,8 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
 
         return value
 
-    def _criterion_function(questions, m_optimal_obs, upper, start_fixed, start_utility_paras, paras):
+    def _criterion_function(questions, m_optimal_obs, upper, start_fixed, start_utility_paras,
+                            paras):
         """This will be the criterion function."""
         utility_cand = []
         j = 0
@@ -87,7 +88,7 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
 
     # We minimize the squared distance between the observed and theoretical average compensations.
     func = partial(_criterion_function, questions, m_optimal_obs, upper, start_fixed,
-        start_utility_paras)
+                   start_utility_paras)
     utility_opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)[
         'x'].tolist()
 
