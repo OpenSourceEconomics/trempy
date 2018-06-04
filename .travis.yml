@@ -1,18 +1,11 @@
 language: python
-python:
-  - 3.6
-
-bundler_args: --retry 3
 
 install:
-  - travis_retry travis_wait pip install -r requirements.txt
-  - pip install codecov
-  - pip install pytest-cov
-  - pip install flake8
+  - sudo apt-get update
+  - ./.travis_miniconda.sh
+  - PATH="$HOME/miniconda/bin:$PATH"
+  - conda env create -f environment.yml
+  - source activate copulpy
 
 script:
-  - travis_wait pytest --cov
-  - flake8 .
-
-after_success:
-  - codecov
+  - py.test
