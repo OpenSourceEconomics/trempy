@@ -7,7 +7,11 @@ dependencies:
   - statsmodels
   - pytest
   - pytest-xdist
+  - pytest-cov
   - scipy
   - matplotlib
   - seaborn
   - flake8
+  - pip
+  - pip:
+      - codecov

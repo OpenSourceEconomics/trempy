@@ -8,4 +8,7 @@ install:
   - source activate trempy
 
 script:
-  - py.test
+  - py.test --cov
+
+after_success:
+  - codecov

@@ -18,7 +18,7 @@ from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
 
-def get_automatic_starting_values(paras_obj, df_obs, questions):
+def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
     """This method updates the container for the parameters with the automatic starting values."""
     def _adjust_bounds(value, bounds):
         """This function simply adjusts the starting values to meet the requirements of the
@@ -33,7 +33,7 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
 
         return value
 
-    def _criterion_function(questions, m_optimal_obs, start_fixed, start_utility_paras, paras):
+    def _criterion_function(questions, m_optimal_obs, upper, start_fixed, start_utility_paras, paras):
         """This will be the criterion function."""
         utility_cand = []
         j = 0
@@ -44,7 +44,7 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
                 utility_cand += [paras[j]]
                 j += 1
 
-        m_optimal_cand = get_optimal_compensations(questions, *utility_cand)
+        m_optimal_cand = get_optimal_compensations(questions, upper, *utility_cand)
         m_optimal_cand = np.array([m_optimal_cand[q] for q in questions])
 
         # We need to ensure that we only compare values if the mean is not missing.
@@ -86,8 +86,10 @@ def get_automatic_starting_values(paras_obj, df_obs, questions):
         start_bounds += [bounds]
 
     # We minimize the squared distance between the observed and theoretical average compensations.
-    func = partial(_criterion_function, questions, m_optimal_obs, start_fixed, start_utility_paras)
-    utility_opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)['x'].tolist()
+    func = partial(_criterion_function, questions, m_optimal_obs, upper, start_fixed,
+        start_utility_paras)
+    utility_opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)[
+        'x'].tolist()
 
     # We construct the relevant set of free economic starting values.
     x_econ_free_start = []
