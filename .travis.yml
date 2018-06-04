@@ -5,7 +5,7 @@ install:
   - ./.travis_miniconda.sh
   - PATH="$HOME/miniconda/bin:$PATH"
   - conda env create -f environment.yml
-  - source activate copulpy
+  - source activate trempy
 
 script:
   - py.test
