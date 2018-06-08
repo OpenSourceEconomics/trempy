@@ -55,7 +55,6 @@ def check_regression_vault(num_tests):
     tests = pkl.load(open(fname, 'rb'))
 
     for i, test in enumerate(tests[:num_tests]):
-        print('Test ', i)
         try:
             run_regression_test(test)
         except Exception:

@@ -17,24 +17,6 @@ def run_regression_test(test):
     # Create and process initialization file
     init_dict, crit_val = test
 
-    # TODO: This has to go once the modifications are tested and a new regression test
-    # battery is created.
-    mappings = []
-    mappings += [(1, 31), (2, 32), (3, 33), (4, 34), (5, 35), (6, 36), (7, 37), (8, 38)]
-    mappings += [(9, 39), (10, 40), (11, 42), (12, 41), (13, 43), (14, 45), (15, 44)]
-
-    for mapping in mappings:
-        old, new = mapping
-        try:
-            init_dict['CUTOFFS'][new] = init_dict['CUTOFFS'].pop(old)
-        except:
-            pass
-
-        try:
-            init_dict['QUESTIONS'][new] = init_dict['QUESTIONS'].pop(old)
-        except:
-            pass
-
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
     df = simulate('test.trempy.ini')
