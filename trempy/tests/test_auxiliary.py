@@ -30,7 +30,7 @@ def random_dict(constr):
     sim_agents = np.random.randint(2, 10)
     fname = get_random_string()
 
-    questions = np.random.choice(range(1, 16), size=num_questions, replace=False)
+    questions = np.random.choice(range(31, 46), size=num_questions, replace=False)
     is_fixed = np.random.choice([True, False], size=num_questions + 3)
 
     # We need to ensure at least one parameter is free for a valid estimation request.
@@ -141,7 +141,7 @@ def get_bounds(label):
     elif label in ['delta', 'self', 'other']:
         lower = float(np.random.uniform(0.00, 0.98 - wedge))
         upper = lower + wedge
-    elif label in range(1, 16):
+    elif label in range(31, 46):
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
         upper = lower + wedge
     else:

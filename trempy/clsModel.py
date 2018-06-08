@@ -146,7 +146,7 @@ class ModelCls(BaseCls):
             start = dist_class_attributes(self, *args)
 
         # We restrict the identifiers for the questions between 1 and 16
-        np.testing.assert_equal(0 < min(questions) <= max(questions) < 16, True)
+        np.testing.assert_equal(30 < min(questions) <= max(questions) < 46, True)
 
         # We have to alternative how to start the estimation.
         np.testing.assert_equal(start in ['init', 'auto'], True)

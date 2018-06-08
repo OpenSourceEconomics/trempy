@@ -181,42 +181,42 @@ def format_coefficient_line(label_internal, info, str_):
 
 def expected_utility_a(copula, lottery):
     """This function calculates the expected utility for lottery A."""
-    if lottery == 1:
+    if lottery == 31:
         rslt = 0.50 * copula.evaluate(15, 0) + 0.50 * copula.evaluate(20, 0)
-    elif lottery == 2:
+    elif lottery == 32:
         rslt = 0.50 * copula.evaluate(30, 0) + 0.50 * copula.evaluate(40, 0)
-    elif lottery == 3:
+    elif lottery == 33:
         rslt = 0.50 * copula.evaluate(60, 0) + 0.50 * copula.evaluate(80, 0)
-    elif lottery == 4:
+    elif lottery == 34:
         rslt = 0.50 * copula.evaluate(0, 15) + 0.50 * copula.evaluate(0, 20)
-    elif lottery == 5:
+    elif lottery == 35:
         rslt = 0.50 * copula.evaluate(0, 30) + 0.50 * copula.evaluate(0, 40)
-    elif lottery == 6:
+    elif lottery == 36:
         rslt = 0.50 * copula.evaluate(0, 60) + 0.50 * copula.evaluate(0, 80)
-    elif lottery == 7:
+    elif lottery == 37:
         rslt = 0.50 * copula.evaluate(15, 25) + 0.50 * copula.evaluate(25, 15)
-    elif lottery == 8:
+    elif lottery == 38:
         rslt = 0.50 * copula.evaluate(30, 50) + 0.50 * copula.evaluate(50, 30)
-    elif lottery == 9:
+    elif lottery == 39:
         rslt = 0.50 * copula.evaluate(60, 100) + 0.50 * copula.evaluate(100, 60)
-    elif lottery == 10:
+    elif lottery == 40:
         rslt = 0.50 * copula.evaluate(30, 0) + \
                0.50 * (0.50 * copula.evaluate(54, 0) + 0.50 * copula.evaluate(26, 0))
-    elif lottery == 11:
-        rslt = 0.50 * copula.evaluate(30, 0) + \
-               0.50 * (0.80 * copula.evaluate(47, 0) + 0.20 * copula.evaluate(12, 0))
-    elif lottery == 12:
+    elif lottery == 41:
         rslt = 0.50 * copula.evaluate(30, 0) + \
                0.50 * (0.80 * copula.evaluate(33, 0) + 0.20 * copula.evaluate(68, 0))
-    elif lottery == 13:
+    elif lottery == 42:
+        rslt = 0.50 * copula.evaluate(30, 0) + \
+               0.50 * (0.80 * copula.evaluate(47, 0) + 0.20 * copula.evaluate(12, 0))
+    elif lottery == 43:
         rslt = 0.50 * copula.evaluate(0, 30) + \
                0.50 * (0.50 * copula.evaluate(0, 54) + 0.50 * copula.evaluate(0, 26))
-    elif lottery == 14:
-        rslt = 0.50 * copula.evaluate(0, 30) + \
-               0.50 * (0.80 * copula.evaluate(0, 47) + 0.20 * copula.evaluate(0, 12))
-    elif lottery == 15:
+    elif lottery == 44:
         rslt = 0.50 * copula.evaluate(0, 30) + \
                0.50 * (0.80 * copula.evaluate(0, 33) + 0.20 * copula.evaluate(0, 68))
+    elif lottery == 45:
+        rslt = 0.50 * copula.evaluate(0, 30) + \
+               0.50 * (0.80 * copula.evaluate(0, 47) + 0.20 * copula.evaluate(0, 12))
     else:
         raise AssertionError
 
@@ -225,56 +225,56 @@ def expected_utility_a(copula, lottery):
 
 def expected_utility_b(copula, lottery, m):
     """This function calculates the expected utility for lottery B."""
-    if lottery == 1:
+    if lottery == 31:
         rslt = 0.50 * copula.evaluate(10 + m, 0) + \
                0.50 * copula.evaluate(25 + m, 0)
-    elif lottery == 2:
+    elif lottery == 32:
         rslt = 0.50 * copula.evaluate(20 + m, 0) + \
                0.50 * copula.evaluate(50 + m, 0)
-    elif lottery == 3:
+    elif lottery == 33:
         rslt = 0.50 * copula.evaluate(40 + m, 0) + \
                0.50 * copula.evaluate(100 + m, 0)
-    elif lottery == 4:
+    elif lottery == 34:
         rslt = 0.50 * copula.evaluate(0, 10 + m) + \
                0.50 * copula.evaluate(0, 25 + m)
-    elif lottery == 5:
+    elif lottery == 35:
         rslt = 0.50 * copula.evaluate(0, 20 + m) + \
                0.50 * copula.evaluate(0, 50 + m)
-    elif lottery == 6:
+    elif lottery == 36:
         rslt = 0.50 * copula.evaluate(0, 40 + m) + \
                0.50 * copula.evaluate(0, 100 + m)
-    elif lottery == 7:
+    elif lottery == 37:
         rslt = 0.50 * copula.evaluate(15 + m, 15) + \
                0.50 * copula.evaluate(25 + m, 25)
-    elif lottery == 8:
+    elif lottery == 38:
         rslt = 0.50 * copula.evaluate(30 + m, 30) + \
                0.50 * copula.evaluate(50 + m, 50)
-    elif lottery == 9:
+    elif lottery == 39:
         rslt = 0.50 * copula.evaluate(60 + m, 60) + \
                0.50 * copula.evaluate(100 + m, 100)
-    elif lottery == 10:
+    elif lottery == 40:
         rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0) +
                        0.50 * copula.evaluate(16 + m, 0)) + \
                0.50 * copula.evaluate(40 + m, 0)
-    elif lottery == 11:
-        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0) +
-                       0.20 * copula.evaluate(2 + m, 0)) + \
-               0.50 * copula.evaluate(40 + m, 0)
-    elif lottery == 12:
+    elif lottery == 41:
         rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0) +
                        0.20 * copula.evaluate(58 + m, 0)) + \
                0.50 * copula.evaluate(40 + m, 0)
-    elif lottery == 13:
+    elif lottery == 42:
+        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0) +
+                       0.20 * copula.evaluate(2 + m, 0)) + \
+               0.50 * copula.evaluate(40 + m, 0)
+    elif lottery == 43:
         rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m) +
                        0.50 * copula.evaluate(0, 16 + m)) + \
                0.50 * copula.evaluate(0, 40 + m)
-    elif lottery == 14:
-        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m) +
-                       0.20 * copula.evaluate(0, 2 + m)) + \
-               0.50 * copula.evaluate(0, 40 + m)
-    elif lottery == 15:
+    elif lottery == 44:
         rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m) +
                        0.20 * copula.evaluate(0, 58 + m)) + \
+               0.50 * copula.evaluate(0, 40 + m)
+    elif lottery == 45:
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m) +
+                       0.20 * copula.evaluate(0, 2 + m)) + \
                0.50 * copula.evaluate(0, 40 + m)
     else:
         raise AssertionError

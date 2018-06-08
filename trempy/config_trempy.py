@@ -16,7 +16,7 @@ TINY_FLOAT = 10e-20
 NEVER_SWITCHERS = 9999
 
 # We set the range of questions that are possible to handle.
-QUESTIONS_ALL = range(1, 16)
+QUESTIONS_ALL = range(31, 46)
 
 # We want to be strict about any problems due to floating-point errors. However, during estimation,
 # we might have a problem with UNDERFLOW when evaluating the probability density function.
