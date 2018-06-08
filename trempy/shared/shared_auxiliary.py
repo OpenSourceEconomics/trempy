@@ -306,11 +306,11 @@ def determine_optimal_compensation(copula, lottery):
     # signs. If that is the case, we use a simple grid search as backup.
     try:
         crit_func = partial(comp_criterion_function, copula, lottery, 'brenth')
-        m_opt = optimize.brenth(crit_func, 0.00, 200)
+        m_opt = optimize.brenth(crit_func, 0.01, 200)
     except ValueError:
         crit_func = partial(comp_criterion_function, copula, lottery, 'grid')
         crit_func = np.vectorize(crit_func)
-        grid = np.linspace(0, 200, num=500, endpoint=True)
+        grid = np.linspace(0.01, 200, num=500, endpoint=True)
         m_opt = grid[np.argmin(crit_func(grid))]
         logger_obj.record_event(2)
 
