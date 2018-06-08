@@ -1,6 +1,7 @@
 """This module contains the class to manage the model estimation."""
 import os
 
+from trempy.estimate.estimate_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import criterion_function
 from trempy.estimate.estimate_auxiliary import char_floats
 from trempy.record.clsLogger import logger_obj
@@ -33,6 +34,10 @@ class EstimateClass(BaseCls):
         self.attr['x_econ_all_start'] = None
         self.attr['x_econ_all_step'] = None
 
+        self.attr['m_optimal_current'] = None
+        self.attr['m_optimal_start'] = None
+        self.attr['m_optimal_step'] = None
+
         self.attr['f_current'] = HUGE_FLOAT
         self.attr['f_start'] = HUGE_FLOAT
         self.attr['f_step'] = HUGE_FLOAT
@@ -63,8 +68,16 @@ class EstimateClass(BaseCls):
     def _update_evaluation(self, fval, x_econ_all_current, x_optim_all_current):
         """This method updates all attributes based on the new evaluation and writes some
         information to files."""
-        # Update current information
+        # Distribute class attribute
+        questions = self.attr['questions']
+        upper = self.attr['upper']
+
+        # Update current information]
+        m_optimal = get_optimal_compensations(questions, upper, *x_econ_all_current[:5])
+
         self.attr['x_econ_all_current'] = x_econ_all_current
+        self.attr['m_optimal_current'] = m_optimal
+
         self.attr['f_current'] = fval
         self.attr['num_eval'] += 1
 
@@ -75,11 +88,13 @@ class EstimateClass(BaseCls):
         # Record information at start
         if is_start:
             self.attr['x_econ_all_start'] = x_econ_all_current
+            self.attr['m_optimal_start'] = m_optimal
             self.attr['f_start'] = fval
 
         # Record information at step
         if is_step:
             self.attr['x_econ_all_step'] = x_econ_all_current
+            self.attr['m_optimal_step'] = m_optimal
             self.attr['f_step'] = fval
             self.attr['num_step'] += 1
 
@@ -137,6 +152,16 @@ class EstimateClass(BaseCls):
                 line += char_floats(self.attr['x_econ_all_start'][i])
                 line += char_floats(self.attr['x_econ_all_step'][i])
                 line += char_floats(self.attr['x_econ_all_current'][i])
+                outfile.write(fmt_.format(*line) + '\n')
+
+            outfile.write('\n\n {:<25}\n\n'.format('Optimal Compensations'))
+            line = ['Questions', '',  'Start', 'Step', 'Current']
+            outfile.write(fmt_.format(*line) + '\n\n')
+            for q in questions:
+                line = [q, '']
+                line += char_floats(self.attr['m_optimal_start'][q])
+                line += char_floats(self.attr['m_optimal_step'][q])
+                line += char_floats(self.attr['m_optimal_current'][q])
                 outfile.write(fmt_.format(*line) + '\n')
 
             outfile.write('\n')

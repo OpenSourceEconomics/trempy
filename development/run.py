@@ -13,7 +13,7 @@ import os
 from trempy.paras.clsParas import ParasCls
 
 
-simulate('model.trempy.ini')
+estimate('model.trempy.ini')
 #
 # for _ in range(1):
 #     np.random.seed(1423)

@@ -4,13 +4,13 @@ import copy
 
 from scipy.optimize import minimize
 
+from trempy.estimate.estimate_auxiliary import get_automatic_starting_values
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.estimate.estimate_auxiliary import estimate_simulate
 from trempy.estimate.estimate_auxiliary import estimate_cleanup
 from trempy.estimate.clsEstimate import EstimateClass
 from trempy.custom_exceptions import MaxfunError
 from trempy.custom_exceptions import TrempyError
-from trempy.estimate.estimate_auxiliary import get_automatic_starting_values
 from trempy.process.process import process
 from trempy.clsModel import ModelCls
 

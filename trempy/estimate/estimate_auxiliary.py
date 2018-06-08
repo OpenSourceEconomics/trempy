@@ -92,8 +92,13 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
         func = partial(_criterion_function, questions, m_optimal_obs, upper, start_fixed,
                            start_utility_paras)
 
-        utility_opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)[
-                'x'].tolist()
+        opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)
+        start_utility = opt['x'].tolist()
+
+        with open('est.trempy.log', 'w') as outfile:
+            outfile.write('\n {:<35}\n'.format('AUTOMATIC STARTING VALUES'))
+            outfile.write('\n Success    {:<25}'.format(str(opt['success'])))
+            outfile.write('\n')
 
     # We construct the relevant set of free economic starting values.
     x_econ_free_start = []
@@ -104,7 +109,7 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
             continue
         else:
             if label in PREFERENCE_PARAMETERS:
-                x_econ_free_start += [_adjust_bounds(utility_opt.pop(0), bounds)]
+                x_econ_free_start += [_adjust_bounds(start_utility.pop(0), bounds)]
             else:
                 cond = df_obs['Compensation'].isin([NEVER_SWITCHERS])
                 value = df_obs['Compensation'].mask(cond).loc[slice(None), label].std()
