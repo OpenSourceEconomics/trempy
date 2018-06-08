@@ -181,7 +181,9 @@ def format_coefficient_line(label_internal, info, str_):
 
 def expected_utility_a(copula, lottery):
     """This function calculates the expected utility for lottery A."""
-    if lottery == 31:
+    if lottery == 13:
+        rslt = copula.evaluate(50, 0)
+    elif lottery == 31:
         rslt = 0.50 * copula.evaluate(15, 0) + 0.50 * copula.evaluate(20, 0)
     elif lottery == 32:
         rslt = 0.50 * copula.evaluate(30, 0) + 0.50 * copula.evaluate(40, 0)
@@ -225,7 +227,9 @@ def expected_utility_a(copula, lottery):
 
 def expected_utility_b(copula, lottery, m):
     """This function calculates the expected utility for lottery B."""
-    if lottery == 31:
+    if lottery == 13:
+        rslt = copula.evaluate(0, m)
+    elif lottery == 31:
         rslt = 0.50 * copula.evaluate(10 + m, 0) + \
                0.50 * copula.evaluate(25 + m, 0)
     elif lottery == 32:
@@ -302,11 +306,11 @@ def determine_optimal_compensation(copula, lottery):
     # signs. If that is the case, we use a simple grid search as backup.
     try:
         crit_func = partial(comp_criterion_function, copula, lottery, 'brenth')
-        m_opt = optimize.brenth(crit_func, 0.00, 100)
+        m_opt = optimize.brenth(crit_func, 0.00, 200)
     except ValueError:
         crit_func = partial(comp_criterion_function, copula, lottery, 'grid')
         crit_func = np.vectorize(crit_func)
-        grid = np.linspace(0, 100, num=500, endpoint=True)
+        grid = np.linspace(0, 200, num=500, endpoint=True)
         m_opt = grid[np.argmin(crit_func(grid))]
         logger_obj.record_event(2)
 

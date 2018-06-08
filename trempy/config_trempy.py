@@ -16,7 +16,7 @@ TINY_FLOAT = 10e-20
 NEVER_SWITCHERS = 9999
 
 # We set the range of questions that are possible to handle.
-QUESTIONS_ALL = range(31, 46)
+QUESTIONS_ALL = [13] + list(range(31, 46))
 
 # We want to be strict about any problems due to floating-point errors. However, during estimation,
 # we might have a problem with UNDERFLOW when evaluating the probability density function.
@@ -35,4 +35,4 @@ for q in QUESTIONS_ALL:
     DEFAULT_BOUNDS[q] = [0.01, 100]
 
 # We maintain a list of all preference parameters.
-PREFERENCE_PARAMETERS = ['r_self', 'r_other', 'delta', 'other', 'self']
+PREFERENCE_PARAMETERS = ['r_self', 'r_other', 'delta', 'self', 'other']

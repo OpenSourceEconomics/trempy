@@ -86,11 +86,14 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
         start_paras += [value]
         start_bounds += [bounds]
 
-    # We minimize the squared distance between the observed and theoretical average compensations.
-    func = partial(_criterion_function, questions, m_optimal_obs, upper, start_fixed,
-                   start_utility_paras)
-    utility_opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)[
-        'x'].tolist()
+    # We minimize the squared distance between the observed and theoretical average
+    # compensations. This is only a valid request if there are any free preference parameters.
+    if len(start_paras) > 0:
+        func = partial(_criterion_function, questions, m_optimal_obs, upper, start_fixed,
+                           start_utility_paras)
+
+        utility_opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)[
+                'x'].tolist()
 
     # We construct the relevant set of free economic starting values.
     x_econ_free_start = []

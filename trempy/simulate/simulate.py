@@ -28,7 +28,7 @@ def simulate(fname):
 
     m_optimal = get_optimal_compensations(questions, upper, r_self, r_other, delta, self, other)
 
-    stands = paras_obj.get_values('econ', 'all')[3:]
+    stands = paras_obj.get_values('econ', 'all')[5:]
 
     data = []
     for i in range(sim_agents):
