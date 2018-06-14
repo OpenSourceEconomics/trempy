@@ -11,7 +11,6 @@ from trempy.interface.interface_copulpy import get_copula
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
-from trempy.record.clsLogger import logger_obj
 from trempy.config_trempy import TINY_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
@@ -289,30 +288,28 @@ def expected_utility_b(copula, lottery, m):
 def determine_optimal_compensation(copula, lottery):
     """This function determines the optimal compensation that ensures the equality of teh
     expected utilities."""
-    def comp_criterion_function(copula, lottery, version, m):
+    def comp_criterion_function(copula, lottery, m):
         """Criterion function for the root-finding function."""
         stat_a = expected_utility_a(copula, lottery)
         stat_b = expected_utility_b(copula, lottery, m)
 
-        if version == 'brenth':
-            stat = stat_a - stat_b
-        elif version == 'grid':
-            stat = (stat_a - stat_b) ** 2
-        else:
-            raise NotImplementedError
+        stat = stat_a - stat_b
+
         return stat
 
-    # For some parametrization our first choice fails as f(a) and f(b) must have different
-    # signs. If that is the case, we use a simple grid search as backup.
-    try:
-        crit_func = partial(comp_criterion_function, copula, lottery, 'brenth')
-        m_opt = optimize.brenth(crit_func, 0.01, 200)
-    except ValueError:
-        crit_func = partial(comp_criterion_function, copula, lottery, 'grid')
-        crit_func = np.vectorize(crit_func)
-        grid = np.linspace(0.01, 200, num=500, endpoint=True)
-        m_opt = grid[np.argmin(crit_func(grid))]
-        logger_obj.record_event(2)
+    a, b = 0.01, 200
+    crit_func = partial(comp_criterion_function, copula, lottery)
+
+    # If the criterion function is positive even at the maximum compensation then the optimal
+    # compensation is set to upper bound itself.
+    if np.sign(crit_func(b)) == 1:
+        m_opt = float(b)
+    # If the criterion function is already even at the minimum compensation then the optimal
+    # compensation is set to the lower bound itself.
+    elif np.sign(crit_func(a)) == -1:
+        m_opt = float(a)
+    else:
+        m_opt = optimize.brenth(crit_func, a, b)
 
     return m_opt
 

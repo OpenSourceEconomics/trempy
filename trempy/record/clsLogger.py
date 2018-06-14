@@ -21,8 +21,6 @@ class LoggerCls(BaseCls):
                 msg += 'small adjustment to bounds in to_real()'
             elif error_code == 1:
                 msg += 'Overflow, FloatingPoint errors in _to_interval()'
-            elif error_code == 2:
-                msg += 'ValueError: f(a) and f(b) must have different signs for brenth()'
             elif error_code == 3:
                 msg += 'FloatingPointError: invalid value encountered in double_scalars in utility'
             else:

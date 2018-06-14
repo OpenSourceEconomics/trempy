@@ -89,8 +89,8 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
     # We minimize the squared distance between the observed and theoretical average
     # compensations. This is only a valid request if there are any free preference parameters.
     if len(start_paras) > 0:
-        func = partial(_criterion_function, questions, m_optimal_obs, upper, start_fixed,
-                           start_utility_paras)
+        args = [questions, m_optimal_obs, upper, start_fixed, start_utility_paras]
+        func = partial(_criterion_function, *args)
 
         opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)
         start_utility = opt['x'].tolist()
