@@ -143,6 +143,11 @@ def estimate_simulate(which, points, model_obj, df_obs):
     estimation."""
     questions = dist_class_attributes(model_obj, 'questions')
 
+    paras_obj, upper = dist_class_attributes(model_obj, 'paras_obj', 'upper')
+
+    args = paras_obj.get_values('econ', 'all')[:5]
+    m_optimal = get_optimal_compensations(questions, upper, *args)
+
     os.mkdir(which)
     os.chdir(which)
 
@@ -153,12 +158,12 @@ def estimate_simulate(which, points, model_obj, df_obs):
     sim_model.write_out(which + '.trempy.ini')
     simulate(which + '.trempy.ini')
 
-    compare_datasets(which, df_obs, questions)
+    compare_datasets(which, df_obs, questions, m_optimal)
 
     os.chdir('../')
 
 
-def compare_datasets(which, df_obs, questions):
+def compare_datasets(which, df_obs, questions, m_optimal):
     """This function compares the estimation dataset with a simulated dataset using the estimated
     parameter vector."""
     df_sim = pd.read_pickle(which + '.trempy.pkl')
@@ -233,6 +238,23 @@ def compare_datasets(which, df_obs, questions):
 
         line = '{:>15}'.format('RMSE') + '{:>15}\n'.format(rmse)
         outfile.write(line)
+
+        for identifier, df_individual in df_obs['Compensation'].groupby(level=0):
+            outfile.write('\n Individual {:d}\n\n'.format(identifier))
+
+            fmt_ = ' {:>10}    ' + '{:>25}    ' * 3
+            outfile.write(fmt_.format(*['Question', 'Optimal', 'Observed', 'Difference']) + '\n\n')
+
+            for q in questions:
+
+                m_obs = df_individual.loc[(slice(None), slice(q, q))].values[0]
+                m_opt = m_optimal[q]
+
+                info = []
+                info += ['{:d}'.format(q)] + char_floats(m_opt)
+                info += char_floats(m_obs) + char_floats(m_obs - m_opt)
+
+                outfile.write(fmt_.format(*info) + '\n')
 
 
 def char_floats(floats):
