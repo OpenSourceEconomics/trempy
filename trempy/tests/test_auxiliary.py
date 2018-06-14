@@ -82,11 +82,15 @@ def random_dict(constr):
     dict_['SIMULATION']['file'] = fname
 
     # We sample valid estimation requests.
+    est_agents = np.random.randint(1, sim_agents)
+    num_skip = np.random.randint(0, sim_agents - est_agents)
+
     dict_['ESTIMATION'] = dict()
     dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-BFGS', 'SCIPY-POWELL'])
     dict_['ESTIMATION']['detailed'] = np.random.choice([True, False], p=[0.9, 0.1])
     dict_['ESTIMATION']['start'] = np.random.choice(['init', 'auto'])
-    dict_['ESTIMATION']['agents'] = np.random.randint(1, sim_agents)
+    dict_['ESTIMATION']['agents'] = est_agents
+    dict_['ESTIMATION']['skip'] = num_skip
     dict_['ESTIMATION']['maxfun'] = np.random.randint(1, 10)
     dict_['ESTIMATION']['file'] = fname + '.trempy.pkl'
 
@@ -107,6 +111,7 @@ def random_dict(constr):
         if 'num_agents' in constr.keys():
             dict_['SIMULATION']['agents'] = constr['num_agents']
             dict_['ESTIMATION']['agents'] = constr['num_agents']
+            dict_['ESTIMATION']['skip'] = 0
 
         if 'est_file' in constr.keys():
             dict_['ESTIMATION']['file'] = constr['est_file']

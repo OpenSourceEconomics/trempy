@@ -42,6 +42,7 @@ class ModelCls(BaseCls):
         self.attr['optimizer'] = init_dict['ESTIMATION']['optimizer']
 
         self.attr['est_agents'] = init_dict['ESTIMATION']['agents']
+        self.attr['num_skip'] = init_dict['ESTIMATION']['skip']
         self.attr['est_file'] = init_dict['ESTIMATION']['file']
         self.attr['maxfun'] = init_dict['ESTIMATION']['maxfun']
         self.attr['start'] = init_dict['ESTIMATION']['start']
@@ -115,6 +116,7 @@ class ModelCls(BaseCls):
         init_dict['ESTIMATION']['detailed'] = self.attr['est_detailed']
         init_dict['ESTIMATION']['optimizer'] = self.attr['optimizer']
         init_dict['ESTIMATION']['agents'] = self.attr['est_agents']
+        init_dict['ESTIMATION']['skip'] = self.attr['num_skip']
         init_dict['ESTIMATION']['file'] = self.attr['est_file']
         init_dict['ESTIMATION']['maxfun'] = self.attr['maxfun']
         init_dict['ESTIMATION']['start'] = self.attr['start']
@@ -140,13 +142,16 @@ class ModelCls(BaseCls):
         # Distribute class attributes for further processing.
         args = []
         args += ['paras_obj', 'sim_seed', 'sim_agents', 'sim_file', 'est_agents', 'maxfun']
-        args += ['est_file', 'questions', 'start']
+        args += ['est_file', 'questions', 'start', 'num_skip']
 
         paras_obj, sim_seed, sim_agents, sim_file, est_agents, maxfun, est_file, questions, \
-            start = dist_class_attributes(self, *args)
+            start, num_skip = dist_class_attributes(self, *args)
 
         # We restrict the identifiers for the questions between 1 and 16
         np.testing.assert_equal(12 < min(questions) <= max(questions) < 46, True)
+
+        # The number of skipped individuals has to be non-negative.
+        np.testing.assert_equal(0 <= num_skip, True)
 
         # We have to alternative how to start the estimation.
         np.testing.assert_equal(start in ['init', 'auto'], True)

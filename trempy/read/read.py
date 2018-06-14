@@ -158,7 +158,7 @@ def type_conversions(flag, value):
     """ Type conversions
     """
     # Type conversion
-    if flag in ['seed', 'agents', 'maxfun', 'max']:
+    if flag in ['seed', 'agents', 'maxfun', 'max', 'skip']:
         value = int(value)
     elif flag in ['file', 'optimizer', 'start']:
         value = str(value)

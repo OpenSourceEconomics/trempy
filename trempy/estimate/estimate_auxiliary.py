@@ -1,5 +1,4 @@
 """This module contains function solely related to the estimation of the model."""
-from functools import partial
 import shutil
 import copy
 import os
@@ -13,9 +12,96 @@ from trempy.shared.shared_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
+from trempy.custom_exceptions import MaxfunError
 from trempy.simulate.simulate import simulate
 from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
+from trempy.shared.clsBase import BaseCls
+
+
+class StartClass(BaseCls):
+    """This class manages all issues about the model estimation."""
+
+    def __init__(self, questions, m_optimal_obs, upper, start_fixed, start_utility_paras):
+
+        self.attr = dict()
+
+        # Initialization attributes
+        self.attr['start_utility_paras'] = start_utility_paras
+        self.attr['m_optimal_obs'] = m_optimal_obs
+        self.attr['start_fixed'] = start_fixed
+
+        self.attr['questions'] = questions
+        self.attr['upper'] = upper
+
+        # Housekeeping attributes
+        self.attr['f_current'] = HUGE_FLOAT
+        self.attr['f_start'] = HUGE_FLOAT
+        self.attr['f_step'] = HUGE_FLOAT
+
+        self.attr['num_eval'] = 0
+
+    def evaluate(self, x_vals):
+        """This will be the criterion function."""
+
+        if self.attr['num_eval'] > 10:
+            return HUGE_FLOAT
+
+        start_utility_paras = self.attr['start_utility_paras']
+        m_optimal_obs = self.attr['m_optimal_obs']
+        start_fixed = self.attr['start_fixed']
+        questions = self.attr['questions']
+        upper = self.attr['upper']
+
+        utility_cand = []
+        j = 0
+        for i in range(5):
+            if start_fixed[i]:
+                utility_cand += [start_utility_paras[i]]
+            else:
+                utility_cand += [x_vals[j]]
+                j += 1
+
+        m_optimal_cand = get_optimal_compensations(questions, upper, *utility_cand)
+        m_optimal_cand = np.array([m_optimal_cand[q] for q in questions])
+
+        # We need to ensure that we only compare values if the mean is not missing.
+        np_stats = np.tile(np.nan, (len(questions), 2))
+        for i, _ in enumerate(questions):
+            np_stats[i, :] = [m_optimal_obs[i], m_optimal_cand[i]]
+        np_stats = np_stats[~np.isnan(np_stats).any(axis=1)]
+
+        fval = np.mean((np_stats[:, 0] - np_stats[:, 1]) ** 2)
+
+        # Update class attributes
+        self.attr['num_eval'] += 1
+
+        self._update_evaluation(fval, x_vals)
+
+        return fval
+
+    def _update_evaluation(self, fval, x_vals):
+        """This method updates all attributes based on the new evaluation and writes some
+        information to files."""
+        self.attr['f_current'] = fval
+        self.attr['num_eval'] += 1
+
+        # Determine special events
+        is_start = self.attr['num_eval'] == 1
+        is_step = fval < self.attr['f_step']
+
+        # Record information at start
+        if is_start:
+            self.attr['x_vals_start'] = x_vals
+            self.attr['f_start'] = fval
+
+        # Record information at step
+        if is_step:
+            self.attr['x_vals_step'] = x_vals
+            self.attr['f_step'] = fval
+
+        if self.attr['num_eval'] == 100:
+            raise MaxfunError
 
 
 def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
@@ -32,31 +118,6 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
             pass
 
         return value
-
-    def _criterion_function(questions, m_optimal_obs, upper, start_fixed, start_utility_paras,
-                            paras):
-        """This will be the criterion function."""
-        utility_cand = []
-        j = 0
-        for i in range(5):
-            if start_fixed[i]:
-                utility_cand += [start_utility_paras[i]]
-            else:
-                utility_cand += [paras[j]]
-                j += 1
-
-        m_optimal_cand = get_optimal_compensations(questions, upper, *utility_cand)
-        m_optimal_cand = np.array([m_optimal_cand[q] for q in questions])
-
-        # We need to ensure that we only compare values if the mean is not missing.
-        np_stats = np.tile(np.nan, (len(questions), 2))
-        for i, _ in enumerate(questions):
-            np_stats[i, :] = [m_optimal_obs[i], m_optimal_cand[i]]
-        np_stats = np_stats[~np.isnan(np_stats).any(axis=1)]
-
-        stat = np.mean((np_stats[:, 0] - np_stats[:, 1]) ** 2)
-
-        return stat
 
     # During testing it might occur that we in fact run an estimation on a dataset that does not
     # contain any interior observations for any question. This results in a failure of the
@@ -89,16 +150,13 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
     # We minimize the squared distance between the observed and theoretical average
     # compensations. This is only a valid request if there are any free preference parameters.
     if len(start_paras) > 0:
-        args = [questions, m_optimal_obs, upper, start_fixed, start_utility_paras]
-        func = partial(_criterion_function, *args)
+        start_obj = StartClass(questions, m_optimal_obs, upper, start_fixed, start_utility_paras)
 
-        opt = minimize(func, start_paras, method='L-BFGS-B', bounds=start_bounds)
-        start_utility = opt['x'].tolist()
-
-        with open('est.trempy.log', 'w') as outfile:
-            outfile.write('\n {:<35}\n'.format('AUTOMATIC STARTING VALUES'))
-            outfile.write('\n Success    {:<25}'.format(str(opt['success'])))
-            outfile.write('\n')
+        try:
+            minimize(start_obj.evaluate, start_paras, method='L-BFGS-B', bounds=start_bounds)
+        except MaxfunError:
+            pass
+        start_utility = start_obj.get_attr('x_vals_step').tolist()
 
     # We construct the relevant set of free economic starting values.
     x_econ_free_start = []

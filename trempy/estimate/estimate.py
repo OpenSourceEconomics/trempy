@@ -23,13 +23,13 @@ def estimate(fname):
 
     args = []
     args += [model_obj, 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs', 'maxfun']
-    args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents', 'upper']
+    args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents', 'upper', 'num_skip']
 
     est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
-        est_agents, upper = dist_class_attributes(*args)
+        est_agents, upper, num_skip = dist_class_attributes(*args)
 
     # Some initial setup
-    df_obs = process(est_file, questions, est_agents, cutoffs)
+    df_obs = process(est_file, questions, num_skip, est_agents, cutoffs)
 
     args = [df_obs, cutoffs, upper, questions, copy.deepcopy(paras_obj), maxfun]
     estimate_obj = EstimateClass(*args)

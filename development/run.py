@@ -13,8 +13,15 @@ import os
 from trempy.paras.clsParas import ParasCls
 
 
-estimate('model.trempy.ini')
-#
+#estimate('model.trempy.ini')
+
+get_random_init()
+model_obj = ModelCls('test.trempy.ini')
+model_obj.write_out('alt.trempy.ini')
+
+np.testing.assert_equal(filecmp.cmp('test.trempy.ini', 'alt.trempy.ini'), True)
+
+
 # for _ in range(1):
 #     np.random.seed(1423)
 #     constr = dict()
