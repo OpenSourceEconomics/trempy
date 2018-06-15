@@ -28,6 +28,10 @@ def estimate(fname):
     est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
         est_agents, upper, num_skip = dist_class_attributes(*args)
 
+    # We only need to continue if there is at least one parameter to actually estimate.
+    if len(paras_obj.get_values('optim', 'free')) == 0:
+        raise TrempyError('no free parameter to estimate')
+
     # Some initial setup
     df_obs = process(est_file, questions, num_skip, est_agents, cutoffs)
 
