@@ -11,6 +11,7 @@ from trempy.interface.interface_copulpy import get_copula
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
+from trempy.config_trempy import LOTTERY_BOUNDS
 from trempy.config_trempy import TINY_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
@@ -229,55 +230,40 @@ def expected_utility_b(copula, lottery, m):
     if lottery == 13:
         rslt = copula.evaluate(0, m)
     elif lottery == 31:
-        rslt = 0.50 * copula.evaluate(10 + m, 0) + \
-               0.50 * copula.evaluate(25 + m, 0)
+        rslt = 0.50 * copula.evaluate(10 + m, 0) + 0.50 * copula.evaluate(25 + m, 0)
     elif lottery == 32:
-        rslt = 0.50 * copula.evaluate(20 + m, 0) + \
-               0.50 * copula.evaluate(50 + m, 0)
+        rslt = 0.50 * copula.evaluate(20 + m, 0) + 0.50 * copula.evaluate(50 + m, 0)
     elif lottery == 33:
-        rslt = 0.50 * copula.evaluate(40 + m, 0) + \
-               0.50 * copula.evaluate(100 + m, 0)
+        rslt = 0.50 * copula.evaluate(40 + m, 0) + 0.50 * copula.evaluate(100 + m, 0)
     elif lottery == 34:
-        rslt = 0.50 * copula.evaluate(0, 10 + m) + \
-               0.50 * copula.evaluate(0, 25 + m)
+        rslt = 0.50 * copula.evaluate(0, 10 + m) + 0.50 * copula.evaluate(0, 25 + m)
     elif lottery == 35:
-        rslt = 0.50 * copula.evaluate(0, 20 + m) + \
-               0.50 * copula.evaluate(0, 50 + m)
+        rslt = 0.50 * copula.evaluate(0, 20 + m) + 0.50 * copula.evaluate(0, 50 + m)
     elif lottery == 36:
-        rslt = 0.50 * copula.evaluate(0, 40 + m) + \
-               0.50 * copula.evaluate(0, 100 + m)
+        rslt = 0.50 * copula.evaluate(0, 40 + m) + 0.50 * copula.evaluate(0, 100 + m)
     elif lottery == 37:
-        rslt = 0.50 * copula.evaluate(15 + m, 15) + \
-               0.50 * copula.evaluate(25 + m, 25)
+        rslt = 0.50 * copula.evaluate(15 + m, 15) + 0.50 * copula.evaluate(25 + m, 25)
     elif lottery == 38:
-        rslt = 0.50 * copula.evaluate(30 + m, 30) + \
-               0.50 * copula.evaluate(50 + m, 50)
+        rslt = 0.50 * copula.evaluate(30 + m, 30) + 0.50 * copula.evaluate(50 + m, 50)
     elif lottery == 39:
-        rslt = 0.50 * copula.evaluate(60 + m, 60) + \
-               0.50 * copula.evaluate(100 + m, 100)
+        rslt = 0.50 * copula.evaluate(60 + m, 60) + 0.50 * copula.evaluate(100 + m, 100)
     elif lottery == 40:
-        rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0) +
-                       0.50 * copula.evaluate(16 + m, 0)) + \
+        rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0) + 0.50 * copula.evaluate(16 + m, 0)) + \
                0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 41:
-        rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0) +
-                       0.20 * copula.evaluate(58 + m, 0)) + \
+        rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0) + 0.20 * copula.evaluate(58 + m, 0)) + \
                0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 42:
-        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0) +
-                       0.20 * copula.evaluate(2 + m, 0)) + \
+        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0) + 0.20 * copula.evaluate(2 + m, 0)) + \
                0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 43:
-        rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m) +
-                       0.50 * copula.evaluate(0, 16 + m)) + \
+        rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m) + 0.50 * copula.evaluate(0, 16 + m)) + \
                0.50 * copula.evaluate(0, 40 + m)
     elif lottery == 44:
-        rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m) +
-                       0.20 * copula.evaluate(0, 58 + m)) + \
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m) + 0.20 * copula.evaluate(0, 58 + m)) + \
                0.50 * copula.evaluate(0, 40 + m)
     elif lottery == 45:
-        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m) +
-                       0.20 * copula.evaluate(0, 2 + m)) + \
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m) + 0.20 * copula.evaluate(0, 2 + m)) + \
                0.50 * copula.evaluate(0, 40 + m)
     else:
         raise AssertionError
@@ -297,19 +283,19 @@ def determine_optimal_compensation(copula, lottery):
 
         return stat
 
-    a, b = 0.01, 200
+    lower, upper = LOTTERY_BOUNDS[lottery]
     crit_func = partial(comp_criterion_function, copula, lottery)
 
     # If the criterion function is positive even at the maximum compensation then the optimal
     # compensation is set to upper bound itself.
-    if np.sign(crit_func(b)) == 1:
-        m_opt = float(b)
+    if np.sign(crit_func(upper)) == 1:
+        m_opt = float(upper)
     # If the criterion function is already even at the minimum compensation then the optimal
     # compensation is set to the lower bound itself.
-    elif np.sign(crit_func(a)) == -1:
-        m_opt = float(a)
+    elif np.sign(crit_func(lower)) == -1:
+        m_opt = float(lower)
     else:
-        m_opt = optimize.brenth(crit_func, a, b)
+        m_opt = optimize.brenth(crit_func, lower, upper)
 
     return m_opt
 

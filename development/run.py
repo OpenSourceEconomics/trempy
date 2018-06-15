@@ -13,7 +13,8 @@ import os
 from trempy.paras.clsParas import ParasCls
 
 
-#estimate('model.trempy.ini')
+simulate('model.trempy.ini')
+estimate('model.trempy.ini')
 
 get_random_init()
 model_obj = ModelCls('test.trempy.ini')

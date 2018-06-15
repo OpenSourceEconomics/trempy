@@ -36,3 +36,28 @@ for q in QUESTIONS_ALL:
 
 # We maintain a list of all preference parameters.
 PREFERENCE_PARAMETERS = ['r_self', 'r_other', 'delta', 'self', 'other']
+
+# We need to specify the grid for the determination of the optimal compensation. It varies as the
+# payoff turns negative at different values.
+LOTTERY_BOUNDS = dict()
+LOTTERY_BOUNDS[13] = [+00.01, 200.00]
+
+LOTTERY_BOUNDS[31] = [-09.99, 200.00]
+LOTTERY_BOUNDS[32] = [-19.99, 200.00]
+LOTTERY_BOUNDS[33] = [-39.99, 200.00]
+
+LOTTERY_BOUNDS[34] = [-09.99, 200.00]
+LOTTERY_BOUNDS[35] = [-19.99, 200.00]
+LOTTERY_BOUNDS[36] = [-39.99, 200.00]
+
+LOTTERY_BOUNDS[37] = [-14.99, 200.00]
+LOTTERY_BOUNDS[38] = [-29.99, 200.00]
+LOTTERY_BOUNDS[39] = [-59.99, 200.00]
+
+LOTTERY_BOUNDS[40] = [-15.99, 200.00]
+LOTTERY_BOUNDS[41] = [-22.99, 200.00]
+LOTTERY_BOUNDS[42] = [-01.99, 200.00]
+
+LOTTERY_BOUNDS[43] = [-15.99, 200.00]
+LOTTERY_BOUNDS[44] = [-22.99, 200.00]
+LOTTERY_BOUNDS[45] = [-01.99, 200.00]
