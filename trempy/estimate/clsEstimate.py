@@ -190,6 +190,12 @@ class EstimateClass(BaseCls):
             # We need to keep track of captured warnings.
             logger_obj.flush(outfile)
 
+            # We also record the results from the fitting of the copula.
+            outfile.write('\n')
+            with open('fit.copulpy.info') as infile:
+                outfile.write(infile.read())
+            os.remove('fit.copulpy.info')
+
         # We can determine the estimation if the number of requested function evaluations is
         # reached or the user requests a stop.
         is_finish = (self.attr['max_eval'] == self.attr['num_eval']) and (self.attr['max_eval'] > 1)
