@@ -40,6 +40,7 @@ PREFERENCE_PARAMETERS = ['r_self', 'r_other', 'delta', 'self', 'other']
 # We need to specify the grid for the determination of the optimal compensation. It varies as the
 # payoff turns negative at different values.
 LOTTERY_BOUNDS = dict()
+
 LOTTERY_BOUNDS[13] = [+00.01, 200.00]
 
 LOTTERY_BOUNDS[31] = [-09.99, 200.00]
