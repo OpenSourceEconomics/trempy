@@ -3,7 +3,7 @@ import os
 
 from trempy.estimate.estimate_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import criterion_function
-from trempy.estimate.estimate_auxiliary import char_floats
+from trempy.shared.shared_auxiliary import char_floats
 from trempy.record.clsLogger import logger_obj
 
 from trempy.config_trempy import PREFERENCE_PARAMETERS
@@ -182,7 +182,7 @@ class EstimateClass(BaseCls):
             line = ['Identifier', 'Label', 'Economic', 'Optimizer']
             outfile.write(fmt_.format(*line) + '\n\n')
 
-            for i, _ in enumerate(range(len(questions) + 3)):
+            for i, _ in enumerate(range(len(questions) + 5)):
                 line = [i]
                 line += [para_labels[i]]
                 line += char_floats([x_econ_all_current[i], x_optim_all_current[i]])

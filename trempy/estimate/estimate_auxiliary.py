@@ -10,6 +10,7 @@ import numpy as np
 
 from trempy.shared.shared_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import dist_class_attributes
+from trempy.shared.shared_auxiliary import char_floats
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.custom_exceptions import MaxfunError
@@ -313,19 +314,3 @@ def compare_datasets(which, df_obs, questions, m_optimal):
                 info += char_floats(m_obs) + char_floats(m_obs - m_opt)
 
                 outfile.write(fmt_.format(*info) + '\n')
-
-
-def char_floats(floats):
-    """This method ensures a pretty printing of all floats."""
-    # We ensure that this function can also be called on for a single float value.
-    if isinstance(floats, float):
-        floats = [floats]
-
-    line = []
-    for value in floats:
-        if abs(value) > HUGE_FLOAT:
-            line += ['{:>25}'.format('---')]
-        else:
-            line += ['{:25.15f}'.format(value)]
-
-    return line

@@ -323,3 +323,19 @@ def get_random_string(size=6):
     chars = list(string.ascii_lowercase)
     str_ = ''.join(np.random.choice(chars) for _ in range(size))
     return str_
+
+
+def char_floats(floats):
+    """This method ensures a pretty printing of all floats."""
+    # We ensure that this function can also be called on for a single float value.
+    if isinstance(floats, float):
+        floats = [floats]
+
+    line = []
+    for value in floats:
+        if abs(value) > HUGE_FLOAT:
+            line += ['{:>25}'.format('---')]
+        else:
+            line += ['{:25.15f}'.format(value)]
+
+    return line

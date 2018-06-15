@@ -6,6 +6,7 @@ import numpy as np
 from trempy.shared.shared_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.shared.shared_auxiliary import criterion_function
+from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.clsModel import ModelCls
 
@@ -58,16 +59,20 @@ def simulate(fname):
 
     fval = criterion_function(df, questions, cutoffs, upper, *x_econ_all_current)
 
-    write_info(df, questions, fval, m_optimal, sim_file + '.trempy.info')
+    write_info(x_econ_all_current, df, questions, fval, m_optimal, sim_file + '.trempy.info')
 
     return df
 
 
-def write_info(df, questions, likl, m_optimal, fname):
+def write_info(x_econ_all_current, df, questions, likl, m_optimal, fname):
     """This function writes out some basic information about the simulated dataset."""
     df_sim = df['Compensation'].mask(df['Compensation'] == NEVER_SWITCHERS)
+    paras_label = PREFERENCE_PARAMETERS + questions
+    fmt_ = '{:>15}' + '{:>15}' + '{:>15}    '
 
     with open(fname, 'w') as outfile:
+
+        outfile.write('\n {:<25}\n'.format('Observed Data'))
 
         string = '{:>15}' * 10 + '\n'
         label = []
@@ -94,6 +99,14 @@ def write_info(df, questions, likl, m_optimal, fname):
 
             outfile.write(string.format(*info))
 
+        outfile.write('\n {:<25}\n\n'.format('Economic Parameters'))
+        line = ['Identifier', 'Label', 'Value']
+        outfile.write(fmt_.format(*line) + '\n\n')
+        for i, _ in enumerate(range(len(questions) + 5)):
+            line = [i]
+            line += [paras_label[i], '{:15.5f}'.format(x_econ_all_current[i])]
+            outfile.write(fmt_.format(*line) + '\n')
+
         outfile.write('\n')
 
-        outfile.write('Criterion Function: ' + '{:25.5f}'.format(likl) + '\n\n')
+        outfile.write(' Criterion Function ' + '{:25.5f}'.format(likl) + '\n\n')
