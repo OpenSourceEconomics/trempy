@@ -25,8 +25,8 @@ np.seterr(divide='raise', over='raise', invalid='raise', under='ignore')
 # We need to impose some bounds on selected estimation parameters. The bounds are included in the
 # package's admissible values.
 DEFAULT_BOUNDS = dict()
-DEFAULT_BOUNDS['r_other'] = [-5.00, 5.00]
-DEFAULT_BOUNDS['r_self'] = [-5.00, 5.00]
+DEFAULT_BOUNDS['r_other'] = [0.01, 5.00]
+DEFAULT_BOUNDS['r_self'] = [0.01, 5.00]
 DEFAULT_BOUNDS['delta'] = [0.01, 5.00]
 DEFAULT_BOUNDS['other'] = [0.00, 0.99]
 DEFAULT_BOUNDS['self'] = [0.00, 0.99]

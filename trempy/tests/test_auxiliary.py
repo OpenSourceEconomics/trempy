@@ -141,10 +141,10 @@ def get_bounds(label):
     wedge = float(np.random.uniform(0.03, 0.10))
 
     if label in ['r_self', 'r_other']:
-        lower = float(np.random.uniform(-5.0, 5.0 - wedge))
+        lower = float(np.random.uniform(0.01, 5.0 - wedge))
         upper = lower + wedge
     elif label in ['delta', 'self', 'other']:
-        lower = float(np.random.uniform(0.00, 0.98 - wedge))
+        lower = float(np.random.uniform(0.01, 0.98 - wedge))
         upper = lower + wedge
     elif label in [13] + list(range(31, 46)):
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
