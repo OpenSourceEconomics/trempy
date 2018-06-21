@@ -53,7 +53,7 @@ def read(fname):
 
             # We need to allow for additional information about the potential estimation
             # parameters.
-            if group in ESTIMATION_GROUP and flag not in ['max']:
+            if group in ESTIMATION_GROUP and flag not in ['max', 'marginal']:
                 dict_[group][flag] = process_coefficient_line(group, list_, value)
             elif group in ['CUTOFFS']:
                 dict_[group][flag] = process_cutoff_line(list_)
@@ -160,7 +160,7 @@ def type_conversions(flag, value):
     # Type conversion
     if flag in ['seed', 'agents', 'maxfun', 'max', 'skip']:
         value = int(value)
-    elif flag in ['file', 'optimizer', 'start']:
+    elif flag in ['file', 'optimizer', 'start', 'marginal']:
         value = str(value)
     elif flag in ['detailed']:
         assert (value.upper() in ['TRUE', 'FALSE'])

@@ -22,11 +22,11 @@ def run_regression_test(test):
     df = simulate('test.trempy.ini')
 
     # Distribute class attributes for further processing.
-    args = [model_obj, 'paras_obj', "questions", 'upper', 'cutoffs']
-    paras_obj, questions, upper, cutoffs = dist_class_attributes(*args)
+    args = [model_obj, 'paras_obj', "questions", 'upper', 'cutoffs', 'marginals']
+    paras_obj, questions, upper, cutoffs, marginals = dist_class_attributes(*args)
 
     x_econ_all = paras_obj.get_values('econ', 'all')
-    stat = criterion_function(df, questions, cutoffs, upper, *x_econ_all)
+    stat = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all)
 
     np.testing.assert_almost_equal(stat, crit_val)
 

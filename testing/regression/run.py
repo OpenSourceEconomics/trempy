@@ -36,12 +36,11 @@ def create_regression_vault(num_tests):
         df = simulate('test.trempy.ini')
 
         # Distribute class attributes for further processing.
-        args = (model_obj, 'paras_obj', 'questions', 'cutoffs', 'upper')
-        paras_obj, questions, upper, cutoffs = dist_class_attributes(*args)
+        args = (model_obj, 'paras_obj', 'questions', 'cutoffs', 'upper', 'marginals')
+        paras_obj, questions, cutoffs, upper, marginals = dist_class_attributes(*args)
 
         x_econ_all = paras_obj.get_values('econ', 'all')
-        stat = criterion_function(df, questions, upper, cutoffs, *x_econ_all)
-
+        stat = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all)
         tests += [(init_dict, stat)]
 
         cleanup()

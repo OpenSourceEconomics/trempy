@@ -25,6 +25,7 @@ def random_dict(constr):
     dict_ = dict()
 
     # Initial setup to ensure constraints across options.
+    marginals = np.random.choice(['exponential', 'power'], 2)
     upper_bounds = np.random.random_integers(500, 800, 2)
     num_questions = np.random.randint(2, 14)
     sim_agents = np.random.randint(2, 10)
@@ -49,10 +50,12 @@ def random_dict(constr):
     dict_['UNIATTRIBUTE SELF'], i = dict(), 0
     dict_['UNIATTRIBUTE SELF']['r'] = [values[i], is_fixed[i], bounds[i]]
     dict_['UNIATTRIBUTE SELF']['max'] = upper_bounds[i]
+    dict_['UNIATTRIBUTE SELF']['marginal'] = marginals[i]
 
     dict_['UNIATTRIBUTE OTHER'], i = dict(), 1
     dict_['UNIATTRIBUTE OTHER']['r'] = [values[i], is_fixed[i], bounds[i]]
     dict_['UNIATTRIBUTE OTHER']['max'] = upper_bounds[i]
+    dict_['UNIATTRIBUTE OTHER']['marginal'] = marginals[i]
 
     dict_['MULTIATTRIBUTE COPULA'] = dict()
     for i, label in enumerate(['delta', 'self', 'other']):

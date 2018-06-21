@@ -12,9 +12,10 @@ from trempy.read.read import read
 import os
 from trempy.paras.clsParas import ParasCls
 
+np.random.seed(13)
+for _ in range(10):
+    get_random_init()
 
-simulate('simulate.trempy.ini')
-estimate('simulate.trempy.ini')
+    simulate('test.trempy.ini')
+    estimate('test.trempy.ini')
 
-import cProfile
-cProfile.run("estimate('simulate.trempy.ini')", 'profile.prof')

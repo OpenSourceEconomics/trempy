@@ -23,7 +23,8 @@ from trempy.shared.clsBase import BaseCls
 class StartClass(BaseCls):
     """This class manages all issues about the model estimation."""
 
-    def __init__(self, questions, m_optimal_obs, upper, start_fixed, start_utility_paras):
+    def __init__(self, questions, m_optimal_obs, upper, marginals, start_fixed,
+                 start_utility_paras):
 
         self.attr = dict()
 
@@ -31,7 +32,7 @@ class StartClass(BaseCls):
         self.attr['start_utility_paras'] = start_utility_paras
         self.attr['m_optimal_obs'] = m_optimal_obs
         self.attr['start_fixed'] = start_fixed
-
+        self.attr['marginals'] = marginals
         self.attr['questions'] = questions
         self.attr['upper'] = upper
 
@@ -51,6 +52,7 @@ class StartClass(BaseCls):
         start_utility_paras = self.attr['start_utility_paras']
         m_optimal_obs = self.attr['m_optimal_obs']
         start_fixed = self.attr['start_fixed']
+        marginals = self.attr['marginals']
         questions = self.attr['questions']
         upper = self.attr['upper']
 
@@ -63,7 +65,7 @@ class StartClass(BaseCls):
                 utility_cand += [x_vals[j]]
                 j += 1
 
-        m_optimal_cand = get_optimal_compensations(questions, upper, *utility_cand)
+        m_optimal_cand = get_optimal_compensations(questions, upper, marginals, *utility_cand)
         m_optimal_cand = np.array([m_optimal_cand[q] for q in questions])
 
         # We need to ensure that we only compare values if the mean is not missing.
@@ -105,7 +107,7 @@ class StartClass(BaseCls):
             raise MaxfunError
 
 
-def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
+def get_automatic_starting_values(paras_obj, df_obs, upper, marginals, questions):
     """This method updates the container for the parameters with the automatic starting values."""
     def _adjust_bounds(value, bounds):
         """This function simply adjusts the starting values to meet the requirements of the
@@ -151,7 +153,8 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, questions):
     # We minimize the squared distance between the observed and theoretical average
     # compensations. This is only a valid request if there are any free preference parameters.
     if len(start_paras) > 0:
-        start_obj = StartClass(questions, m_optimal_obs, upper, start_fixed, start_utility_paras)
+        args = [questions, m_optimal_obs, upper, marginals, start_fixed, start_utility_paras]
+        start_obj = StartClass(*args)
 
         try:
             minimize(start_obj.evaluate, start_paras, method='L-BFGS-B', bounds=start_bounds)
@@ -200,12 +203,12 @@ def estimate_cleanup():
 def estimate_simulate(which, points, model_obj, df_obs):
     """This function allows to easily simulate samples at the beginning and the end of the
     estimation."""
-    questions = dist_class_attributes(model_obj, 'questions')
+    questions, marginals = dist_class_attributes(model_obj, 'questions', 'marginals')
 
     paras_obj, upper = dist_class_attributes(model_obj, 'paras_obj', 'upper')
 
     args = paras_obj.get_values('econ', 'all')[:5]
-    m_optimal = get_optimal_compensations(questions, upper, *args)
+    m_optimal = get_optimal_compensations(questions, upper, marginals, *args)
 
     os.mkdir(which)
     os.chdir(which)

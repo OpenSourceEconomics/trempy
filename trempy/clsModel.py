@@ -29,6 +29,12 @@ class ModelCls(BaseCls):
         upper += [init_dict['UNIATTRIBUTE OTHER']['max']]
         self.attr['upper'] = upper
 
+        # Marginal utility functions
+        marginals = []
+        marginals += [init_dict['UNIATTRIBUTE SELF']['marginal']]
+        marginals += [init_dict['UNIATTRIBUTE OTHER']['marginal']]
+        self.attr['marginals'] = marginals
+
         # Cutoffs
         self.attr['cutoffs'] = init_dict['CUTOFFS']
 
@@ -95,9 +101,11 @@ class ModelCls(BaseCls):
         questions = self.attr['questions']
 
         # Preferences
+        init_dict['UNIATTRIBUTE SELF']['marginal'] = self.attr['marginals'][0]
         init_dict['UNIATTRIBUTE SELF']['r'] = paras_obj.get_para('r_self')
         init_dict['UNIATTRIBUTE SELF']['max'] = self.attr['upper'][0]
 
+        init_dict['UNIATTRIBUTE OTHER']['marginal'] = self.attr['marginals'][1]
         init_dict['UNIATTRIBUTE OTHER']['r'] = paras_obj.get_para('r_other')
         init_dict['UNIATTRIBUTE OTHER']['max'] = self.attr['upper'][1]
 

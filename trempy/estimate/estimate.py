@@ -24,9 +24,10 @@ def estimate(fname):
     args = []
     args += [model_obj, 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs', 'maxfun']
     args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents', 'upper', 'num_skip']
+    args += ['marginals']
 
     est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
-        est_agents, upper, num_skip = dist_class_attributes(*args)
+        est_agents, upper, num_skip, marginals = dist_class_attributes(*args)
 
     # We only need to continue if there is at least one parameter to actually estimate.
     if len(paras_obj.get_values('optim', 'free')) == 0:
@@ -35,12 +36,12 @@ def estimate(fname):
     # Some initial setup
     df_obs = process(est_file, questions, num_skip, est_agents, cutoffs)
 
-    args = [df_obs, cutoffs, upper, questions, copy.deepcopy(paras_obj), maxfun]
+    args = [df_obs, cutoffs, upper, marginals, questions, copy.deepcopy(paras_obj), maxfun]
     estimate_obj = EstimateClass(*args)
 
     # We lock in an evaluation at the starting values as not all optimizers actually start there.
     if start in ['auto']:
-        paras_obj = get_automatic_starting_values(paras_obj, df_obs, upper, questions)
+        paras_obj = get_automatic_starting_values(paras_obj, df_obs, upper, marginals, questions)
 
     x_optim_free_start = paras_obj.get_values('optim', 'free')
     estimate_obj.evaluate(x_optim_free_start)

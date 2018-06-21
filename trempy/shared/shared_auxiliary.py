@@ -16,13 +16,14 @@ from trempy.config_trempy import TINY_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
 
-def criterion_function(df, questions, cutoffs, upper, *args):
+def criterion_function(df, questions, cutoffs, upper, marginals, *args):
     """This function calculates the likelihood of the observed sample."""
     # Distribute parameters
     r_self, r_other, delta, self, other = args[:5]
     sds = args[5:]
 
-    m_optimal = get_optimal_compensations(questions, upper, r_self, r_other, delta, self, other)
+    args = [questions, upper, marginals, r_self, r_other, delta, self, other]
+    m_optimal = get_optimal_compensations(*args)
 
     contribs = []
     for i, q in enumerate(questions):
@@ -55,9 +56,9 @@ def criterion_function(df, questions, cutoffs, upper, *args):
     return rslt
 
 
-def get_optimal_compensations(questions, upper, r_self, r_other, delta, self, other):
+def get_optimal_compensations(questions, upper, marginals, r_self, r_other, delta, self, other):
     """This function returns the optimal compensations for all questions."""
-    copula = get_copula(upper, r_self, r_other, delta, self, other)
+    copula = get_copula(upper, marginals, r_self, r_other, delta, self, other)
 
     m_optimal = dict()
     for q in questions:

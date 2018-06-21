@@ -14,13 +14,14 @@ from trempy.shared.clsBase import BaseCls
 
 class EstimateClass(BaseCls):
     """This class manages all issues about the model estimation."""
-    def __init__(self, df, cutoffs, upper, questions, paras_obj, max_eval):
+    def __init__(self, df, cutoffs, upper, marginals, questions, paras_obj, max_eval):
 
         self.attr = dict()
 
         # Initialization attributes
         self.attr['paras_obj'] = paras_obj
         self.attr['questions'] = questions
+        self.attr['marginals'] = marginals
         self.attr['max_eval'] = max_eval
         self.attr['cutoffs'] = cutoffs
         self.attr['upper'] = upper
@@ -51,6 +52,7 @@ class EstimateClass(BaseCls):
         # Distribute class attributes
         paras_obj = self.attr['paras_obj']
         questions = self.attr['questions']
+        marginals = self.attr['marginals']
         cutoffs = self.attr['cutoffs']
         upper = self.attr['upper']
         df = self.attr['df']
@@ -59,7 +61,7 @@ class EstimateClass(BaseCls):
         paras_obj.set_values('optim', 'free', x_optim_free_current)
         x_optim_all_current = paras_obj.get_values('optim', 'all')
         x_econ_all_current = paras_obj.get_values('econ', 'all')
-        fval = criterion_function(df, questions, cutoffs, upper, *x_econ_all_current)
+        fval = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all_current)
 
         self._update_evaluation(fval, x_econ_all_current, x_optim_all_current)
 
@@ -70,10 +72,11 @@ class EstimateClass(BaseCls):
         information to files."""
         # Distribute class attribute
         questions = self.attr['questions']
+        marginals = self.attr['marginals']
         upper = self.attr['upper']
 
         # Update current information]
-        m_optimal = get_optimal_compensations(questions, upper, *x_econ_all_current[:5])
+        m_optimal = get_optimal_compensations(questions, upper, marginals, *x_econ_all_current[:5])
 
         self.attr['x_econ_all_current'] = x_econ_all_current
         self.attr['m_optimal_current'] = m_optimal

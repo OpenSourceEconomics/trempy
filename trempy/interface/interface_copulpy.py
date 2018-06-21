@@ -2,11 +2,12 @@
 from copulpy import UtilityCopulaCls
 
 
-def get_copula(upper, r_self, r_other, delta, self, other):
+def get_copula(upper, marginals, r_self, r_other, delta, self, other):
     """This function allows to access a multiattribute utility copula."""
     copula_spec = dict()
 
     copula_spec['r'] = [r_self, r_other]
+    copula_spec['marginals'] = marginals
     copula_spec['u'] = self, other
     copula_spec['bounds'] = upper
     copula_spec['delta'] = delta
