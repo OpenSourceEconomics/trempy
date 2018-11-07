@@ -144,7 +144,7 @@ class ParasCls(BaseCls):
         """This function maps any value to a bounded interval."""
         try:
             exponential = np.exp(-val)
-        except (OverflowError, FloatingPointError) as _:
+        except (OverflowError, FloatingPointError):
             exponential = HUGE_FLOAT
             logger_obj.record_event(1)
         interval = upper - lower
