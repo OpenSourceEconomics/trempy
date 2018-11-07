@@ -13,9 +13,5 @@ import os
 from trempy.paras.clsParas import ParasCls
 
 np.random.seed(13)
-for _ in range(10):
-    get_random_init()
-
-    simulate('test.trempy.ini')
-    estimate('test.trempy.ini')
-
+simulate('simulate.trempy.ini')
+estimate('simulate.trempy.ini')
