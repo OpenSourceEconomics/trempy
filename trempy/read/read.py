@@ -9,13 +9,20 @@ from trempy.config_trempy import DEFAULT_BOUNDS
 from trempy.config_trempy import QUESTIONS_ALL
 from trempy.config_trempy import HUGE_FLOAT
 
-ESTIMATION_GROUP = []
-ESTIMATION_GROUP += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
-ESTIMATION_GROUP += ['QUESTIONS']
+# Blocks that should be processed all the time.
+BASIC_GROUPS = [
+    'VERSION', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS', 'SCIPY-POWELL', 'CUTOFFS', 'QUESTIONS',
+]
+
+# Blocks that are specific to the 'version' of the utility function.
+ESTIMATION_GROUP = {
+    'scaled_archimedean': ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA'],
+    'nonstationary': ['ATEMPORAL PARAMETERS', 'TEMPORAL PARAMETERS'],
+}
 
 
 def read(fname):
-    """This function reads the initialization file."""
+    """Read the initialization file."""
     # Check input
     np.testing.assert_equal(os.path.exists(fname), True)
 
@@ -38,27 +45,47 @@ def read(fname):
             # Prepare dictionary
             if is_group:
                 group = ' '.join(list_)
-                dict_[group] = {}
+                dict_[group] = dict()
                 continue
 
+            # Code below is only executed if the current line is not a group name
             flag, value = list_[:2]
 
-            # Type conversions
+            # Handle the VERSION block.
+            if (group in ['VERSION']) and (flag in ['version']):
+                version = value
+                print('Version: {}.'.format(version))
+
+            # Type conversions for the NON-CUTOFF block
             if group not in ['CUTOFFS']:
-                value = type_conversions(flag, value)
+                value = type_conversions(version, flag, value)
 
             # We need to make sure questions and cutoffs are not duplicated.
             if flag in dict_[group].keys():
                 raise TrempyError('duplicated information')
 
-            # We need to allow for additional information about the potential estimation
-            # parameters.
-            if group in ESTIMATION_GROUP and flag not in ['max', 'marginal']:
-                dict_[group][flag] = process_coefficient_line(group, list_, value)
-            elif group in ['CUTOFFS']:
-                dict_[group][flag] = process_cutoff_line(list_)
-            else:
-                dict_[group][flag] = value
+            # Handle the basic blocks
+            if group in BASIC_GROUPS:
+                if group in ['CUTOFFS']:
+                    dict_[group][flag] = process_cutoff_line(list_)
+                elif group in ['QUESTIONS']:
+                    dict_[group][flag] = process_coefficient_line(group, list_, value)
+                else:
+                    dict_[group][flag] = value
+
+            # Handle blocks specific to the 'version' of the utility function.
+            if group in ESTIMATION_GROUP[version]:
+                if version in ['scaled_archimedean']:
+                    if flag not in ['max', 'marginal']:
+                        dict_[group][flag] = process_coefficient_line(group, list_, value)
+                    else:
+                        dict_[group][flag] = value
+
+                elif version in ['nonstationary']:
+                    dict_[group][flag] = process_coefficient_line(group, list_, value)
+
+                else:
+                    raise TrempyError('version not implemented')
 
     # We allow for initialization files where no CUTOFFS are specified.
     if "CUTOFFS" not in dict_.keys():
@@ -78,11 +105,19 @@ def read(fname):
                 if dict_['CUTOFFS'][q][i] is None:
                     dict_['CUTOFFS'][q][i] = (-1)**i * -HUGE_FLOAT
 
+    # # Post-processing of the version parameters
+    # if version in ['scaled_archimedean']:
+    #     pass
+    # elif version in ['nonstationary']:
+    #     dict_['TEMPORAL PARAMETERS'] = postprocess_temporal_blocks(dict_['TEMPORAL PARAMETERS'])
+    # else:
+    #     raise TrempyError('version not implemented')
+
     return dict_
 
 
 def process_cutoff_line(list_):
-    """This function processes a cutoff line."""
+    """Process a cutoff line."""
     cutoffs = []
     for i in [1, 2]:
         if list_[i] == 'None':
@@ -94,7 +129,7 @@ def process_cutoff_line(list_):
 
 
 def process_bounds(bounds, label):
-    """This function extracts the proper bounds."""
+    """Extract the proper bounds."""
     bounds = bounds.replace(')', '')
     bounds = bounds.replace('(', '')
     bounds = bounds.split(',')
@@ -108,8 +143,10 @@ def process_bounds(bounds, label):
 
 
 def process_coefficient_line(group, list_, value):
-    """This function processes a coefficient line and extracts the relevant information. We also
-    impose the default values for the bounds here."""
+    """Process a coefficient line and extracts the relevant information.
+
+    We also impose the default values for the bounds here.
+    """
     try:
         label = int(list_[0])
     except ValueError:
@@ -154,13 +191,11 @@ def process_cases(list_):
     return is_empty, is_group, is_comment
 
 
-def type_conversions(flag, value):
-    """ Type conversions
-    """
-    # Type conversion
+def type_conversions(version, flag, value):
+    """Type conversions by version."""
     if flag in ['seed', 'agents', 'maxfun', 'max', 'skip']:
         value = int(value)
-    elif flag in ['file', 'optimizer', 'start', 'marginal']:
+    elif flag in ['version', 'file', 'optimizer', 'start', 'marginal']:
         value = str(value)
     elif flag in ['detailed']:
         assert (value.upper() in ['TRUE', 'FALSE'])
@@ -168,7 +203,34 @@ def type_conversions(flag, value):
     elif flag in []:
         value = value.upper()
     else:
-        value = float(value)
+        # Currently both cases are handled identically. This is only future-proofing.
+        if version in ['scaled_archimedean']:
+            value = float(value)
+
+        elif version in ['nonstationary']:
+            # Optional argument needs handling of 'None' string.
+            if flag.startswith('unrestricted_weights_') and value == 'None':
+                value = None
+            else:
+                value = float(value)
+        else:
+            raise TrempyError('version not implemented')
 
     # Finishing
     return value
+
+
+# def postprocess_temporal_blocks(block):
+#     """Convert temporal block into dictionary."""
+#     temporal_dict = dict()
+#     for key, value in block.items():
+#         # Split at the last occurence of '_' to get the period.
+#         varname, period = key.rsplit('_', 1)
+
+#         if varname in temporal_dict.keys():
+#             temporal_dict[varname][period] = value
+#         else:
+#             temporal_dict[varname] = dict()
+#             temporal_dict[varname][period] = value
+
+#     return temporal_dict

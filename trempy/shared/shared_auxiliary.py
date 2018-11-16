@@ -17,7 +17,7 @@ from trempy.config_trempy import HUGE_FLOAT
 
 
 def criterion_function(df, questions, cutoffs, upper, marginals, *args):
-    """This function calculates the likelihood of the observed sample."""
+    """Calculate the likelihood of the observed sample."""
     # Distribute parameters
     r_self, r_other, delta, self, other = args[:5]
     sds = args[5:]
@@ -57,7 +57,7 @@ def criterion_function(df, questions, cutoffs, upper, marginals, *args):
 
 
 def get_optimal_compensations(questions, upper, marginals, r_self, r_other, delta, self, other):
-    """This function returns the optimal compensations for all questions."""
+    """Return the optimal compensations for all questions."""
     copula = get_copula(upper, marginals, r_self, r_other, delta, self, other)
 
     m_optimal = dict()
@@ -67,7 +67,7 @@ def get_optimal_compensations(questions, upper, marginals, r_self, r_other, delt
 
 
 def print_init_dict(dict_, fname='test.trempy.ini'):
-    """This function prints an initialization dictionary."""
+    """Print an initialization dictionary."""
     keys = []
     keys += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA', 'QUESTIONS']
     keys += ['CUTOFFS', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS', 'SCIPY-POWELL']
@@ -121,7 +121,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
 
 
 def format_cutoff_line(label, info):
-    """This function returns a properly formatted cutoff line."""
+    """Return a properly formatted cutoff line."""
     cutoffs = info
 
     str_ = '{:<10}'
@@ -141,7 +141,7 @@ def format_cutoff_line(label, info):
 
 
 def format_coefficient_line(label_internal, info, str_):
-    """This function returns a properly formatted coefficient line."""
+    """Return a properly formatted coefficient line."""
     value, is_fixed, bounds = info
 
     # We need to make sure this is an independent copy as otherwise the bound in the original
@@ -181,7 +181,7 @@ def format_coefficient_line(label_internal, info, str_):
 
 
 def expected_utility_a(copula, lottery):
-    """This function calculates the expected utility for lottery A."""
+    """Calculate the expected utility for lottery A."""
     if lottery == 13:
         rslt = copula.evaluate(50, 0)
     elif lottery == 31:
@@ -204,22 +204,22 @@ def expected_utility_a(copula, lottery):
         rslt = 0.50 * copula.evaluate(60, 100) + 0.50 * copula.evaluate(100, 60)
     elif lottery == 40:
         rslt = 0.50 * copula.evaluate(30, 0) + \
-               0.50 * (0.50 * copula.evaluate(54, 0) + 0.50 * copula.evaluate(26, 0))
+            0.50 * (0.50 * copula.evaluate(54, 0) + 0.50 * copula.evaluate(26, 0))
     elif lottery == 41:
         rslt = 0.50 * copula.evaluate(30, 0) + \
-               0.50 * (0.80 * copula.evaluate(33, 0) + 0.20 * copula.evaluate(68, 0))
+            0.50 * (0.80 * copula.evaluate(33, 0) + 0.20 * copula.evaluate(68, 0))
     elif lottery == 42:
         rslt = 0.50 * copula.evaluate(30, 0) + \
-               0.50 * (0.80 * copula.evaluate(47, 0) + 0.20 * copula.evaluate(12, 0))
+            0.50 * (0.80 * copula.evaluate(47, 0) + 0.20 * copula.evaluate(12, 0))
     elif lottery == 43:
         rslt = 0.50 * copula.evaluate(0, 30) + \
-               0.50 * (0.50 * copula.evaluate(0, 54) + 0.50 * copula.evaluate(0, 26))
+            0.50 * (0.50 * copula.evaluate(0, 54) + 0.50 * copula.evaluate(0, 26))
     elif lottery == 44:
         rslt = 0.50 * copula.evaluate(0, 30) + \
-               0.50 * (0.80 * copula.evaluate(0, 33) + 0.20 * copula.evaluate(0, 68))
+            0.50 * (0.80 * copula.evaluate(0, 33) + 0.20 * copula.evaluate(0, 68))
     elif lottery == 45:
         rslt = 0.50 * copula.evaluate(0, 30) + \
-               0.50 * (0.80 * copula.evaluate(0, 47) + 0.20 * copula.evaluate(0, 12))
+            0.50 * (0.80 * copula.evaluate(0, 47) + 0.20 * copula.evaluate(0, 12))
     else:
         raise AssertionError
 
@@ -227,7 +227,7 @@ def expected_utility_a(copula, lottery):
 
 
 def expected_utility_b(copula, lottery, m):
-    """This function calculates the expected utility for lottery B."""
+    """Calculate the expected utility for lottery B."""
     if lottery == 13:
         rslt = copula.evaluate(0, m)
     elif lottery == 31:
@@ -250,22 +250,22 @@ def expected_utility_b(copula, lottery, m):
         rslt = 0.50 * copula.evaluate(60 + m, 60) + 0.50 * copula.evaluate(100 + m, 100)
     elif lottery == 40:
         rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0) + 0.50 * copula.evaluate(16 + m, 0)) + \
-               0.50 * copula.evaluate(40 + m, 0)
+            0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 41:
         rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0) + 0.20 * copula.evaluate(58 + m, 0)) + \
-               0.50 * copula.evaluate(40 + m, 0)
+            0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 42:
         rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0) + 0.20 * copula.evaluate(2 + m, 0)) + \
-               0.50 * copula.evaluate(40 + m, 0)
+            0.50 * copula.evaluate(40 + m, 0)
     elif lottery == 43:
         rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m) + 0.50 * copula.evaluate(0, 16 + m)) + \
-               0.50 * copula.evaluate(0, 40 + m)
+            0.50 * copula.evaluate(0, 40 + m)
     elif lottery == 44:
         rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m) + 0.20 * copula.evaluate(0, 58 + m)) + \
-               0.50 * copula.evaluate(0, 40 + m)
+            0.50 * copula.evaluate(0, 40 + m)
     elif lottery == 45:
         rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m) + 0.20 * copula.evaluate(0, 2 + m)) + \
-               0.50 * copula.evaluate(0, 40 + m)
+            0.50 * copula.evaluate(0, 40 + m)
     else:
         raise AssertionError
 
@@ -273,8 +273,7 @@ def expected_utility_b(copula, lottery, m):
 
 
 def determine_optimal_compensation(copula, lottery):
-    """This function determines the optimal compensation that ensures the equality of teh
-    expected utilities."""
+    """Determine the optimal compensation that ensures the equality of the expected utilities."""
     def comp_criterion_function(copula, lottery, m):
         """Criterion function for the root-finding function."""
         stat_a = expected_utility_a(copula, lottery)
@@ -302,8 +301,7 @@ def determine_optimal_compensation(copula, lottery):
 
 
 def dist_class_attributes(model_obj, *args):
-    """ This function distributes a host of class attributes.
-    """
+    """Distribute a host of class attributes."""
     # Initialize container
     ret = []
 
@@ -320,14 +318,14 @@ def dist_class_attributes(model_obj, *args):
 
 
 def get_random_string(size=6):
-    """This function samples a random string of varying size."""
+    """Sample a random string of varying size."""
     chars = list(string.ascii_lowercase)
     str_ = ''.join(np.random.choice(chars) for _ in range(size))
     return str_
 
 
 def char_floats(floats):
-    """This method ensures a pretty printing of all floats."""
+    """Ensure a pretty printing of all floats."""
     # We ensure that this function can also be called on for a single float value.
     if isinstance(floats, float):
         floats = [floats]

@@ -24,6 +24,8 @@ np.seterr(divide='raise', over='raise', invalid='raise', under='ignore')
 
 # We need to impose some bounds on selected estimation parameters. The bounds are included in the
 # package's admissible values.
+
+# Scaled Archimedean copula parameter
 DEFAULT_BOUNDS = dict()
 DEFAULT_BOUNDS['r_other'] = [0.01, 5.00]
 DEFAULT_BOUNDS['r_self'] = [0.01, 5.00]
@@ -31,34 +33,101 @@ DEFAULT_BOUNDS['delta'] = [0.01, 5.00]
 DEFAULT_BOUNDS['other'] = [0.00, 0.99]
 DEFAULT_BOUNDS['self'] = [0.00, 0.99]
 
+# Nonstationary utility function
+DEFAULT_BOUNDS['alpha'] = [0.01, 5.00]
+DEFAULT_BOUNDS['beta'] = [0.01, 5.00]
+DEFAULT_BOUNDS['gamma'] = [0.01, 5.00]
+DEFAULT_BOUNDS['y_scale'] = [0.01, 100.00]
+
+DEFAULT_BOUNDS['discount_factors_0'] = [1.00, 1.00]
+DEFAULT_BOUNDS['discount_factors_1'] = [0.01, 1.00]
+DEFAULT_BOUNDS['discount_factors_3'] = [0.01, 1.00]
+DEFAULT_BOUNDS['discount_factors_6'] = [0.01, 1.00]
+DEFAULT_BOUNDS['discount_factors_12'] = [0.01, 1.00]
+DEFAULT_BOUNDS['discount_factors_24'] = [0.01, 1.00]
+
+DEFAULT_BOUNDS['unrestricted_weights_0'] = [0.01, 5.00]
+DEFAULT_BOUNDS['unrestricted_weights_1'] = [0.01, 5.00]
+DEFAULT_BOUNDS['unrestricted_weights_3'] = [0.01, 5.00]
+DEFAULT_BOUNDS['unrestricted_weights_6'] = [0.01, 5.00]
+DEFAULT_BOUNDS['unrestricted_weights_12'] = [0.01, 5.00]
+DEFAULT_BOUNDS['unrestricted_weights_24'] = [0.01, 5.00]
+
 for q in QUESTIONS_ALL:
     DEFAULT_BOUNDS[q] = [0.01, 100]
 
-# We maintain a list of all preference parameters.
-PREFERENCE_PARAMETERS = ['r_self', 'r_other', 'delta', 'self', 'other']
+# We maintain a list of all preference parameters by version.
+PREFERENCE_PARAMETERS = {
+    'scaled_archimedean': ['r_self', 'r_other', 'delta', 'self', 'other'],
+    'nonstationary': ['alpha', 'beta', 'gamma', 'y_scale',
+                      'discount_factors', 'unrestricted_weights'],
+}
 
-# We need to specify the grid for the determination of the optimal compensation. It varies as the
-# payoff turns negative at different values.
-LOTTERY_BOUNDS = dict()
+# We need to specify the grid for the determination of the optimal compensation.
+# It varies as the payoff turns negative at different values.
+LOTTERY_BOUNDS = {
+    # Risky choices
+    13: [+00.01, 200.00],
+    31: [-09.99, 200.00],
+    32: [-19.99, 200.00],
+    33: [-39.99, 200.00],
 
-LOTTERY_BOUNDS[13] = [+00.01, 200.00]
+    34: [-09.99, 200.00],
+    35: [-19.99, 200.00],
+    36: [-39.99, 200.00],
 
-LOTTERY_BOUNDS[31] = [-09.99, 200.00]
-LOTTERY_BOUNDS[32] = [-19.99, 200.00]
-LOTTERY_BOUNDS[33] = [-39.99, 200.00]
+    37: [-14.99, 200.00],
+    38: [-29.99, 200.00],
+    39: [-59.99, 200.00],
 
-LOTTERY_BOUNDS[34] = [-09.99, 200.00]
-LOTTERY_BOUNDS[35] = [-19.99, 200.00]
-LOTTERY_BOUNDS[36] = [-39.99, 200.00]
+    40: [-15.99, 200.00],
+    41: [-22.99, 200.00],
+    42: [-01.99, 200.00],
 
-LOTTERY_BOUNDS[37] = [-14.99, 200.00]
-LOTTERY_BOUNDS[38] = [-29.99, 200.00]
-LOTTERY_BOUNDS[39] = [-59.99, 200.00]
+    43: [-15.99, 200.00],
+    44: [-22.99, 200.00],
+    45: [-01.99, 200.00],
 
-LOTTERY_BOUNDS[40] = [-15.99, 200.00]
-LOTTERY_BOUNDS[41] = [-22.99, 200.00]
-LOTTERY_BOUNDS[42] = [-01.99, 200.00]
+    # # Temporal choices
 
-LOTTERY_BOUNDS[43] = [-15.99, 200.00]
-LOTTERY_BOUNDS[44] = [-22.99, 200.00]
-LOTTERY_BOUNDS[45] = [-01.99, 200.00]
+    # # Univariate discounting: SELF. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    # 1: [+50.0, 56.25],
+    # 2: [+50.0, 68.75],
+    # 3: [+50.0, 87.50],
+    # 4: [+50.0, 125.00],
+    # 5: [+50.0, 200.00],
+    # 6: [+50.0, 87.50],
+
+    # # Univariate discounting: CHARITY. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    # 7: [+50.0, 56.25],
+    # 8: [+50.0, 68.75],
+    # 9: [+50.0, 87.50],
+    # 10: [+50.0, 125.00],
+    # 11: [+50.0, 200.00],
+    # 12: [+50.0, 87.50],
+
+    # # Exchange rate. 0-0, 1-1, 3-3, 6-6, 12-12, 24-24
+    # # TODO: Delete duplicate of question 13 once we move to temporal choices.
+    # 13: [+0.01, 200.00],
+    # 14: [+0.01, 200.00],
+    # 15: [+0.01, 200.00],
+    # 16: [+0.01, 200.00],
+    # 17: [+0.01, 200.00],
+    # 18: [+0.01, 200.00],
+
+    # # Multivariate discounting: SELF. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    # 19: [+0.01, 168.75],
+    # 20: [+0.01, 206.25],
+    # 21: [+0.01, 262.50],
+    # 22: [+0.01, 375.00],
+    # 23: [+0.01, 600.00],
+    # 24: [+0.01, 262.50],
+
+    # # Multivariate discounting: CHARITY. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    # 25: [+0.01, 56.25],
+    # 26: [+0.01, 68.75],
+    # 27: [+0.01, 87.50],
+    # 28: [+0.01, 125.00],
+    # 29: [+0.01, 200.00],
+    # 30: [+0.01, 87.50],
+}
