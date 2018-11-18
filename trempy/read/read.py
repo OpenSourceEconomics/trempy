@@ -17,7 +17,7 @@ BASIC_GROUPS = [
 # Blocks that are specific to the 'version' of the utility function.
 ESTIMATION_GROUP = {
     'scaled_archimedean': ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA'],
-    'nonstationary': ['ATEMPORAL PARAMETERS', 'TEMPORAL PARAMETERS'],
+    'nonstationary': ['ATEMPORAL', 'DISCOUNTING'],
 }
 
 
@@ -109,7 +109,7 @@ def read(fname):
     # if version in ['scaled_archimedean']:
     #     pass
     # elif version in ['nonstationary']:
-    #     dict_['TEMPORAL PARAMETERS'] = postprocess_temporal_blocks(dict_['TEMPORAL PARAMETERS'])
+    #     dict_['DISCOUNTING'] = postprocess_temporal_blocks(dict_['DISCOUNTING'])
     # else:
     #     raise TrempyError('version not implemented')
 
@@ -203,12 +203,11 @@ def type_conversions(version, flag, value):
     elif flag in []:
         value = value.upper()
     else:
-        # Currently both cases are handled identically. This is only future-proofing.
+        # Currently both cases are handled similarly. This is future-proofing.
         if version in ['scaled_archimedean']:
             value = float(value)
-
         elif version in ['nonstationary']:
-            # Optional argument needs handling of 'None' string.
+            # Optional argument: handle 'None' strings.
             if flag.startswith('unrestricted_weights_') and value == 'None':
                 value = None
             else:
@@ -217,7 +216,7 @@ def type_conversions(version, flag, value):
             raise TrempyError('version not implemented')
 
     # Finishing
-    return value
+    return value, version
 
 
 # def postprocess_temporal_blocks(block):

@@ -12,7 +12,7 @@ from trempy.config_trempy import HUGE_FLOAT
 
 
 def get_random_init(constr=None):
-    """This function prints a random dictionary."""
+    """Print a random dictionary."""
     if constr is None:
         constr = dict()
     init_dict = random_dict(constr)
@@ -21,48 +21,57 @@ def get_random_init(constr=None):
 
 
 def random_dict(constr):
-    """This function creates a random initialization file."""
+    """Create a random initialization file."""
     dict_ = dict()
 
-    # Initial setup to ensure constraints across options.
-    marginals = np.random.choice(['exponential', 'power'], 2)
-    upper_bounds = np.random.random_integers(500, 800, 2)
     num_questions = np.random.randint(2, 14)
     sim_agents = np.random.randint(2, 10)
     fname = get_random_string()
 
-    questions = np.random.choice([13] + list(range(31, 46)), size=num_questions, replace=False)
     is_fixed = np.random.choice([True, False], size=num_questions + 3)
-
     # We need to ensure at least one parameter is free for a valid estimation request.
     if is_fixed.tolist().count('False') == 0:
         is_fixed[0] = 'False'
 
-    bounds = list()
-    for label in PREFERENCE_PARAMETERS:
-        bounds += [get_bounds(label)]
+    # Handle version specific data.
+    version = np.random.choice(['scaled_archimedean', 'nonstationary'])
+    dict_['VERSION']['version'] = version
 
-    values = list()
-    for i, label in enumerate(PREFERENCE_PARAMETERS):
-        values += [get_value(bounds[i], label)]
+    # Bounds and values
+    bounds = [get_bounds(label) for label in PREFERENCE_PARAMETERS[version]]
+    values = [get_value(bounds[i], label) for i, label in enumerate(PREFERENCE_PARAMETERS[version])]
 
-    # We start with sampling all preference parameters.
-    dict_['UNIATTRIBUTE SELF'], i = dict(), 0
-    dict_['UNIATTRIBUTE SELF']['r'] = [values[i], is_fixed[i], bounds[i]]
-    dict_['UNIATTRIBUTE SELF']['max'] = upper_bounds[i]
-    dict_['UNIATTRIBUTE SELF']['marginal'] = marginals[i]
+    if version in ['scaled_archimedean']:
+        # Initial setup to ensure constraints across options.
+        marginals = np.random.choice(['exponential', 'power'], 2)
+        upper_bounds = np.random.random_integers(500, 800, 2)
 
-    dict_['UNIATTRIBUTE OTHER'], i = dict(), 1
-    dict_['UNIATTRIBUTE OTHER']['r'] = [values[i], is_fixed[i], bounds[i]]
-    dict_['UNIATTRIBUTE OTHER']['max'] = upper_bounds[i]
-    dict_['UNIATTRIBUTE OTHER']['marginal'] = marginals[i]
+        # We start with sampling all preference parameters.
+        dict_['UNIATTRIBUTE SELF'], i = dict(), 0
+        dict_['UNIATTRIBUTE SELF']['r'] = [values[i], is_fixed[i], bounds[i]]
+        dict_['UNIATTRIBUTE SELF']['max'] = upper_bounds[i]
+        dict_['UNIATTRIBUTE SELF']['marginal'] = marginals[i]
 
-    dict_['MULTIATTRIBUTE COPULA'] = dict()
-    for i, label in enumerate(['delta', 'self', 'other']):
-        j = i + 2
-        dict_['MULTIATTRIBUTE COPULA'][label] = [values[j], is_fixed[j], bounds[j]]
+        dict_['UNIATTRIBUTE OTHER'], i = dict(), 1
+        dict_['UNIATTRIBUTE OTHER']['r'] = [values[i], is_fixed[i], bounds[i]]
+        dict_['UNIATTRIBUTE OTHER']['max'] = upper_bounds[i]
+        dict_['UNIATTRIBUTE OTHER']['marginal'] = marginals[i]
+
+        dict_['MULTIATTRIBUTE COPULA'] = dict()
+        for i, label in enumerate(['delta', 'self', 'other']):
+            j = i + 2
+            dict_['MULTIATTRIBUTE COPULA'][label] = [values[j], is_fixed[j], bounds[j]]
+
+    elif version in ['nonstationary']:
+        dict_['ATEMPORAL'], i = dict(), 0
+        dict_['ATEMPORAL']['alpha'] = [values[i], is_fixed[i], bounds[i]]
+    else:
+        raise TrempyError('version not implemented')
+
+    # General part of the init file that does not change with the version.
 
     # It is time to sample the questions.
+    questions = np.random.choice([13] + list(range(31, 46)), size=num_questions, replace=False)
     dict_['QUESTIONS'] = dict()
 
     for i, q in enumerate(questions):
@@ -129,7 +138,7 @@ def random_dict(constr):
 
 
 def get_rmse():
-    """This function returns the RMSE from the information file."""
+    """Return the RMSE from the information file."""
     with open('compare.trempy.info') as in_file:
         for line in in_file.readlines():
             if 'RMSE' in line:
@@ -140,20 +149,31 @@ def get_rmse():
 
 
 def get_bounds(label):
-    """This function returns a set of valid bounds tailored for each parameter."""
+    """Return a set of valid bounds tailored for each parameter."""
     wedge = float(np.random.uniform(0.03, 0.10))
 
+    # Scaled Archimedean
     if label in ['r_self', 'r_other']:
         lower = float(np.random.uniform(0.01, 5.0 - wedge))
-        upper = lower + wedge
     elif label in ['delta', 'self', 'other']:
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
-        upper = lower + wedge
+    # Nonstationary
+    elif label in ['alpha', 'beta', 'gamma']:
+        lower = float(np.random.uniform(0.01, 5.0 - wedge))
+    elif label in ['y_scale']:
+        lower = float(np.random.uniform(0.01, 0.98 - wedge))
+    elif label.startswith('discount_factors'):
+        lower = float(np.random.uniform(0.01, 0.98 - wedge))
+    elif label.startswith('unrestricted_weights'):
+        lower = float(np.random.uniform(0.01, 0.98 - wedge))
+    # Questions
     elif label in [13] + list(range(31, 46)):
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
-        upper = lower + wedge
     else:
         raise TrempyError('flawed request for bounds')
+
+    # Get upper bound by adding the wedge
+    upper = lower + wedge
 
     # We want to check the case of the default bounds as well.
     if np.random.choice([True, False], p=[0.1, 0.9]):
@@ -167,7 +187,7 @@ def get_bounds(label):
 
 
 def get_value(bounds, label):
-    """This function returns a value for the parameter that honors the bounds."""
+    """Return a value for the parameter that honors the bounds."""
     lower, upper = bounds
 
     if label in PREFERENCE_PARAMETERS:
@@ -180,7 +200,7 @@ def get_value(bounds, label):
 
 
 def get_cutoffs():
-    """This function returns a valid cutoff value."""
+    """Return a valid cutoff value."""
     lower = np.random.uniform(-5.0, -0.01)
     upper = np.random.uniform(0.01, 5.0)
 

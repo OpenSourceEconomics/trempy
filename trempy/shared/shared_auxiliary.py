@@ -68,12 +68,17 @@ def get_optimal_compensations(questions, upper, marginals, r_self, r_other, delt
 
 def print_init_dict(dict_, fname='test.trempy.ini'):
     """Print an initialization dictionary."""
-    keys = []
-    keys += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA', 'QUESTIONS']
-    keys += ['CUTOFFS', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS', 'SCIPY-POWELL']
+    keys = ['VERSION', 'SIMULATION', 'ESTIMATION',
+            'SCIPY-BFGS', 'SCIPY-POWELL',
+            'CUTOFFS', 'QUESTIONS']
+    # Scaled Archimedean
+    keys += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
+    # Nonstationary utility
+    keys += ['ATEMPORAL', 'DISCOUNTING']
 
     questions = list(dict_['QUESTIONS'].keys())
     is_cutoffs = False
+    version = dict_['VERSION']['version']
 
     with open(fname, 'w') as outfile:
         for key_ in keys:
@@ -87,13 +92,14 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 info = dict_[key_][label]
 
                 label_internal = label
+                # Scaled Archimedean
                 if label in ['r'] and 'SELF' in key_:
                     label_internal = 'r_self'
                 elif label in ['r'] and 'OTHER' in key_:
                     label_internal = 'r_other'
 
                 str_ = '{:<10}'
-                if label_internal in PREFERENCE_PARAMETERS + questions:
+                if label_internal in PREFERENCE_PARAMETERS[version] + questions:
                     str_ += ' {:25.4f} {:>5} '
                 else:
                     str_ += ' {:>25}\n'
@@ -101,7 +107,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 if label in ['detailed']:
                     info = str(info)
 
-                if label_internal in PREFERENCE_PARAMETERS + questions and key_ != 'CUTOFFS':
+                if label_internal in PREFERENCE_PARAMETERS[version] + questions and key_ != 'CUTOFFS':
                     line, str_ = format_coefficient_line(label_internal, info, str_)
                 elif key_ in ['CUTOFFS']:
                     line, str_ = format_cutoff_line(label, info)
@@ -153,8 +159,7 @@ def format_coefficient_line(label_internal, info, str_):
     if label_internal in ['r_other', 'r_self']:
         label_external = 'r'
 
-    line = []
-    line += [label_external, value]
+    line = [label_external, value]
 
     if is_fixed is True:
         line += ['!']

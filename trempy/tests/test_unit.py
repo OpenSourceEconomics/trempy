@@ -15,14 +15,14 @@ from trempy import estimate
 
 
 def test_1():
-    """This test checks that the random initialization files can all be properly processed."""
+    """Check that the random initialization files can all be properly processed."""
     for _ in range(100):
         get_random_init()
-        read('test.trempy.ini')
+        init_dict, version = read('test.trempy.ini')
 
 
 def test_2():
-    """This test ensures the back an forth transformations for the parameter values."""
+    """Ensure the back an forth transformations for the parameter values."""
     get_random_init()
 
     model_obj = ModelCls('test.trempy.ini')
@@ -40,8 +40,7 @@ def test_2():
 
 
 def test_3():
-    """This test ensures that writing out an initialization results in exactly the same value of
-    the criterion function."""
+    """Ensure that writing out an init_dict results in the same value of the criterion function."""
     constr = dict()
     constr['maxfun'] = 2
 
@@ -57,7 +56,7 @@ def test_3():
 
 
 def test_4():
-    """This test checks for valid bounds."""
+    """Check for valid bounds."""
     for _ in range(1000):
         for label in PREFERENCE_PARAMETERS:
             lower, upper = get_bounds(label)
@@ -66,8 +65,7 @@ def test_4():
 
 
 def test_5():
-    """This test ensures that the original and printed version of the initialization file are
-    identical."""
+    """Ensure that the original and printed version of the initialization file are identical."""
     get_random_init()
     model_obj = ModelCls('test.trempy.ini')
     model_obj.write_out('alt.trempy.ini')

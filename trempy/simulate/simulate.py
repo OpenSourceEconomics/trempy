@@ -12,12 +12,10 @@ from trempy.clsModel import ModelCls
 
 
 def simulate(fname):
-    """This function simulates the model based on the initialization file."""
-
+    """Simulate the model based on the initialization file."""
     model_obj = ModelCls(fname)
 
-    args = []
-    args += [model_obj, 'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs']
+    args = [model_obj, 'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs']
     args += ['upper', 'marginals']
     sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs, upper, marginals = \
         dist_class_attributes(*args)
@@ -66,7 +64,7 @@ def simulate(fname):
 
 
 def write_info(x_econ_all_current, df, questions, likl, m_optimal, fname):
-    """This function writes out some basic information about the simulated dataset."""
+    """Write out some basic information about the simulated dataset."""
     df_sim = df['Compensation'].mask(df['Compensation'] == NEVER_SWITCHERS)
     paras_label = PREFERENCE_PARAMETERS + questions
     fmt_ = '{:>15}' + '{:>15}' + '{:>15}    '
