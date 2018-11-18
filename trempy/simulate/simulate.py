@@ -14,11 +14,25 @@ from trempy.clsModel import ModelCls
 def simulate(fname):
     """Simulate the model based on the initialization file."""
     model_obj = ModelCls(fname)
+    version = model_obj.attr['version']
 
+    # List of args
     args = [model_obj, 'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs']
-    args += ['upper', 'marginals']
-    sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs, upper, marginals = \
-        dist_class_attributes(*args)
+    if version in ['scaled_archimedean']:
+        args += ['upper', 'marginals']
+    elif version in ['nonstationary']:
+        pass
+    else:
+        raise Exception
+
+    if version in ['scaled_archimedean']:
+        sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs, upper, marginals = \
+            dist_class_attributes(*args)
+    elif version in ['nonstationary']:
+        sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = \
+            dist_class_attributes(*args)
+    else:
+        raise Exception
 
     np.random.seed(sim_seed)
 

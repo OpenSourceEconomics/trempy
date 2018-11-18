@@ -179,7 +179,7 @@ def format_coefficient_line(label_internal, info, str_):
         label_external = 'r'
 
     # First, filter out integer values
-    if isinstance(label_external, np.int64):
+    if isinstance(label_external, np.int64) or isinstance(label_external, int):
         line = [label_external, value]
     # Handle optional arguments that should be set to 'None'
     elif label_external.startswith('unrestricted_weights') and value is None:
@@ -216,43 +216,43 @@ def format_coefficient_line(label_internal, info, str_):
 def expected_utility_a(copula, lottery):
     """Calculate the expected utility for lottery A."""
     if lottery == 13:
-        rslt = copula.evaluate(50, 0)
+        rslt = copula.evaluate(50, 0, t=0)
     elif lottery == 31:
-        rslt = 0.50 * copula.evaluate(15, 0) + 0.50 * copula.evaluate(20, 0)
+        rslt = 0.50 * copula.evaluate(15, 0, t=0) + 0.50 * copula.evaluate(20, 0, t=0)
     elif lottery == 32:
-        rslt = 0.50 * copula.evaluate(30, 0) + 0.50 * copula.evaluate(40, 0)
+        rslt = 0.50 * copula.evaluate(30, 0, t=0) + 0.50 * copula.evaluate(40, 0, t=0)
     elif lottery == 33:
-        rslt = 0.50 * copula.evaluate(60, 0) + 0.50 * copula.evaluate(80, 0)
+        rslt = 0.50 * copula.evaluate(60, 0, t=0) + 0.50 * copula.evaluate(80, 0, t=0)
     elif lottery == 34:
-        rslt = 0.50 * copula.evaluate(0, 15) + 0.50 * copula.evaluate(0, 20)
+        rslt = 0.50 * copula.evaluate(0, 15, t=0) + 0.50 * copula.evaluate(0, 20, t=0)
     elif lottery == 35:
-        rslt = 0.50 * copula.evaluate(0, 30) + 0.50 * copula.evaluate(0, 40)
+        rslt = 0.50 * copula.evaluate(0, 30, t=0) + 0.50 * copula.evaluate(0, 40, t=0)
     elif lottery == 36:
-        rslt = 0.50 * copula.evaluate(0, 60) + 0.50 * copula.evaluate(0, 80)
+        rslt = 0.50 * copula.evaluate(0, 60, t=0) + 0.50 * copula.evaluate(0, 80, t=0)
     elif lottery == 37:
-        rslt = 0.50 * copula.evaluate(15, 25) + 0.50 * copula.evaluate(25, 15)
+        rslt = 0.50 * copula.evaluate(15, 25, t=0) + 0.50 * copula.evaluate(25, 15, t=0)
     elif lottery == 38:
-        rslt = 0.50 * copula.evaluate(30, 50) + 0.50 * copula.evaluate(50, 30)
+        rslt = 0.50 * copula.evaluate(30, 50, t=0) + 0.50 * copula.evaluate(50, 30, t=0)
     elif lottery == 39:
-        rslt = 0.50 * copula.evaluate(60, 100) + 0.50 * copula.evaluate(100, 60)
+        rslt = 0.50 * copula.evaluate(60, 100, t=0) + 0.50 * copula.evaluate(100, 60, t=0)
     elif lottery == 40:
-        rslt = 0.50 * copula.evaluate(30, 0) + \
-            0.50 * (0.50 * copula.evaluate(54, 0) + 0.50 * copula.evaluate(26, 0))
+        rslt = 0.50 * copula.evaluate(30, 0, t=0) + \
+            0.50 * (0.50 * copula.evaluate(54, 0, t=0) + 0.50 * copula.evaluate(26, 0, t=0))
     elif lottery == 41:
-        rslt = 0.50 * copula.evaluate(30, 0) + \
-            0.50 * (0.80 * copula.evaluate(33, 0) + 0.20 * copula.evaluate(68, 0))
+        rslt = 0.50 * copula.evaluate(30, 0, t=0) + \
+            0.50 * (0.80 * copula.evaluate(33, 0, t=0) + 0.20 * copula.evaluate(68, 0, t=0))
     elif lottery == 42:
-        rslt = 0.50 * copula.evaluate(30, 0) + \
-            0.50 * (0.80 * copula.evaluate(47, 0) + 0.20 * copula.evaluate(12, 0))
+        rslt = 0.50 * copula.evaluate(30, 0, t=0) + \
+            0.50 * (0.80 * copula.evaluate(47, 0, t=0) + 0.20 * copula.evaluate(12, 0, t=0))
     elif lottery == 43:
-        rslt = 0.50 * copula.evaluate(0, 30) + \
-            0.50 * (0.50 * copula.evaluate(0, 54) + 0.50 * copula.evaluate(0, 26))
+        rslt = 0.50 * copula.evaluate(0, 30, t=0) + \
+            0.50 * (0.50 * copula.evaluate(0, 54, t=0) + 0.50 * copula.evaluate(0, 26, t=0))
     elif lottery == 44:
-        rslt = 0.50 * copula.evaluate(0, 30) + \
-            0.50 * (0.80 * copula.evaluate(0, 33) + 0.20 * copula.evaluate(0, 68))
+        rslt = 0.50 * copula.evaluate(0, 30, t=0) + \
+            0.50 * (0.80 * copula.evaluate(0, 33, t=0) + 0.20 * copula.evaluate(0, 68, t=0))
     elif lottery == 45:
-        rslt = 0.50 * copula.evaluate(0, 30) + \
-            0.50 * (0.80 * copula.evaluate(0, 47) + 0.20 * copula.evaluate(0, 12))
+        rslt = 0.50 * copula.evaluate(0, 30, t=0) + \
+            0.50 * (0.80 * copula.evaluate(0, 47, t=0) + 0.20 * copula.evaluate(0, 12, t=0))
     else:
         raise AssertionError
 
@@ -262,43 +262,43 @@ def expected_utility_a(copula, lottery):
 def expected_utility_b(copula, lottery, m):
     """Calculate the expected utility for lottery B."""
     if lottery == 13:
-        rslt = copula.evaluate(0, m)
+        rslt = copula.evaluate(0, m, t=0)
     elif lottery == 31:
-        rslt = 0.50 * copula.evaluate(10 + m, 0) + 0.50 * copula.evaluate(25 + m, 0)
+        rslt = 0.50 * copula.evaluate(10 + m, 0, t=0) + 0.50 * copula.evaluate(25 + m, 0, t=0)
     elif lottery == 32:
-        rslt = 0.50 * copula.evaluate(20 + m, 0) + 0.50 * copula.evaluate(50 + m, 0)
+        rslt = 0.50 * copula.evaluate(20 + m, 0, t=0) + 0.50 * copula.evaluate(50 + m, 0, t=0)
     elif lottery == 33:
-        rslt = 0.50 * copula.evaluate(40 + m, 0) + 0.50 * copula.evaluate(100 + m, 0)
+        rslt = 0.50 * copula.evaluate(40 + m, 0, t=0) + 0.50 * copula.evaluate(100 + m, 0, t=0)
     elif lottery == 34:
-        rslt = 0.50 * copula.evaluate(0, 10 + m) + 0.50 * copula.evaluate(0, 25 + m)
+        rslt = 0.50 * copula.evaluate(0, 10 + m, t=0) + 0.50 * copula.evaluate(0, 25 + m, t=0)
     elif lottery == 35:
-        rslt = 0.50 * copula.evaluate(0, 20 + m) + 0.50 * copula.evaluate(0, 50 + m)
+        rslt = 0.50 * copula.evaluate(0, 20 + m, t=0) + 0.50 * copula.evaluate(0, 50 + m, t=0)
     elif lottery == 36:
-        rslt = 0.50 * copula.evaluate(0, 40 + m) + 0.50 * copula.evaluate(0, 100 + m)
+        rslt = 0.50 * copula.evaluate(0, 40 + m, t=0) + 0.50 * copula.evaluate(0, 100 + m, t=0)
     elif lottery == 37:
-        rslt = 0.50 * copula.evaluate(15 + m, 15) + 0.50 * copula.evaluate(25 + m, 25)
+        rslt = 0.50 * copula.evaluate(15 + m, 15, t=0) + 0.50 * copula.evaluate(25 + m, 25, t=0)
     elif lottery == 38:
-        rslt = 0.50 * copula.evaluate(30 + m, 30) + 0.50 * copula.evaluate(50 + m, 50)
+        rslt = 0.50 * copula.evaluate(30 + m, 30, t=0) + 0.50 * copula.evaluate(50 + m, 50, t=0)
     elif lottery == 39:
-        rslt = 0.50 * copula.evaluate(60 + m, 60) + 0.50 * copula.evaluate(100 + m, 100)
+        rslt = 0.50 * copula.evaluate(60 + m, 60, t=0) + 0.50 * copula.evaluate(100 + m, 100, t=0)
     elif lottery == 40:
-        rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0) + 0.50 * copula.evaluate(16 + m, 0)) + \
-            0.50 * copula.evaluate(40 + m, 0)
+        rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0, t=0) + 0.50 *
+                       copula.evaluate(16 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
     elif lottery == 41:
-        rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0) + 0.20 * copula.evaluate(58 + m, 0)) + \
-            0.50 * copula.evaluate(40 + m, 0)
+        rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0, t=0) + 0.20 *
+                       copula.evaluate(58 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
     elif lottery == 42:
-        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0) + 0.20 * copula.evaluate(2 + m, 0)) + \
-            0.50 * copula.evaluate(40 + m, 0)
+        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0, t=0) + 0.20 *
+                       copula.evaluate(2 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
     elif lottery == 43:
-        rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m) + 0.50 * copula.evaluate(0, 16 + m)) + \
-            0.50 * copula.evaluate(0, 40 + m)
+        rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m, t=0) + 0.50 *
+                       copula.evaluate(0, 16 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
     elif lottery == 44:
-        rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m) + 0.20 * copula.evaluate(0, 58 + m)) + \
-            0.50 * copula.evaluate(0, 40 + m)
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m, t=0) + 0.20 *
+                       copula.evaluate(0, 58 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
     elif lottery == 45:
-        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m) + 0.20 * copula.evaluate(0, 2 + m)) + \
-            0.50 * copula.evaluate(0, 40 + m)
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m, t=0) + 0.20 *
+                       copula.evaluate(0, 2 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
     else:
         raise AssertionError
 

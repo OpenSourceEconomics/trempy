@@ -15,7 +15,8 @@ class ModelCls(BaseCls):
 
     def __init__(self, fname):
         """Init class."""
-        init_dict, version = read(fname)
+        init_dict = read(fname)
+        version = init_dict['VERSION']['version']
 
         # We first tackle the more complex issue of parameter management.
         paras_obj = ParasCls(init_dict)
@@ -39,7 +40,7 @@ class ModelCls(BaseCls):
             marginals += [init_dict['UNIATTRIBUTE SELF']['marginal']]
             marginals += [init_dict['UNIATTRIBUTE OTHER']['marginal']]
             self.attr['marginals'] = marginals
-        elif version in ['scaled_archimedean']:
+        elif version in ['nonstationary']:
             pass
         else:
             raise TrempyError('version not implemented')
@@ -166,30 +167,36 @@ class ModelCls(BaseCls):
             init_dict['MULTIATTRIBUTE COPULA']['self'] = paras_obj.get_para('self')
             init_dict['MULTIATTRIBUTE COPULA']['other'] = paras_obj.get_para('other')
         elif version in ['nonstationary']:
-            init_dict['ATEMPORAL']['alpha'] = self.get_para('alpha')
-            init_dict['ATEMPORAL']['beta'] = self.get_para('beta')
-            init_dict['ATEMPORAL']['gamma'] = self.get_para('gamma')
-            init_dict['ATEMPORAL']['y_scale'] = self.get_para('y_scale')
+            init_dict['ATEMPORAL']['alpha'] = paras_obj.get_para('alpha')
+            init_dict['ATEMPORAL']['beta'] = paras_obj.get_para('beta')
+            init_dict['ATEMPORAL']['gamma'] = paras_obj.get_para('gamma')
+            init_dict['ATEMPORAL']['y_scale'] = paras_obj.get_para('y_scale')
 
-            init_dict['DISCOUNTING']['discount_factors_0'] = self.get_para('discount_factors_0')
-            init_dict['DISCOUNTING']['discount_factors_1'] = self.get_para('discount_factors_1')
-            init_dict['DISCOUNTING']['discount_factors_3'] = self.get_para('discount_factors_3')
-            init_dict['DISCOUNTING']['discount_factors_6'] = self.get_para('discount_factors_6')
-            init_dict['DISCOUNTING']['discount_factors_12'] = self.get_para('discount_factors_12')
-            init_dict['DISCOUNTING']['discount_factors_24'] = self.get_para('discount_factors_24')
+            init_dict['DISCOUNTING']['discount_factors_0'] = \
+                paras_obj.get_para('discount_factors_0')
+            init_dict['DISCOUNTING']['discount_factors_1'] = \
+                paras_obj.get_para('discount_factors_1')
+            init_dict['DISCOUNTING']['discount_factors_3'] = \
+                paras_obj.get_para('discount_factors_3')
+            init_dict['DISCOUNTING']['discount_factors_6'] = \
+                paras_obj.get_para('discount_factors_6')
+            init_dict['DISCOUNTING']['discount_factors_12'] = \
+                paras_obj.get_para('discount_factors_12')
+            init_dict['DISCOUNTING']['discount_factors_24'] = \
+                paras_obj.get_para('discount_factors_24')
 
             init_dict['DISCOUNTING']['unrestricted_weights_0'] = \
-                self.get_para('unrestricted_weights_0')
+                paras_obj.get_para('unrestricted_weights_0')
             init_dict['DISCOUNTING']['unrestricted_weights_1'] = \
-                self.get_para('unrestricted_weights_1')
+                paras_obj.get_para('unrestricted_weights_1')
             init_dict['DISCOUNTING']['unrestricted_weights_3'] = \
-                self.get_para('unrestricted_weights_3')
+                paras_obj.get_para('unrestricted_weights_3')
             init_dict['DISCOUNTING']['unrestricted_weights_6'] = \
-                self.get_para('unrestricted_weights_6')
+                paras_obj.get_para('unrestricted_weights_6')
             init_dict['DISCOUNTING']['unrestricted_weights_12'] = \
-                self.get_para('unrestricted_weights_12')
+                paras_obj.get_para('unrestricted_weights_12')
             init_dict['DISCOUNTING']['unrestricted_weights_24'] = \
-                self.get_para('unrestricted_weights_24')
+                paras_obj.get_para('unrestricted_weights_24')
         else:
             raise TrempyError('version not implemented')
 

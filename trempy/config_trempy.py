@@ -39,7 +39,7 @@ DEFAULT_BOUNDS['beta'] = [0.01, 5.00]
 DEFAULT_BOUNDS['gamma'] = [0.01, 5.00]
 DEFAULT_BOUNDS['y_scale'] = [0.01, 100.00]
 
-DEFAULT_BOUNDS['discount_factors_0'] = [1.00, 1.00]
+DEFAULT_BOUNDS['discount_factors_0'] = [0.01, 1.00]
 DEFAULT_BOUNDS['discount_factors_1'] = [0.01, 1.00]
 DEFAULT_BOUNDS['discount_factors_3'] = [0.01, 1.00]
 DEFAULT_BOUNDS['discount_factors_6'] = [0.01, 1.00]
