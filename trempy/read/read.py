@@ -54,7 +54,6 @@ def read(fname):
             # Handle the VERSION block.
             if (group in ['VERSION']) and (flag in ['version']):
                 version = value
-                print('Version: {}.'.format(version))
 
             # Type conversions for the NON-CUTOFF block
             if group not in ['CUTOFFS']:
@@ -135,7 +134,7 @@ def process_bounds(bounds, label):
     bounds = bounds.split(',')
     for i in range(2):
         if bounds[i] == 'None':
-            bounds[i] = DEFAULT_BOUNDS[label][i]
+            bounds[i] = float(DEFAULT_BOUNDS[label][i])
         else:
             bounds[i] = float(bounds[i])
 
@@ -193,33 +192,43 @@ def process_cases(list_):
 
 def type_conversions(version, flag, value):
     """Type conversions by version."""
-    if flag in ['seed', 'agents', 'maxfun', 'max', 'skip']:
+    # Handle ESTIMATION, SIMULATION and VERSION
+    if flag in ['seed', 'agents', 'maxfun', 'skip']:
         value = int(value)
-    elif flag in ['version', 'file', 'optimizer', 'start', 'marginal']:
+    elif flag in ['version', 'file', 'optimizer', 'start']:
         value = str(value)
     elif flag in ['detailed']:
         assert (value.upper() in ['TRUE', 'FALSE'])
         value = (value.upper() == 'TRUE')
+    # Handle SCIPY-BFGS and SCIPY-POWELL
+    elif flag in ['eps', 'gtol', 'ftol', 'xtol']:
+        value = float(value)
+    # Empty flags
     elif flag in []:
         value = value.upper()
-    else:
-        # Currently both cases are handled similarly. This is future-proofing.
-        if version in ['scaled_archimedean']:
-            value = float(value)
-        elif version in ['nonstationary']:
-            # Optional argument: handle 'None' strings.
-            if flag.startswith('unrestricted_weights_') and value == 'None':
-                value = None
-            else:
-                value = float(value)
+    # Handle Scaled Archimedean
+    elif flag in ['marginal']:
+        value = str(value)
+    elif flag in ['max']:
+        value = int(value)
+    elif flag in ['r', 'delta', 'other', 'self']:
+        value = float(value)
+    # Handle nonstationary
+    elif flag in ['alpha', 'beta', 'gamma', 'y_scale'] or flag.startswith('discount_factors'):
+        value = float(value)
+    elif flag.startswith('unrestricted_weights_'):
+        if value == 'None':
+            value = None
         else:
-            raise TrempyError('version not implemented')
+            value = float(value)
+    else:
+        value = float(value)
 
     # TODO: add consistency check for unrestricted weights and
     # TODO: add additional tests for the init dict in separate file "read_init_check.py"
 
     # Finishing
-    return value, version
+    return value
 
 
 # def postprocess_temporal_blocks(block):

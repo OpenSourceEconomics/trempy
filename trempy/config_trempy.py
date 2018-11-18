@@ -54,7 +54,7 @@ DEFAULT_BOUNDS['unrestricted_weights_12'] = [0.01, 5.00]
 DEFAULT_BOUNDS['unrestricted_weights_24'] = [0.01, 5.00]
 
 for q in QUESTIONS_ALL:
-    DEFAULT_BOUNDS[q] = [0.01, 100]
+    DEFAULT_BOUNDS[q] = [0.01, 100.00]
 
 # We maintain a list of all preference parameters by version.
 PREFERENCE_PARAMETERS = {

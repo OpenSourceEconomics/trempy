@@ -36,8 +36,8 @@ class ParasCls(BaseCls):
             elif version in ['nonstationary']:
                 if label in ['alpha', 'beta', 'gamma', 'y_scale']:
                     value, is_fixed, bounds = init_dict['ATEMPORAL'][label]
-                elif label.startswith('discount_factors') or 
-                     label.startswith('unrestricted_weights'):
+                elif (label.startswith('discount_factors') or
+                      label.startswith('unrestricted_weights')):
                     value, is_fixed, bounds = init_dict['DISCOUNTING'][label]
                 else:
                     raise TrempyError('parameter label not implemented')

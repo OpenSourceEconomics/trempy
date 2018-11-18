@@ -108,14 +108,15 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                     pass
 
                 # Build format string for line
-                str_ = '{:<10}'
+                str_ = '{:<25}'
                 if label_internal in PREFERENCE_PARAMETERS[version] + questions:
                     # Handle optional arguments where None can occur
-                    if label_internal.startswith('unrestricted_weights') and info[0] is None:
-                        str_ += ' {:>25}\n'
+                    if (isinstance(label_internal, str) and
+                       label_internal.startswith('unrestricted_weights') and info[0] is None):
+                        str_ += ' {:>25} {:>10} '
                     # Preference parameters are formatted as floats
                     else:
-                        str_ += ' {:25.4f} {:>5} '
+                        str_ += ' {:25.4f} {:>10} '
                 else:
                     # All other parameters are formatted as strings
                     str_ += ' {:>25}\n'
@@ -148,15 +149,15 @@ def format_cutoff_line(label, info):
     """Return a properly formatted cutoff line."""
     cutoffs = info
 
-    str_ = '{:<10}'
+    str_ = '{:<26}'
     line = [label]
     for i in range(2):
         if abs(cutoffs[i]) >= HUGE_FLOAT:
             cutoff = 'None'
-            str_ += '{:>25}'
+            str_ += '{:>25} '
         else:
             cutoff = np.round(cutoffs[i], decimals=4)
-            str_ += '{:25.4f}'
+            str_ += '{:25.4f} '
         line += [cutoff]
 
     str_ += '\n'
@@ -177,14 +178,18 @@ def format_coefficient_line(label_internal, info, str_):
     if label_internal in ['r_other', 'r_self']:
         label_external = 'r'
 
+    # First, filter out integer values
+    if isinstance(label_external, np.int64):
+        line = [label_external, value]
     # Handle optional arguments that should be set to 'None'
-    if label_external.startswith('unrestricted_weights') and value is None:
+    elif label_external.startswith('unrestricted_weights') and value is None:
         line = [label_external, 'None']
+    # Handle all other cases
     else:
         # The regular case where we want to print value as a float
         line = [label_external, value]
 
-    if is_fixed is True:
+    if np.any(is_fixed):
         line += ['!']
     else:
         line += ['']

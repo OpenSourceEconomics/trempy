@@ -24,18 +24,19 @@ def random_dict(constr):
     """Create a random initialization file."""
     dict_ = dict()
 
+    # Handle version specific data.
+    version = np.random.choice(['scaled_archimedean', 'nonstationary'])
+    dict_['VERSION'] = {'version': version}
+
     num_questions = np.random.randint(2, 14)
     sim_agents = np.random.randint(2, 10)
     fname = get_random_string()
 
-    is_fixed = np.random.choice([True, False], size=num_questions + 3)
+    is_fixed = np.random.choice([True, False],
+                                size=num_questions + len(PREFERENCE_PARAMETERS[version]))
     # We need to ensure at least one parameter is free for a valid estimation request.
     if is_fixed.tolist().count('False') == 0:
         is_fixed[0] = 'False'
-
-    # Handle version specific data.
-    version = np.random.choice(['scaled_archimedean', 'nonstationary'])
-    dict_['VERSION']['version'] = version
 
     # Bounds and values. Be careful: the order of labels matters!
     bounds = [get_bounds(label, version) for label in PREFERENCE_PARAMETERS[version]]
@@ -71,7 +72,7 @@ def random_dict(constr):
             if label in ['alpha', 'beta', 'gamma', 'y_scale']:
                 dict_['ATEMPORAL'][label] = [values[i], is_fixed[i], bounds[i]]
             else:
-                dict_['DISCOUNTING'][label] = [values[j], is_fixed[j], bounds[j]]
+                dict_['DISCOUNTING'][label] = [values[i], is_fixed[i], bounds[i]]
 
     else:
         raise TrempyError('version not implemented')
@@ -197,6 +198,8 @@ def get_bounds(label, version):
 
     bounds = [float(lower), float(upper)]
 
+    bounds = [np.around(bound, decimals=4) for bound in bounds]
+
     return bounds
 
 
@@ -212,13 +215,16 @@ def get_value(bounds, label, version):
                 value = None
             else:
                 value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+                value = np.around(value, decimals=4)
         # Other preference paramters
         else:
             value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+            value = np.around(value, decimals=4)
     # Handle non-preference labels
     else:
         upper = min(upper, 10)
         value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+        value = np.around(value, decimals=4)
 
     return value
 
@@ -230,5 +236,5 @@ def get_cutoffs():
 
     cutoffs = [np.random.choice([lower, -HUGE_FLOAT], p=[0.8, 0.2]),
                np.random.choice([upper, HUGE_FLOAT], p=[0.8, 0.2])]
-
+    cutoffs = [np.around(cutoff, decimals=4) for cutoff in cutoffs]
     return cutoffs
