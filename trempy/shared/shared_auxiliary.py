@@ -8,6 +8,7 @@ from scipy import optimize
 import numpy as np
 
 from trempy.interface.interface_copulpy import get_copula
+from trempy.custom_exceptions import TrempyError
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
 from trempy.config_trempy import DEFAULT_BOUNDS
@@ -68,21 +69,25 @@ def get_optimal_compensations(questions, upper, marginals, r_self, r_other, delt
 
 def print_init_dict(dict_, fname='test.trempy.ini'):
     """Print an initialization dictionary."""
+    version = dict_['VERSION']['version']
+
     keys = ['VERSION', 'SIMULATION', 'ESTIMATION',
             'SCIPY-BFGS', 'SCIPY-POWELL',
             'CUTOFFS', 'QUESTIONS']
-    # Scaled Archimedean
-    keys += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
-    # Nonstationary utility
-    keys += ['ATEMPORAL', 'DISCOUNTING']
+
+    # Add keys based on version of the utility function
+    if version in ['scaled_archimedean']:
+        keys += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
+    elif version in ['nonstationary']:
+        keys += ['ATEMPORAL', 'DISCOUNTING']
+    else:
+        raise TrempyError('version not implemented')
 
     questions = list(dict_['QUESTIONS'].keys())
     is_cutoffs = False
-    version = dict_['VERSION']['version']
 
     with open(fname, 'w') as outfile:
         for key_ in keys:
-
             # We do not ned to print the CUTOFFS block if none are specified. So we first check
             # below if there is any need.
             if key_ not in ['CUTOFFS']:
@@ -92,22 +97,35 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 info = dict_[key_][label]
 
                 label_internal = label
-                # Scaled Archimedean
-                if label in ['r'] and 'SELF' in key_:
-                    label_internal = 'r_self'
-                elif label in ['r'] and 'OTHER' in key_:
-                    label_internal = 'r_other'
 
+                # Manually translate labels to internal labels based on version
+                if version in ['scaled_archimedean']:
+                    if label in ['r'] and 'SELF' in key_:
+                        label_internal = 'r_self'
+                    elif label in ['r'] and 'OTHER' in key_:
+                        label_internal = 'r_other'
+                elif version in ['nonstationary']:
+                    pass
+
+                # Build format string for line
                 str_ = '{:<10}'
                 if label_internal in PREFERENCE_PARAMETERS[version] + questions:
-                    str_ += ' {:25.4f} {:>5} '
+                    # Handle optional arguments where None can occur
+                    if label_internal.startswith('unrestricted_weights') and info[0] is None:
+                        str_ += ' {:>25}\n'
+                    # Preference parameters are formatted as floats
+                    else:
+                        str_ += ' {:25.4f} {:>5} '
                 else:
+                    # All other parameters are formatted as strings
                     str_ += ' {:>25}\n'
 
-                if label in ['detailed']:
+                # Handle string output (e.g. "True" or "None")
+                if label in ['detailed', 'version']:
                     info = str(info)
 
-                if label_internal in PREFERENCE_PARAMETERS[version] + questions and key_ != 'CUTOFFS':
+                if (label_internal in PREFERENCE_PARAMETERS[version] + questions and
+                   key_ != 'CUTOFFS'):
                     line, str_ = format_coefficient_line(label_internal, info, str_)
                 elif key_ in ['CUTOFFS']:
                     line, str_ = format_cutoff_line(label, info)
@@ -159,7 +177,12 @@ def format_coefficient_line(label_internal, info, str_):
     if label_internal in ['r_other', 'r_self']:
         label_external = 'r'
 
-    line = [label_external, value]
+    # Handle optional arguments that should be set to 'None'
+    if label_external.startswith('unrestricted_weights') and value is None:
+        line = [label_external, 'None']
+    else:
+        # The regular case where we want to print value as a float
+        line = [label_external, value]
 
     if is_fixed is True:
         line += ['!']

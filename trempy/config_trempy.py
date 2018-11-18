@@ -60,7 +60,12 @@ for q in QUESTIONS_ALL:
 PREFERENCE_PARAMETERS = {
     'scaled_archimedean': ['r_self', 'r_other', 'delta', 'self', 'other'],
     'nonstationary': ['alpha', 'beta', 'gamma', 'y_scale',
-                      'discount_factors', 'unrestricted_weights'],
+                      'discount_factors_0', 'discount_factors_1',
+                      'discount_factors_3', 'discount_factors_6',
+                      'discount_factors_12', 'discount_factors_24',
+                      'unrestricted_weights_0', 'unrestricted_weights_1',
+                      'unrestricted_weights_3', 'unrestricted_weights_6',
+                      'unrestricted_weights_12', 'unrestricted_weights_24'],
 }
 
 # We need to specify the grid for the determination of the optimal compensation.

@@ -215,6 +215,9 @@ def type_conversions(version, flag, value):
         else:
             raise TrempyError('version not implemented')
 
+    # TODO: add consistency check for unrestricted weights and
+    # TODO: add additional tests for the init dict in separate file "read_init_check.py"
+
     # Finishing
     return value, version
 

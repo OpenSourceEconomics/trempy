@@ -37,9 +37,10 @@ def random_dict(constr):
     version = np.random.choice(['scaled_archimedean', 'nonstationary'])
     dict_['VERSION']['version'] = version
 
-    # Bounds and values
-    bounds = [get_bounds(label) for label in PREFERENCE_PARAMETERS[version]]
-    values = [get_value(bounds[i], label) for i, label in enumerate(PREFERENCE_PARAMETERS[version])]
+    # Bounds and values. Be careful: the order of labels matters!
+    bounds = [get_bounds(label, version) for label in PREFERENCE_PARAMETERS[version]]
+    values = [get_value(bounds[i], label, version)
+              for i, label in enumerate(PREFERENCE_PARAMETERS[version])]
 
     if version in ['scaled_archimedean']:
         # Initial setup to ensure constraints across options.
@@ -59,12 +60,19 @@ def random_dict(constr):
 
         dict_['MULTIATTRIBUTE COPULA'] = dict()
         for i, label in enumerate(['delta', 'self', 'other']):
+            # We increment index because (r_self, r_other) are handled above.
             j = i + 2
             dict_['MULTIATTRIBUTE COPULA'][label] = [values[j], is_fixed[j], bounds[j]]
 
     elif version in ['nonstationary']:
-        dict_['ATEMPORAL'], i = dict(), 0
-        dict_['ATEMPORAL']['alpha'] = [values[i], is_fixed[i], bounds[i]]
+        dict_['ATEMPORAL'] = dict()
+        dict_['DISCOUNTING'] = dict()
+        for i, label in enumerate(PREFERENCE_PARAMETERS[version]):
+            if label in ['alpha', 'beta', 'gamma', 'y_scale']:
+                dict_['ATEMPORAL'][label] = [values[i], is_fixed[i], bounds[i]]
+            else:
+                dict_['DISCOUNTING'][label] = [values[j], is_fixed[j], bounds[j]]
+
     else:
         raise TrempyError('version not implemented')
 
@@ -75,8 +83,8 @@ def random_dict(constr):
     dict_['QUESTIONS'] = dict()
 
     for i, q in enumerate(questions):
-        bounds = get_bounds(q)
-        value = get_value(bounds, q)
+        bounds = get_bounds(q, version)
+        value = get_value(bounds, q, version)
         dict_['QUESTIONS'][q] = [value, is_fixed[i + 3], bounds]
 
     # We now add some cutoff values.
@@ -148,29 +156,35 @@ def get_rmse():
                 return stat
 
 
-def get_bounds(label):
+def get_bounds(label, version):
     """Return a set of valid bounds tailored for each parameter."""
     wedge = float(np.random.uniform(0.03, 0.10))
 
-    # Scaled Archimedean
-    if label in ['r_self', 'r_other']:
-        lower = float(np.random.uniform(0.01, 5.0 - wedge))
-    elif label in ['delta', 'self', 'other']:
-        lower = float(np.random.uniform(0.01, 0.98 - wedge))
-    # Nonstationary
-    elif label in ['alpha', 'beta', 'gamma']:
-        lower = float(np.random.uniform(0.01, 5.0 - wedge))
-    elif label in ['y_scale']:
-        lower = float(np.random.uniform(0.01, 0.98 - wedge))
-    elif label.startswith('discount_factors'):
-        lower = float(np.random.uniform(0.01, 0.98 - wedge))
-    elif label.startswith('unrestricted_weights'):
-        lower = float(np.random.uniform(0.01, 0.98 - wedge))
     # Questions
-    elif label in [13] + list(range(31, 46)):
+    if label in [13] + list(range(31, 46)):
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
     else:
-        raise TrempyError('flawed request for bounds')
+        # Handle version
+        if version in ['scaled_archimedean']:
+            if label in ['r_self', 'r_other']:
+                lower = float(np.random.uniform(0.01, 5.0 - wedge))
+            elif label in ['delta', 'self', 'other']:
+                lower = float(np.random.uniform(0.01, 0.98 - wedge))
+            else:
+                raise TrempyError('flawed request for bounds')
+        elif version in ['nonstationary']:
+            if label in ['alpha', 'beta', 'gamma']:
+                lower = float(np.random.uniform(0.01, 5.0 - wedge))
+            elif label in ['y_scale']:
+                lower = float(np.random.uniform(0.01, 0.98 - wedge))
+            elif label.startswith('discount_factors'):
+                lower = float(np.random.uniform(0.01, 0.98 - wedge))
+            elif label.startswith('unrestricted_weights'):
+                lower = float(np.random.uniform(0.01, 0.98 - wedge))
+            else:
+                raise TrempyError('flawed request for bounds')
+        else:
+            raise TrempyError('version not implemented')
 
     # Get upper bound by adding the wedge
     upper = lower + wedge
@@ -186,12 +200,22 @@ def get_bounds(label):
     return bounds
 
 
-def get_value(bounds, label):
+def get_value(bounds, label, version):
     """Return a value for the parameter that honors the bounds."""
     lower, upper = bounds
 
-    if label in PREFERENCE_PARAMETERS:
-        value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+    if label in PREFERENCE_PARAMETERS[version]:
+        # Handle optional arguments and set them to None if not required.
+        if label.startswith('unrestricted_weights'):
+            restricted = np.random.choice([True, False], p=[0.9, 0.1])
+            if restricted:
+                value = None
+            else:
+                value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+        # Other preference paramters
+        else:
+            value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+    # Handle non-preference labels
     else:
         upper = min(upper, 10)
         value = float(np.random.uniform(lower + 0.01, upper - 0.01))
@@ -204,8 +228,7 @@ def get_cutoffs():
     lower = np.random.uniform(-5.0, -0.01)
     upper = np.random.uniform(0.01, 5.0)
 
-    cutoffs = []
-    cutoffs += [np.random.choice([lower, -HUGE_FLOAT], p=[0.8, 0.2])]
-    cutoffs += [np.random.choice([upper, HUGE_FLOAT], p=[0.8, 0.2])]
+    cutoffs = [np.random.choice([lower, -HUGE_FLOAT], p=[0.8, 0.2]),
+               np.random.choice([upper, HUGE_FLOAT], p=[0.8, 0.2])]
 
     return cutoffs
