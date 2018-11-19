@@ -7,7 +7,8 @@ from scipy.stats import norm
 from scipy import optimize
 import numpy as np
 
-from trempy.interface.interface_copulpy import get_copula
+from trempy.interface.interface_copulpy import get_copula_nonstationary
+from trempy.interface.interface_copulpy import get_copula_scaled_archimedean
 from trempy.custom_exceptions import TrempyError
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
@@ -17,14 +18,15 @@ from trempy.config_trempy import TINY_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
 
-def criterion_function(df, questions, cutoffs, upper, marginals, *args):
-    """Calculate the likelihood of the observed sample."""
-    # Distribute parameters
-    r_self, r_other, delta, self, other = args[:5]
-    sds = args[5:]
+def criterion_function(df, questions, cutoffs, model_obj, version, sds):
+    """Calculate the likelihood of the observed sample.
 
-    args = [questions, upper, marginals, r_self, r_other, delta, self, other]
-    m_optimal = get_optimal_compensations(*args)
+    sds: standard deviations for each question.
+    model_obj: the ModelCls object
+    version: nonstationary or scaled_archimedean
+    """
+    # Distribute parameters
+    m_optimal = get_optimal_compensations(version=version, model_obj=model_obj, questions=questions)
 
     contribs = []
     for i, q in enumerate(questions):
@@ -57,13 +59,79 @@ def criterion_function(df, questions, cutoffs, upper, marginals, *args):
     return rslt
 
 
-def get_optimal_compensations(questions, upper, marginals, r_self, r_other, delta, self, other):
+def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_self,
+                                                 r_other, delta, self, other):
     """Return the optimal compensations for all questions."""
-    copula = get_copula(upper, marginals, r_self, r_other, delta, self, other)
+    copula = get_copula_scaled_archimedean(upper, marginals, r_self, r_other, delta, self, other)
 
     m_optimal = dict()
     for q in questions:
         m_optimal[q] = determine_optimal_compensation(copula, q)
+    return m_optimal
+
+
+def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_scale,
+                                            discount_factors_0, discount_factors_1,
+                                            discount_factors_3, discount_factors_6,
+                                            discount_factors_12, discount_factors_24,
+                                            unrestricted_weights_0, unrestricted_weights_1,
+                                            unrestricted_weights_3, unrestricted_weights_6,
+                                            unrestricted_weights_12, unrestricted_weights_24
+                                            ):
+    """Optimal compensation for the nonstationary utility function."""
+    copula = get_copula_nonstationary(
+        alpha, beta, gamma, y_scale,
+        discount_factors_0, discount_factors_1,
+        discount_factors_3, discount_factors_6,
+        discount_factors_12, discount_factors_24,
+        unrestricted_weights_0, unrestricted_weights_1,
+        unrestricted_weights_3, unrestricted_weights_6,
+        unrestricted_weights_12, unrestricted_weights_24)
+
+    m_optimal = dict()
+    for q in questions:
+        m_optimal[q] = determine_optimal_compensation(copula, q)
+    return m_optimal
+
+
+def get_optimal_compensations(version, model_obj, questions):
+    """Get optimal compensations based on a model_obj."""
+    args = [model_obj, 'paras_obj']
+
+    if version in ['scaled_archimedean']:
+        # Fixed part
+        args += ['upper', 'marginals']
+        paras_obj, upper, marginals = dist_class_attributes(*args)
+
+        # Variable args
+        r_self, r_other, delta, self, other = paras_obj.get_values('econ', 'all')[:5]
+
+        # Optimal compensation
+        args = [questions, upper, marginals, r_self, r_other, delta, self, other]
+        m_optimal = get_optimal_compensations_scaled_archimedean(*args)
+
+    elif version in ['nonstationary']:
+        # Fixed part
+        paras_obj = dist_class_attributes(*args)
+
+        # Variable args
+        alpha, beta, gamma, y_scale, discount_factors_0, discount_factors_1, \
+            discount_factors_3, discount_factors_6, discount_factors_12, discount_factors_24, \
+            unrestricted_weights_0, unrestricted_weights_1, unrestricted_weights_3, \
+            unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24 = \
+            paras_obj.get_values('econ', 'all')[:16]
+
+        # Optimal compensation
+        args = [questions, alpha, beta, gamma, y_scale,
+                discount_factors_0, discount_factors_1,
+                discount_factors_3, discount_factors_6,
+                discount_factors_12, discount_factors_24,
+                unrestricted_weights_0, unrestricted_weights_1, unrestricted_weights_3,
+                unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24]
+        m_optimal = get_optimal_compensations_nonstationary(*args)
+    else:
+        raise TrempyError('version not implemented')
+
     return m_optimal
 
 

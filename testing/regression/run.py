@@ -19,7 +19,7 @@ from trempy import simulate
 
 
 def create_regression_vault(num_tests):
-    """This function creates a set of regression tests."""
+    """Create a set of regression tests."""
     np.random.seed(123)
 
     tests = []
@@ -36,11 +36,19 @@ def create_regression_vault(num_tests):
         df = simulate('test.trempy.ini')
 
         # Distribute class attributes for further processing.
-        args = (model_obj, 'paras_obj', 'questions', 'cutoffs', 'upper', 'marginals')
-        paras_obj, questions, cutoffs, upper, marginals = dist_class_attributes(*args)
+        args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
+        paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
 
+        # Get correct standard deviations
         x_econ_all = paras_obj.get_values('econ', 'all')
-        stat = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all)
+        if version in ['scaled_archimedean']:
+            stands = x_econ_all[5:]
+        elif version in ['nonstationary']:
+            stands = x_econ_all[16:]
+
+        # Evaluate criterion function and process results
+        stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
+                                  model_obj=model_obj, version=version, sds=stands)
         tests += [(init_dict, stat)]
 
         cleanup()
@@ -49,7 +57,7 @@ def create_regression_vault(num_tests):
 
 
 def check_regression_vault(num_tests):
-    """This function checks an existing regression tests."""
+    """Check an existing regression tests."""
     fname = PACKAGE_DIR + '/tests/regression_vault.trempy.pkl'
     tests = pkl.load(open(fname, 'rb'))
 

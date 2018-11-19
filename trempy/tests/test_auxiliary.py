@@ -26,6 +26,9 @@ def random_dict(constr):
 
     # Handle version specific data.
     version = np.random.choice(['scaled_archimedean', 'nonstationary'])
+    if constr is not None and 'version' in constr.keys():
+        version = constr['version']
+
     dict_['VERSION'] = {'version': version}
 
     num_questions = np.random.randint(2, 14)

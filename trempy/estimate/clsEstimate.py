@@ -14,9 +14,11 @@ from trempy.shared.clsBase import BaseCls
 
 class EstimateClass(BaseCls):
     """This class manages all issues about the model estimation."""
-    def __init__(self, df, cutoffs, upper, marginals, questions, paras_obj, max_eval):
 
+    def __init__(self, df, cutoffs, upper, marginals, questions, paras_obj, max_eval, version):
+        """Init class."""
         self.attr = dict()
+        self.attr['version'] = version
 
         # Initialization attributes
         self.attr['paras_obj'] = paras_obj
@@ -43,12 +45,12 @@ class EstimateClass(BaseCls):
         self.attr['f_start'] = HUGE_FLOAT
         self.attr['f_step'] = HUGE_FLOAT
 
-        self.attr['paras_label'] = PREFERENCE_PARAMETERS + questions
+        self.attr['paras_label'] = PREFERENCE_PARAMETERS[version] + questions
 
         self._logging_start()
 
     def evaluate(self, x_optim_free_current):
-        """This method allows to evaluate the criterion function during an estimation"""
+        """Evaluate the criterion function during an estimation."""
         # Distribute class attributes
         paras_obj = self.attr['paras_obj']
         questions = self.attr['questions']
@@ -61,6 +63,8 @@ class EstimateClass(BaseCls):
         paras_obj.set_values('optim', 'free', x_optim_free_current)
         x_optim_all_current = paras_obj.get_values('optim', 'all')
         x_econ_all_current = paras_obj.get_values('econ', 'all')
+
+        # TODO: fix criterion function. I changed the parameters that are passed to it.
         fval = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all_current)
 
         self._update_evaluation(fval, x_econ_all_current, x_optim_all_current)
@@ -68,8 +72,7 @@ class EstimateClass(BaseCls):
         return fval
 
     def _update_evaluation(self, fval, x_econ_all_current, x_optim_all_current):
-        """This method updates all attributes based on the new evaluation and writes some
-        information to files."""
+        """Update all attributes based on the new evaluation and write some information to file."""
         # Distribute class attribute
         questions = self.attr['questions']
         marginals = self.attr['marginals']
@@ -104,7 +107,7 @@ class EstimateClass(BaseCls):
         self._logging_evaluation(x_econ_all_current, x_optim_all_current)
 
     def _logging_start(self):
-        """This method records some basic properties of the estimation at the beginning."""
+        """Record some basic properties of the estimation at the beginning."""
         # Distribute class attributes
         paras_obj = self.attr['paras_obj']
         df = self.attr['df']
@@ -130,7 +133,7 @@ class EstimateClass(BaseCls):
                 outfile.write(fmt_.format(*line) + '\n')
 
     def _logging_evaluation(self, x_econ_all_current, x_optim_all_current):
-        """This methods manages all issues related to the logging of the estimation."""
+        """Manage all issues related to the logging of the estimation."""
         # Distribute attributes
         para_labels = self.attr['paras_label']
         questions = self.attr['questions']
@@ -147,7 +150,7 @@ class EstimateClass(BaseCls):
             outfile.write(fmt_.format(*line) + '\n\n')
 
             outfile.write('\n {:<25}\n\n'.format('Economic Parameters'))
-            line = ['Identifier', 'Label',  'Start', 'Step', 'Current']
+            line = ['Identifier', 'Label', 'Start', 'Step', 'Current']
             outfile.write(fmt_.format(*line) + '\n\n')
             for i, _ in enumerate(range(len(questions) + 5)):
                 line = [i]
@@ -158,7 +161,7 @@ class EstimateClass(BaseCls):
                 outfile.write(fmt_.format(*line) + '\n')
 
             outfile.write('\n\n {:<25}\n\n'.format('Optimal Compensations'))
-            line = ['Questions', '',  'Start', 'Step', 'Current']
+            line = ['Questions', '', 'Start', 'Step', 'Current']
             outfile.write(fmt_.format(*line) + '\n\n')
             for q in questions:
                 line = [q, '']
@@ -211,7 +214,7 @@ class EstimateClass(BaseCls):
 
     @staticmethod
     def finish(opt):
-        """This method collects all operations to wrap up an estimation."""
+        """Collect all operations to wrap up an estimation."""
         with open('est.trempy.info', 'a') as outfile:
             outfile.write('\n {:<25}'.format('TERMINATED'))
 

@@ -19,12 +19,11 @@ class ModelCls(BaseCls):
         version = init_dict['VERSION']['version']
 
         # We first tackle the more complex issue of parameter management.
-        paras_obj = ParasCls(init_dict)
-
         self.attr = dict()
         self.attr['version'] = version
 
         # Parameters
+        paras_obj = ParasCls(init_dict)
         self.attr['paras_obj'] = paras_obj
 
         # Version specific parameters that don't change during estimation.
@@ -81,8 +80,8 @@ class ModelCls(BaseCls):
             label = para_obj.get_attr('label')
             if label in PREFERENCE_PARAMETERS[version]:
                 continue
-
-            questions += [label]
+            else:
+                questions += [label]
 
         self.attr['questions'] = sorted(questions)
         self.attr['num_questions'] = len(questions)

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Contains estimate function."""
 import shutil
 import copy
 
@@ -16,7 +17,7 @@ from trempy.clsModel import ModelCls
 
 
 def estimate(fname):
-    """This function estimates the model by the method of maximum likelihood."""
+    """Estimate the model by the method of maximum likelihood."""
     estimate_cleanup()
 
     model_obj = ModelCls(fname)

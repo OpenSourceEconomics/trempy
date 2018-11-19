@@ -25,7 +25,7 @@ class StartClass(BaseCls):
 
     def __init__(self, questions, m_optimal_obs, upper, marginals, start_fixed,
                  start_utility_paras):
-
+        """Init class."""
         self.attr = dict()
 
         # Initialization attributes
@@ -44,8 +44,7 @@ class StartClass(BaseCls):
         self.attr['num_eval'] = 0
 
     def evaluate(self, x_vals):
-        """This will be the criterion function."""
-
+        """Evalute. This will be the criterion function."""
         if self.attr['num_eval'] > 10:
             return HUGE_FLOAT
 
@@ -84,8 +83,7 @@ class StartClass(BaseCls):
         return fval
 
     def _update_evaluation(self, fval, x_vals):
-        """This method updates all attributes based on the new evaluation and writes some
-        information to files."""
+        """Update all attributes based on the new evaluation and write some information to files."""
         self.attr['f_current'] = fval
         self.attr['num_eval'] += 1
 
@@ -108,10 +106,9 @@ class StartClass(BaseCls):
 
 
 def get_automatic_starting_values(paras_obj, df_obs, upper, marginals, questions):
-    """This method updates the container for the parameters with the automatic starting values."""
+    """Update the container for the parameters with the automatic starting values."""
     def _adjust_bounds(value, bounds):
-        """This function simply adjusts the starting values to meet the requirements of the
-        bounds."""
+        """Adjust the starting values to meet the requirements of the bounds."""
         lower, upper = bounds
         if value <= bounds[0]:
             value = lower + 2 * SMALL_FLOAT
@@ -188,7 +185,7 @@ def get_automatic_starting_values(paras_obj, df_obs, upper, marginals, questions
 
 
 def estimate_cleanup():
-    """This function ensures that we start the estimation with a clean slate."""
+    """Ensure that we start the estimation with a clean slate."""
     # We remove the directories that contain the simulated choice menus at the start.
     for dirname in ['start', 'stop']:
         if os.path.exists(dirname):
@@ -201,8 +198,7 @@ def estimate_cleanup():
 
 
 def estimate_simulate(which, points, model_obj, df_obs):
-    """This function allows to easily simulate samples at the beginning and the end of the
-    estimation."""
+    """Allow the user to easily simulate samples at the beginning and the end of the estimation."""
     questions, marginals = dist_class_attributes(model_obj, 'questions', 'marginals')
 
     paras_obj, upper = dist_class_attributes(model_obj, 'paras_obj', 'upper')
@@ -226,8 +222,7 @@ def estimate_simulate(which, points, model_obj, df_obs):
 
 
 def compare_datasets(which, df_obs, questions, m_optimal):
-    """This function compares the estimation dataset with a simulated dataset using the estimated
-    parameter vector."""
+    """Compare the estimation dataset with a simulated one using the estimated parameter vector."""
     df_sim = pd.read_pickle(which + '.trempy.pkl')
 
     df_sim_masked = df_sim['Compensation'].mask(df_sim['Compensation'].isin([NEVER_SWITCHERS]))

@@ -12,8 +12,11 @@ from trempy import simulate
 
 
 def run_regression_test(test):
-    """This function runs a single regression test. It is repeatedly used by the testing
-    infrastructure. Thus, manual modifications are only required here."""
+    """Run a single regression test.
+
+    It is repeatedly used by the testing infrastructure.
+    Thus, manual modifications are only required here.
+    """
     # Create and process initialization file
     init_dict, crit_val = test
 
@@ -22,17 +25,24 @@ def run_regression_test(test):
     df = simulate('test.trempy.ini')
 
     # Distribute class attributes for further processing.
-    args = [model_obj, 'paras_obj', "questions", 'upper', 'cutoffs', 'marginals']
-    paras_obj, questions, upper, cutoffs, marginals = dist_class_attributes(*args)
+    args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
+    paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
 
+    # Standard deviations
     x_econ_all = paras_obj.get_values('econ', 'all')
-    stat = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all)
+    if version in ['scaled_archimedean']:
+        stands = x_econ_all[5:]
+    elif version in ['nonstationary']:
+        stands = x_econ_all[16:]
+
+    stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
+                              model_obj=model_obj, version=version, sds=stands)
 
     np.testing.assert_almost_equal(stat, crit_val)
 
 
 def test_1():
-    """This test simply runs a small sample of the regression test battery."""
+    """Run a small sample of the regression test battery."""
     tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb'))
     for test in tests[:5]:
         run_regression_test(test)

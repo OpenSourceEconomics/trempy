@@ -8,6 +8,7 @@ from trempy.shared.shared_auxiliary import dist_class_attributes
 from trempy.shared.shared_auxiliary import criterion_function
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.config_trempy import NEVER_SWITCHERS
+from trempy.custom_exceptions import TrempyError
 from trempy.clsModel import ModelCls
 
 
@@ -16,34 +17,29 @@ def simulate(fname):
     model_obj = ModelCls(fname)
     version = model_obj.attr['version']
 
-    # List of args
+    # Get fixed args that do not change during simulation.
     args = [model_obj, 'sim_agents', 'questions', 'sim_seed', 'sim_file', 'paras_obj', 'cutoffs']
     if version in ['scaled_archimedean']:
         args += ['upper', 'marginals']
-    elif version in ['nonstationary']:
-        pass
-    else:
-        raise Exception
-
-    if version in ['scaled_archimedean']:
         sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs, upper, marginals = \
             dist_class_attributes(*args)
     elif version in ['nonstationary']:
         sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = \
             dist_class_attributes(*args)
     else:
-        raise Exception
+        raise TrempyError('version not implemented')
 
     np.random.seed(sim_seed)
 
-    # First, I simply determine the optimal compensations.
-    r_self, r_other, delta, self, other = paras_obj.get_values('econ', 'all')[:5]
+    m_optimal = get_optimal_compensations(version, model_obj, questions)
 
-    args = [questions, upper, marginals, r_self, r_other, delta, self, other]
-    m_optimal = get_optimal_compensations(*args)
+    # Get standard deviation for the error in each question
+    if version in ['scaled_archimedean']:
+        stands = paras_obj.get_values('econ', 'all')[5:]
+    elif version in ['nonstationary']:
+        stands = paras_obj.get_values('econ', 'all')[16:]
 
-    stands = paras_obj.get_values('econ', 'all')[5:]
-
+    # Simulate data
     data = []
     for i in range(sim_agents):
         for k, q in enumerate(questions):
@@ -59,6 +55,7 @@ def simulate(fname):
 
             data += [[i, q, m_observed]]
 
+    # Post-processing step
     df = pd.DataFrame(data)
     df.rename({0: 'Individual', 1: 'Question', 2: 'Compensation'}, inplace=True, axis='columns')
     dtype = {'Individual': np.int, 'Question': np.int, 'Compensation': np.float}
@@ -70,17 +67,19 @@ def simulate(fname):
 
     x_econ_all_current = paras_obj.get_values('econ', 'all')
 
-    fval = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all_current)
+    fval = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
+                              model_obj=model_obj, version=version, sds=stands)
 
-    write_info(x_econ_all_current, df, questions, fval, m_optimal, sim_file + '.trempy.info')
+    write_info(version, x_econ_all_current, df, questions,
+               fval, m_optimal, sim_file + '.trempy.info')
 
     return df
 
 
-def write_info(x_econ_all_current, df, questions, likl, m_optimal, fname):
+def write_info(version, x_econ_all_current, df, questions, likl, m_optimal, fname):
     """Write out some basic information about the simulated dataset."""
     df_sim = df['Compensation'].mask(df['Compensation'] == NEVER_SWITCHERS)
-    paras_label = PREFERENCE_PARAMETERS + questions
+    paras_label = PREFERENCE_PARAMETERS[version] + questions
     fmt_ = '{:>15}' + '{:>15}' + '{:>15}    '
 
     with open(fname, 'w') as outfile:
@@ -112,13 +111,21 @@ def write_info(x_econ_all_current, df, questions, likl, m_optimal, fname):
 
             outfile.write(string.format(*info))
 
+        # Print economic parameters
+        fmt_ = '{:>15}' + '{:>25}' + '{:>15}'
         outfile.write('\n {:<25}\n\n'.format('Economic Parameters'))
         line = ['Identifier', 'Label', 'Value']
         outfile.write(fmt_.format(*line) + '\n\n')
-        for i, _ in enumerate(range(len(questions) + 5)):
+        for i, _ in enumerate(range(len(questions) + len(PREFERENCE_PARAMETERS[version]))):
             line = [i]
-            line += [paras_label[i], '{:15.5f}'.format(x_econ_all_current[i])]
-            outfile.write(fmt_.format(*line) + '\n')
+
+            # Handle optional arguments where None value marks optionality.
+            if x_econ_all_current[i] is None:
+                continue
+            # Print all other parameters
+            else:
+                line += [paras_label[i], '{:15.5f}'.format(x_econ_all_current[i])]
+                outfile.write(fmt_.format(*line) + '\n')
 
         outfile.write('\n')
 

@@ -23,6 +23,7 @@ def test_1():
 
 def test_2():
     """Ensure the back an forth transformations for the parameter values."""
+    # TODO: This tests needs updating becaue "num_quetions + 5" hard coded economic parameteres
     get_random_init()
 
     model_obj = ModelCls('test.trempy.ini')
@@ -58,7 +59,9 @@ def test_3():
 def test_4():
     """Check for valid bounds."""
     for _ in range(1000):
-        for label in PREFERENCE_PARAMETERS:
+        version = np.random.choice(['scaled_archimedean', 'nonstationary'])
+
+        for label in PREFERENCE_PARAMETERS[version]:
             lower, upper = get_bounds(label)
             value = get_value((lower, upper), label)
             np.testing.assert_equal(lower < value < upper, True)
