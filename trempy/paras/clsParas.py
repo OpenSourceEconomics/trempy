@@ -48,11 +48,17 @@ class ParasCls(BaseCls):
             self.attr['para_objs'] += [ParaCls(label, value, is_fixed, bounds)]
             self.attr['para_labels'] += [label]
 
+        # Record created parameters so we can use that later in estimate step to get
+        #  standard deviations without using hard-coded numbers
+        self.attr['nparas_econ'] = len(self.attr['para_objs'])
+
         # QUESTION specific parameters
         for label in sorted(init_dict['QUESTIONS'].keys()):
             value, is_fixed, bounds = init_dict['QUESTIONS'][label]
             self.attr['para_objs'] += [ParaCls(int(label), value, is_fixed, bounds)]
             self.attr['para_labels'] += [int(label)]
+
+        self.attr['nparas_questions'] = len(self.attr['para_objs']) - self.attr['nparas_econ']
 
         self.check_integrity()
 
@@ -154,6 +160,10 @@ class ParasCls(BaseCls):
     @staticmethod
     def _to_interval(val, lower, upper):
         """Map any value to a bounded interval."""
+        # Handle optional arguments
+        if val is None:
+            return None
+
         try:
             exponential = np.exp(-val)
         except (OverflowError, FloatingPointError):
@@ -163,8 +173,13 @@ class ParasCls(BaseCls):
         return lower + interval / (1 + exponential)
 
     @staticmethod
+    # TODO: How do we handle optional arguments with None type?
     def _to_real(value, lower, upper):
         """Transform the bounded parameter back to the real line."""
+        # Handle optional arguments with None value.
+        if value is None:
+            return None
+
         if np.isclose(value, lower):
             value += SMALL_FLOAT
             logger_obj.record_event(0)

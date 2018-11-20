@@ -28,12 +28,15 @@ def run_regression_test(test):
     args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
     paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
 
+    # The number of actual economic parameters in paras_obj not counting questions.
+    n_econ_params = paras_obj.attr['nparas_econ']
+
     # Standard deviations
     x_econ_all = paras_obj.get_values('econ', 'all')
     if version in ['scaled_archimedean']:
         stands = x_econ_all[5:]
     elif version in ['nonstationary']:
-        stands = x_econ_all[16:]
+        stands = x_econ_all[n_econ_params:]
 
     stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
                               model_obj=model_obj, version=version, sds=stands)

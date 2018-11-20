@@ -18,7 +18,7 @@ from trempy.config_trempy import TINY_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 
 
-def criterion_function(df, questions, cutoffs, model_obj, version, sds):
+def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **version_specific):
     """Calculate the likelihood of the observed sample.
 
     sds: standard deviations for each question.
@@ -26,7 +26,8 @@ def criterion_function(df, questions, cutoffs, model_obj, version, sds):
     version: nonstationary or scaled_archimedean
     """
     # Distribute parameters
-    m_optimal = get_optimal_compensations(version=version, model_obj=model_obj, questions=questions)
+    m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj, questions=questions,
+                                          **version_specific)
 
     contribs = []
     for i, q in enumerate(questions):
@@ -94,32 +95,33 @@ def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_sca
     return m_optimal
 
 
-def get_optimal_compensations(version, model_obj, questions):
+def get_optimal_compensations(version, paras_obj, questions, **version_specific):
     """Get optimal compensations based on a model_obj."""
-    args = [model_obj, 'paras_obj']
+    nparas_econ = paras_obj.attr['nparas_econ']
 
     if version in ['scaled_archimedean']:
-        # Fixed part
-        args += ['upper', 'marginals']
-        paras_obj, upper, marginals = dist_class_attributes(*args)
+        # Handle version-specific objects outside paras_obj
+        # assert 'marginals' in version_specific.keys()
+        # assert 'upper' in version_specific.keys()
+        marginals = version_specific['marginals']
+        upper = version_specific['upper']
 
         # Variable args
-        r_self, r_other, delta, self, other = paras_obj.get_values('econ', 'all')[:5]
+        r_self, r_other, delta, self, other = paras_obj.get_values('econ', 'all')[:nparas_econ]
 
         # Optimal compensation
         args = [questions, upper, marginals, r_self, r_other, delta, self, other]
         m_optimal = get_optimal_compensations_scaled_archimedean(*args)
 
     elif version in ['nonstationary']:
-        # Fixed part
-        paras_obj = dist_class_attributes(*args)
-
         # Variable args
+        # TODO: How to handle optional arguments? If unrestricted_weights is not generated,
+        # this does not work.
         alpha, beta, gamma, y_scale, discount_factors_0, discount_factors_1, \
             discount_factors_3, discount_factors_6, discount_factors_12, discount_factors_24, \
             unrestricted_weights_0, unrestricted_weights_1, unrestricted_weights_3, \
             unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24 = \
-            paras_obj.get_values('econ', 'all')[:16]
+            paras_obj.get_values('econ', 'all')[:nparas_econ]
 
         # Optimal compensation
         args = [questions, alpha, beta, gamma, y_scale,

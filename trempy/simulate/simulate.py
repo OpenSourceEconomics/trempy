@@ -23,21 +23,23 @@ def simulate(fname):
         args += ['upper', 'marginals']
         sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs, upper, marginals = \
             dist_class_attributes(*args)
+
+        version_specific = {'upper': upper, 'marginals': marginals}
     elif version in ['nonstationary']:
         sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = \
             dist_class_attributes(*args)
+        version_specific = dict()
     else:
         raise TrempyError('version not implemented')
 
     np.random.seed(sim_seed)
+    m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj,
+                                          questions=questions, **version_specific)
 
-    m_optimal = get_optimal_compensations(version, model_obj, questions)
-
-    # Get standard deviation for the error in each question
-    if version in ['scaled_archimedean']:
-        stands = paras_obj.get_values('econ', 'all')[5:]
-    elif version in ['nonstationary']:
-        stands = paras_obj.get_values('econ', 'all')[16:]
+    # First, get number of preference parameters. Paras with higher index belong to questions!
+    nparas_econ = paras_obj.attr['nparas_econ']
+    # Now, get standard deviation for the error in each question. This handles versions implicitly.
+    stands = paras_obj.get_values('econ', 'all')[nparas_econ:]
 
     # Simulate data
     data = []
@@ -68,7 +70,7 @@ def simulate(fname):
     x_econ_all_current = paras_obj.get_values('econ', 'all')
 
     fval = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
-                              model_obj=model_obj, version=version, sds=stands)
+                              paras_obj=paras_obj, version=version, sds=stands)
 
     write_info(version, x_econ_all_current, df, questions,
                fval, m_optimal, sim_file + '.trempy.info')

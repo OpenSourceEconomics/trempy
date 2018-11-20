@@ -39,12 +39,12 @@ def create_regression_vault(num_tests):
         args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
         paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
 
-        # Get correct standard deviations
+        # Get number of economic parameters. Paras with higher index belong to questions.
+        nparas_econ = paras_obj.attr['nparas_econ']
+
+        # Now get correct standard deviations. Versions are handled implicitly.
         x_econ_all = paras_obj.get_values('econ', 'all')
-        if version in ['scaled_archimedean']:
-            stands = x_econ_all[5:]
-        elif version in ['nonstationary']:
-            stands = x_econ_all[16:]
+        stands = x_econ_all[nparas_econ:]
 
         # Evaluate criterion function and process results
         stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,

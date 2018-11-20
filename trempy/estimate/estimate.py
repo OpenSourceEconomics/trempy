@@ -22,13 +22,19 @@ def estimate(fname):
 
     model_obj = ModelCls(fname)
 
-    args = []
-    args += [model_obj, 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs', 'maxfun']
-    args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents', 'upper', 'num_skip']
-    args += ['marginals']
+    # Distribute class parameters except for economic parameters and version-specific thing
+    args = [model_obj, 'version', 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs',
+            'maxfun', 'est_detailed', 'opt_options', 'optimizer', 'est_agents', 'num_skip']
 
-    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
-        est_agents, upper, num_skip, marginals = dist_class_attributes(*args)
+    version, est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, \
+        opt_options, optimizer, est_agents, num_skip = dist_class_attributes(*args)
+
+    # Handle version-specific objects not included in the para_obj
+    if version in ['scaled_archimedean']:
+        upper, marginals = dist_class_attributes(*[model_obj, 'upper', 'marginals'])
+        version_specific = {'upper': upper, 'marginals': marginals}
+    elif version in ['nonstationary']:
+        version_specific = dict()
 
     # We only need to continue if there is at least one parameter to actually estimate.
     if len(paras_obj.get_values('optim', 'free')) == 0:
@@ -37,12 +43,15 @@ def estimate(fname):
     # Some initial setup
     df_obs = process(est_file, questions, num_skip, est_agents, cutoffs)
 
-    args = [df_obs, cutoffs, upper, marginals, questions, copy.deepcopy(paras_obj), maxfun]
-    estimate_obj = EstimateClass(*args)
+    estimate_obj = EstimateClass(
+        df=df_obs, cutoffs=cutoffs, questions=questions, paras_obj=copy.deepcopy(paras_obj),
+        max_eval=maxfun, version=version, **version_specific)
 
     # We lock in an evaluation at the starting values as not all optimizers actually start there.
     if start in ['auto']:
-        paras_obj = get_automatic_starting_values(paras_obj, df_obs, upper, marginals, questions)
+        paras_obj = get_automatic_starting_values(
+            paras_obj=paras_obj, df_obs=df_obs,
+            questions=questions, version=version, **version_specific)
 
     x_optim_free_start = paras_obj.get_values('optim', 'free')
     estimate_obj.evaluate(x_optim_free_start)
