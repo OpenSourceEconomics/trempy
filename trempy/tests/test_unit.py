@@ -17,20 +17,21 @@ from trempy import estimate
 def test_1():
     """Check that the random initialization files can all be properly processed."""
     for _ in range(100):
-        get_random_init()
-        init_dict, version = read('test.trempy.ini')
+        constr = {'fname': 'test.trempy.dict'}
+        get_random_init(constr)
+        read('test.trempy.ini')
 
 
 def test_2():
     """Ensure the back an forth transformations for the parameter values."""
-    # TODO: This tests needs updating becaue "num_quetions + 5" hard coded economic parameteres
     get_random_init()
 
     model_obj = ModelCls('test.trempy.ini')
     paras_obj, num_questions = dist_class_attributes(model_obj, 'paras_obj', 'num_questions')
+    nparas_econ = paras_obj.attr['nparas_econ']
 
     for _ in range(500):
-        x_optim_all_current = np.random.uniform(-1, 1, size=num_questions + 5)
+        x_optim_all_current = np.random.uniform(-1, 1, size=num_questions + nparas_econ)
         paras_obj.set_values('optim', 'all', x_optim_all_current)
 
         x_econ_all_current = paras_obj.get_values('econ', 'all')
@@ -42,8 +43,7 @@ def test_2():
 
 def test_3():
     """Ensure that writing out an init_dict results in the same value of the criterion function."""
-    constr = dict()
-    constr['maxfun'] = 2
+    constr = {'maxfun': 2}
 
     get_random_init(constr)
     simulate('test.trempy.ini')
@@ -62,9 +62,10 @@ def test_4():
         version = np.random.choice(['scaled_archimedean', 'nonstationary'])
 
         for label in PREFERENCE_PARAMETERS[version]:
-            lower, upper = get_bounds(label)
-            value = get_value((lower, upper), label)
-            np.testing.assert_equal(lower < value < upper, True)
+            lower, upper = get_bounds(label, version)
+            value = get_value((lower, upper), label, version)
+            if value is not None:
+                np.testing.assert_equal(lower < value < upper, True)
 
 
 def test_5():

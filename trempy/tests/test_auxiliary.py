@@ -15,8 +15,15 @@ def get_random_init(constr=None):
     """Print a random dictionary."""
     if constr is None:
         constr = dict()
+
     init_dict = random_dict(constr)
-    print_init_dict(init_dict)
+
+    if 'fname' in constr.keys():
+        fname = constr['fname']
+        print_init_dict(init_dict, fname)
+    else:
+        print_init_dict(init_dict)
+
     return init_dict
 
 
@@ -31,12 +38,19 @@ def random_dict(constr):
 
     dict_['VERSION'] = {'version': version}
 
-    num_questions = np.random.randint(2, 14)
+    if 'all_questions' in constr.keys():
+        num_questions = 16
+    else:
+        num_questions = np.random.randint(8, 14)
     sim_agents = np.random.randint(2, 10)
-    fname = get_random_string()
 
-    is_fixed = np.random.choice([True, False],
-                                size=num_questions + len(PREFERENCE_PARAMETERS[version]))
+    if constr is not None and 'fname' in constr.keys():
+        fname = constr['fname']
+    else:
+        fname = get_random_string()
+
+    is_fixed = np.random.choice(
+        [True, False], size=num_questions + len(PREFERENCE_PARAMETERS[version]))
     # We need to ensure at least one parameter is free for a valid estimation request.
     if is_fixed.tolist().count('False') == 0:
         is_fixed[0] = 'False'
@@ -77,6 +91,13 @@ def random_dict(constr):
             else:
                 dict_['DISCOUNTING'][label] = [values[i], is_fixed[i], bounds[i]]
 
+        # Handle optional arguments. If one argument is not used, set all to None and fix them.
+        optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
+        not_used = (None in [dict_['DISCOUNTING'][label][0] for label in optional_args])
+        if not_used:
+            for label in optional_args:
+                dict_['DISCOUNTING'][label] = [None, True, [0.01, 1.00]]
+
     else:
         raise TrempyError('version not implemented')
 
@@ -84,12 +105,14 @@ def random_dict(constr):
 
     # It is time to sample the questions.
     questions = np.random.choice([13] + list(range(31, 46)), size=num_questions, replace=False)
+    print(questions)
+    print(num_questions)
     dict_['QUESTIONS'] = dict()
 
     for i, q in enumerate(questions):
         bounds = get_bounds(q, version)
         value = get_value(bounds, q, version)
-        dict_['QUESTIONS'][q] = [value, is_fixed[i + 3], bounds]
+        dict_['QUESTIONS'][q] = [value, is_fixed[i + len(PREFERENCE_PARAMETERS[version])], bounds]
 
     # We now add some cutoff values.
     dict_['CUTOFFS'] = dict()
@@ -213,7 +236,7 @@ def get_value(bounds, label, version):
     if label in PREFERENCE_PARAMETERS[version]:
         # Handle optional arguments and set them to None if not required.
         if label.startswith('unrestricted_weights'):
-            restricted = np.random.choice([True, False], p=[0.9, 0.1])
+            restricted = np.random.choice([True, False], p=[0.8, 0.2])
             if restricted:
                 value = None
             else:

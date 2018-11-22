@@ -170,7 +170,7 @@ class EstimateClass(BaseCls):
 
         # Update class attributes
         with open('est.trempy.info', 'w') as outfile:
-            fmt_ = ' {:>10}    ' + '{:<10}    ' + '{:>25}    ' * 3
+            fmt_ = ' {:>10}    ' + '{:<20}    ' + '{:>25}    ' * 3
 
             # Write out information about criterion function
             outfile.write('\n {:<25}\n\n'.format('Criterion Function'))
@@ -222,7 +222,7 @@ class EstimateClass(BaseCls):
             fmt_ = '\n Criterion {:>28}  \n\n\n'
             outfile.write(fmt_.format(char_floats(self.attr['f_current'])[0]))
 
-            fmt_ = ' {:>10}   ' + '{:<10}   ' + '{:>25}    ' * 2
+            fmt_ = ' {:>10}   ' + '{:<20}   ' + '{:>25}    ' * 2
             line = ['Identifier', 'Label', 'Economic', 'Optimizer']
             outfile.write(fmt_.format(*line) + '\n\n')
 

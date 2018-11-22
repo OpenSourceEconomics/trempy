@@ -104,13 +104,8 @@ def read(fname):
                 if dict_['CUTOFFS'][q][i] is None:
                     dict_['CUTOFFS'][q][i] = (-1)**i * -HUGE_FLOAT
 
-    # # Post-processing of the version parameters
-    # if version in ['scaled_archimedean']:
-    #     pass
-    # elif version in ['nonstationary']:
-    #     dict_['DISCOUNTING'] = postprocess_temporal_blocks(dict_['DISCOUNTING'])
-    # else:
-    #     raise TrempyError('version not implemented')
+    # Enforce input requirements for optional arguments
+    check_optional_args(dict_)
 
     return dict_
 
@@ -231,17 +226,19 @@ def type_conversions(version, flag, value):
     return value
 
 
-# def postprocess_temporal_blocks(block):
-#     """Convert temporal block into dictionary."""
-#     temporal_dict = dict()
-#     for key, value in block.items():
-#         # Split at the last occurence of '_' to get the period.
-#         varname, period = key.rsplit('_', 1)
-
-#         if varname in temporal_dict.keys():
-#             temporal_dict[varname][period] = value
-#         else:
-#             temporal_dict[varname] = dict()
-#             temporal_dict[varname][period] = value
-
-#     return temporal_dict
+def check_optional_args(init_dict):
+    """Enforce input requirements for the init_dict."""
+    version = init_dict['VERSION']['version']
+    if version in ['scaled_archimedean']:
+        pass
+    elif version in ['nonstationary']:
+        optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
+        for label in optional_args:
+            # If optional argument is not used (None), then we fix it at None.
+            # In this case, the optimizer is not confused!
+            if label in init_dict['DISCOUNTING'].keys():
+                value, is_fixed, bounds = init_dict['DISCOUNTING'][label]
+                if value is None and is_fixed is False:
+                    raise TrempyError('Optional argument misspecified.')
+            else:
+                raise TrempyError('Please set unused optional arguments to None in init file.')

@@ -71,7 +71,7 @@ class StartClass(BaseCls):
 
         # Override non-fixed values in the para_obj with the xvals.
         utility_cand = copy.deepcopy(start_utility_paras)
-        para_obj = utility_cand.attr['para_obj']
+        para_obj = utility_cand.attr['para_objs']
         j = 0
         nparas_econ = start_utility_paras.attr['nparas_econ']
 
@@ -83,7 +83,7 @@ class StartClass(BaseCls):
                 j += 1
 
         # Update para_obj in utility candidate
-        utility_cand.attr['para_obj'] = para_obj
+        utility_cand.attr['para_objs'] = para_obj
 
         m_optimal_cand = get_optimal_compensations(
             version=version, paras_obj=utility_cand,

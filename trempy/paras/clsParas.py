@@ -173,7 +173,6 @@ class ParasCls(BaseCls):
         return lower + interval / (1 + exponential)
 
     @staticmethod
-    # TODO: How do we handle optional arguments with None type?
     def _to_real(value, lower, upper):
         """Transform the bounded parameter back to the real line."""
         # Handle optional arguments with None value.

@@ -37,7 +37,7 @@ DEFAULT_BOUNDS['self'] = [0.00, 0.99]
 DEFAULT_BOUNDS['alpha'] = [0.01, 5.00]
 DEFAULT_BOUNDS['beta'] = [0.01, 5.00]
 DEFAULT_BOUNDS['gamma'] = [0.01, 5.00]
-DEFAULT_BOUNDS['y_scale'] = [0.01, 100.00]
+DEFAULT_BOUNDS['y_scale'] = [0.01, 15.00]
 
 DEFAULT_BOUNDS['discount_factors_0'] = [0.01, 1.00]
 DEFAULT_BOUNDS['discount_factors_1'] = [0.01, 1.00]
