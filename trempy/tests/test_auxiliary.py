@@ -133,7 +133,8 @@ def random_dict(constr):
     num_skip = np.random.randint(0, sim_agents - est_agents)
 
     dict_['ESTIMATION'] = dict()
-    dict_['ESTIMATION']['optimizer'] = np.random.choice(['SCIPY-BFGS', 'SCIPY-POWELL'])
+    dict_['ESTIMATION']['optimizer'] = np.random.choice(
+        ['SCIPY-BFGS', 'SCIPY-L-BFGS-B', 'SCIPY-POWELL'])
     dict_['ESTIMATION']['detailed'] = np.random.choice([True, False], p=[0.9, 0.1])
     dict_['ESTIMATION']['start'] = np.random.choice(['init', 'auto'])
     dict_['ESTIMATION']['agents'] = est_agents
@@ -145,6 +146,11 @@ def random_dict(constr):
     dict_['SCIPY-BFGS'] = dict()
     dict_['SCIPY-BFGS']['gtol'] = np.random.lognormal()
     dict_['SCIPY-BFGS']['eps'] = np.random.lognormal()
+
+    dict_['SCIPY-L-BFGS-B'] = dict()
+    dict_['SCIPY-L-BFGS-B']['gtol'] = np.random.lognormal()
+    dict_['SCIPY-L-BFGS-B']['ftol'] = np.random.lognormal()
+    dict_['SCIPY-L-BFGS-B']['eps'] = np.random.lognormal()
 
     dict_['SCIPY-POWELL'] = dict()
     dict_['SCIPY-POWELL']['xtol'] = np.random.lognormal()

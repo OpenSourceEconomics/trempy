@@ -73,6 +73,11 @@ class ModelCls(BaseCls):
         self.attr['opt_options']['SCIPY-POWELL']['xtol'] = init_dict['SCIPY-POWELL']['xtol']
         self.attr['opt_options']['SCIPY-POWELL']['ftol'] = init_dict['SCIPY-POWELL']['ftol']
 
+        self.attr['opt_options']['SCIPY-L-BFGS-B'] = dict()
+        self.attr['opt_options']['SCIPY-L-BFGS-B']['gtol'] = init_dict['SCIPY-L-BFGS-B']['gtol']
+        self.attr['opt_options']['SCIPY-L-BFGS-B']['ftol'] = init_dict['SCIPY-L-BFGS-B']['ftol']
+        self.attr['opt_options']['SCIPY-L-BFGS-B']['eps'] = init_dict['SCIPY-L-BFGS-B']['eps']
+
         para_objs = paras_obj.get_attr('para_objs')
 
         questions = []
@@ -106,7 +111,7 @@ class ModelCls(BaseCls):
 
         # Group block labels: basis labels and version specific labels.
         basis_labels = ['VERSION', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS',
-                        'SCIPY-POWELL', 'CUTOFFS', 'QUESTIONS']
+                        'SCIPY-POWELL', 'SCIPY-L-BFGS-B', 'CUTOFFS', 'QUESTIONS']
         version_labels = []
         if version in ['scaled_archimedean']:
             version_labels += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
@@ -144,6 +149,11 @@ class ModelCls(BaseCls):
         init_dict['SCIPY-POWELL'] = dict()
         init_dict['SCIPY-POWELL']['xtol'] = self.attr['opt_options']['SCIPY-POWELL']['xtol']
         init_dict['SCIPY-POWELL']['ftol'] = self.attr['opt_options']['SCIPY-POWELL']['ftol']
+
+        init_dict['SCIPY-L-BFGS-B'] = dict()
+        init_dict['SCIPY-L-BFGS-B']['gtol'] = self.attr['opt_options']['SCIPY-L-BFGS-B']['gtol']
+        init_dict['SCIPY-L-BFGS-B']['ftol'] = self.attr['opt_options']['SCIPY-L-BFGS-B']['ftol']
+        init_dict['SCIPY-L-BFGS-B']['eps'] = self.attr['opt_options']['SCIPY-L-BFGS-B']['eps']
 
         # 6) Cutoffs
         init_dict['CUTOFFS'] = self.attr['cutoffs']

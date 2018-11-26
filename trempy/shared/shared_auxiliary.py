@@ -142,7 +142,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
     version = dict_['VERSION']['version']
 
     keys = ['VERSION', 'SIMULATION', 'ESTIMATION',
-            'SCIPY-BFGS', 'SCIPY-POWELL',
+            'SCIPY-BFGS', 'SCIPY-POWELL', 'SCIPY-L-BFGS-B',
             'CUTOFFS', 'QUESTIONS']
 
     # Add keys based on version of the utility function

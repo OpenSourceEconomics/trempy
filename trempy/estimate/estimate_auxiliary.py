@@ -147,14 +147,12 @@ def get_automatic_starting_values(paras_obj, df_obs, questions, version, **versi
     # automatic determination of the starting values and is thus ruled out here from the
     # beginning. In that case, we simply use the starting values from the initialization file.
     cond = df_obs['Compensation'].isin([NEVER_SWITCHERS])
-    if df_obs['Compensation'].mask(cond).isnull().all():
+    df_mask = df_obs['Compensation'].mask(cond)
+    if df_mask.isnull().all():
         return paras_obj
 
     # We first get the observed average compensation from the data.
-    m_optimal_obs = []
-    for q in questions:
-        df_mask = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
-        m_optimal_obs += [df_mask.loc[slice(None), q].mean()]
+    m_optimal_obs = [df_mask.loc[slice(None), q].mean() for q in questions]
     m_optimal_obs = np.array(m_optimal_obs)
 
     # Now we gather information about the utility parameters and prepare for the interface to the
@@ -166,10 +164,9 @@ def get_automatic_starting_values(paras_obj, df_obs, questions, version, **versi
         value, is_fixed, bounds = paras_obj.get_para(label)
         start_fixed += [is_fixed]
 
-        # Get list of labels that are fixed
+        # Get list of labels that are not fixed
         if is_fixed:
             continue
-
         start_paras += [value]
         start_bounds += [bounds]
 

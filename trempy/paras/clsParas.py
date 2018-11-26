@@ -18,6 +18,7 @@ class ParasCls(BaseCls):
         version = init_dict['VERSION']['version']
 
         self.attr = dict()
+        self.attr['optimizer'] = init_dict['ESTIMATION']['optimizer']
         self.attr['version'] = version
         self.attr['para_labels'] = []
         self.attr['para_objs'] = []
@@ -63,15 +64,13 @@ class ParasCls(BaseCls):
         self.check_integrity()
 
     def get_para(self, label):
-        """Access a single parameter."""
+        """Access a single parameter and get value, free/fixed and bounds."""
         # Distribute class attributes
         para_objs = self.attr['para_objs']
 
         for para_obj in para_objs:
             if label == para_obj.get_attr('label'):
-                rslt = list()
-                for info in ['value', 'is_fixed', 'bounds']:
-                    rslt += [para_obj.get_attr(info)]
+                rslt = [para_obj.get_attr(info) for info in ['value', 'is_fixed', 'bounds']]
                 return rslt
 
         raise TrempyError('parameter not available')
@@ -83,6 +82,7 @@ class ParasCls(BaseCls):
 
         # Distribute class attributes
         para_objs = self.attr['para_objs']
+        optimizer = self.attr['optimizer']
 
         count = 0
 
@@ -99,7 +99,7 @@ class ParasCls(BaseCls):
                     value = values[count]
                 elif perspective in ['optim']:
                     bounds = para_obj.get_attr('bounds')
-                    value = self._to_econ(values[count], bounds)
+                    value = self._to_econ(values[count], bounds, optimizer)
                 else:
                     raise TrempyError('misspecified request')
 
@@ -116,6 +116,7 @@ class ParasCls(BaseCls):
 
         # Distribute class attributes
         para_objs = self.attr['para_objs']
+        optimizer = self.attr['optimizer']
 
         # Initialize containers
         values = list()
@@ -132,12 +133,35 @@ class ParasCls(BaseCls):
                 if perspective in ['econ']:
                     value = para_obj.get_attr('value')
                 elif perspective in ['optim']:
-                    value = self._to_optimizer(para_obj)
+                    # Handle choice of algorithm
+                    value = self._to_optimizer(para_obj, optimizer)
                 else:
                     raise TrempyError('misspecified request')
 
                 values += [value]
         return values
+
+    def get_bounds(self, which):
+        """Directly return a list of bounds for the parameters."""
+        # Antibugging
+        np.testing.assert_equal(which in ['all', 'free'], True)
+
+        # Distribute class attributes
+        para_objs = self.attr['para_objs']
+
+        bounds = list()
+
+        for label in self.attr['para_labels']:
+            for para_obj in para_objs:
+                # We are only interested in the free parameters.
+                if which == 'free' and para_obj.get_attr('is_fixed'):
+                    continue
+                # We are only interested in one particular parameter.
+                if label != para_obj.get_attr('label'):
+                    continue
+                lower, upper = para_obj.get_attr('bounds')
+                bounds += [(lower, upper)]
+        return bounds
 
     def check_integrity(self):
         """Check some basic features of the class that need to hold true at all times."""
@@ -146,14 +170,22 @@ class ParasCls(BaseCls):
         for para_obj in para_objs:
             para_obj.check_integrity()
 
-    def _to_optimizer(self, para_obj):
+    def _to_optimizer(self, para_obj, optimizer):
         """Transfer a single parameter to its value used by the optimizer."""
         lower, upper = para_obj.get_attr('bounds')
-        value = self._to_real(para_obj.get_attr('value'), lower, upper)
+        # Optimizer that support bounds.
+        if optimizer == 'L-BFGS-B':
+            value = self.get_attr('value')
+        else:
+            # Optimizer that do not support bounds.
+            value = self._to_real(para_obj.get_attr('value'), lower, upper)
         return value
 
-    def _to_econ(self, value, bounds):
+    def _to_econ(self, value, bounds, optimizer):
         """Transform parameters over the whole real to a bounded interval."""
+        if optimizer == 'L-BFGS-B':
+            return value
+        # Optimizer without support for bounds need to convert back from real to interval.
         value = self._to_interval(value, *bounds)
         return value
 

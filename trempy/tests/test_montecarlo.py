@@ -15,7 +15,7 @@ from trempy.config_trempy import SMALL_FLOAT
 from trempy.read.read import read
 
 
-def perturbate_all(init_dict, no_temporal_choices=True):
+def perturbate_econ(init_dict, no_temporal_choices=True):
     """Perturbate all economic parameters and set bounds to default bounds."""
     old_dict = copy.deepcopy(init_dict)
 
@@ -54,7 +54,7 @@ def perturbate_all(init_dict, no_temporal_choices=True):
 
 
 def pertubation_robustness_all(version, num_agents=None, maxfun=None, no_temporal_choices=True,
-                               all_questions=True):
+                               all_questions=True, optimizer='SCIPY-BFGS'):
     """Test pertubation of all parameters."""
     # Get random init file
     constr = {'version': version, 'fname': 'perturb.all.truth', 'all_questions': all_questions}
@@ -66,12 +66,19 @@ def pertubation_robustness_all(version, num_agents=None, maxfun=None, no_tempora
         constr['maxfun'] = maxfun
 
     init_dict = random_dict(constr)
-    init_dict['ESTIMATION']['optimizer'] = 'SCIPY-POWELL'
+    init_dict['ESTIMATION']['optimizer'] = optimizer
     init_dict['SCIPY-POWELL']['ftol'] = 0.1
     init_dict['SCIPY-POWELL']['xtol'] = 0.01
 
+    init_dict['SCIPY-BFGS']['eps'] = 1.4901161193847656e-08
+    init_dict['SCIPY-BFGS']['gtol'] = 1e-05
+
+    init_dict['SCIPY-L-BFGS-B']['eps'] = 1.4901161193847656e-08
+    init_dict['SCIPY-L-BFGS-B']['gtol'] = 1e-05
+    init_dict['SCIPY-L-BFGS-B']['ftol'] = 1e-05
+
     # Perturb parameters
-    start_dict, perturbated_dict = perturbate_all(init_dict, no_temporal_choices)
+    start_dict, perturbated_dict = perturbate_econ(init_dict, no_temporal_choices)
 
     perturbated_dict
 
@@ -147,7 +154,8 @@ def perturbate_single(init_dict, label, value=None):
     return old_dict, init_dict
 
 
-def pertubation_robustness_single(version, label=None, value=None, num_agents=None, maxfun=None):
+def pertubation_robustness_single(version, label=None, value=None, num_agents=None, maxfun=None,
+                                  optimizer='SCIPY-BFGS'):
     """Check robustness against single perturbations."""
     if label is None:
         label = np.random.choice(PREFERENCE_PARAMETERS[version])
@@ -162,9 +170,16 @@ def pertubation_robustness_single(version, label=None, value=None, num_agents=No
         constr['maxfun'] = maxfun
     init_dict = random_dict(constr)
 
-    init_dict['ESTIMATION']['optimizer'] = 'SCIPY-POWELL'
-    init_dict['ftol'] = 0.01
-    init_dict['xtol'] = 0.05
+    init_dict['ESTIMATION']['optimizer'] = optimizer
+    init_dict['SCIPY-POWELL']['ftol'] = 0.1
+    init_dict['SCIPY-POWELL']['xtol'] = 0.01
+
+    init_dict['SCIPY-BFGS']['eps'] = 1.4901161193847656e-08
+    init_dict['SCIPY-BFGS']['gtol'] = 1e-05
+
+    init_dict['SCIPY-L-BFGS-B']['eps'] = 1.4901161193847656e-08
+    init_dict['SCIPY-L-BFGS-B']['gtol'] = 1.5e-08
+    init_dict['SCIPY-L-BFGS-B']['ftol'] = 1.5e-08
 
     # Perturb parameters
     old_dict, perturbated = perturbate_single(init_dict, label=label, value=value)

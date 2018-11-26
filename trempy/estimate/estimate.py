@@ -45,7 +45,7 @@ def estimate(fname):
 
     estimate_obj = EstimateClass(
         df=df_obs, cutoffs=cutoffs, questions=questions, paras_obj=copy.deepcopy(paras_obj),
-        max_eval=maxfun, version=version, **version_specific)
+        max_eval=maxfun, optimizer=optimizer, version=version, **version_specific)
 
     # We lock in an evaluation at the starting values as not all optimizers actually start there.
     if start in ['auto']:
@@ -53,7 +53,9 @@ def estimate(fname):
             paras_obj=paras_obj, df_obs=df_obs,
             questions=questions, version=version, **version_specific)
 
+    # Objects for scipy.minimize
     x_optim_free_start = paras_obj.get_values('optim', 'free')
+    x_free_bounds = paras_obj.get_bounds('free')
     estimate_obj.evaluate(x_optim_free_start)
 
     # We simulate a sample at the starting point.
@@ -69,16 +71,25 @@ def estimate(fname):
             options['gtol'] = opt_options['SCIPY-BFGS']['gtol']
             options['eps'] = opt_options['SCIPY-BFGS']['eps']
             method = 'BFGS'
+            bounds = None
         elif optimizer == 'SCIPY-POWELL':
             options['ftol'] = opt_options['SCIPY-POWELL']['ftol']
             options['xtol'] = opt_options['SCIPY-POWELL']['xtol']
             method = 'POWELL'
+            bounds = None
+        elif optimizer == 'SCIPY-L-BFGS-B':
+            options['gtol'] = opt_options['SCIPY-L-BFGS-B']['gtol']
+            options['ftol'] = opt_options['SCIPY-L-BFGS-B']['ftol']
+            options['eps'] = opt_options['SCIPY-L-BFGS-B']['eps']
+            method = 'L-BFGS-B'
+            bounds = x_free_bounds
+            # Add bounds
         else:
             raise TrempyError('flawed choice of optimization method')
 
         try:
             opt = minimize(estimate_obj.evaluate, x_optim_free_start, method=method,
-                           options=options)
+                           options=options, bounds=bounds)
         except MaxfunError:
             opt = dict()
             opt['message'] = 'Optimization reached maximum number of function evaluations.'

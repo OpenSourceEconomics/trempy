@@ -11,7 +11,8 @@ from trempy.config_trempy import HUGE_FLOAT
 
 # Blocks that should be processed all the time.
 BASIC_GROUPS = [
-    'VERSION', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS', 'SCIPY-POWELL', 'CUTOFFS', 'QUESTIONS',
+    'VERSION', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS', 'SCIPY-POWELL', 'SCIPY-L-BFGS-B',
+    'CUTOFFS', 'QUESTIONS',
 ]
 
 # Blocks that are specific to the 'version' of the utility function.
@@ -195,7 +196,7 @@ def type_conversions(version, flag, value):
     elif flag in ['detailed']:
         assert (value.upper() in ['TRUE', 'FALSE'])
         value = (value.upper() == 'TRUE')
-    # Handle SCIPY-BFGS and SCIPY-POWELL
+    # Handle SCIPY-BFGS, SCIPY-L-BFGS-B and SCIPY-POWELL
     elif flag in ['eps', 'gtol', 'ftol', 'xtol']:
         value = float(value)
     # Empty flags

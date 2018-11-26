@@ -15,14 +15,14 @@ from trempy.shared.clsBase import BaseCls
 class EstimateClass(BaseCls):
     """This class manages all issues about the model estimation."""
 
-    def __init__(self, df, cutoffs, questions, paras_obj, max_eval, version, **version_specific):
+    def __init__(self, df, cutoffs, questions, paras_obj, max_eval, optimizer,
+                 version, **version_specific):
         """Init class."""
         self.attr = dict()
         self.attr['version'] = version
 
         # Handle version-specific objects outside paras_obj.
         if version in ['scaled_archimedean']:
-            # assert all(x in version_specific.keys() for x in ['marginals', 'upper'])
             for key, value in version_specific.items():
                 self.attr[key] = value
         elif version in ['nonstationary']:
@@ -37,6 +37,7 @@ class EstimateClass(BaseCls):
         self.attr['df'] = df
 
         # Housekeeping attributes
+        self.attr['optimizer'] = optimizer
         self.attr['num_step'] = 0
         self.attr['num_eval'] = 0
 
@@ -82,7 +83,6 @@ class EstimateClass(BaseCls):
         nparas_econ = paras_obj.attr['nparas_econ']
         stands = x_econ_all_current[nparas_econ:]
 
-        # TODO: fix criterion function. I changed the parameters that are passed to it.
         fval = criterion_function(df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj,
                                   version=version, sds=stands, **version_specific)
 
@@ -262,6 +262,6 @@ class EstimateClass(BaseCls):
 
         with open('est.trempy.log', 'a') as outfile:
             outfile.write('\n {:<25}\n'.format('OPTIMIZER RETURN'))
-            outfile.write('\n Message    {:<25}'.format(opt['message']))
-            outfile.write('\n Success    {:<25}'.format(str(opt['success'])))
+            outfile.write('\n Message    {:<40}'.format(str(opt['message'])))
+            outfile.write('\n Success    {:<40}'.format(str(opt['success'])))
             outfile.write('\n')
