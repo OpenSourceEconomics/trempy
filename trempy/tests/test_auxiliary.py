@@ -1,7 +1,10 @@
 """This module contains auxiliary functions for the test runs."""
 import shlex
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import copy
 
 from trempy.shared.shared_auxiliary import get_random_string
 from trempy.shared.shared_auxiliary import print_init_dict
@@ -103,10 +106,12 @@ def random_dict(constr):
 
     # General part of the init file that does not change with the version.
 
-    # It is time to sample the questions.
-    questions = np.random.choice([13] + list(range(31, 46)), size=num_questions, replace=False)
-    print(questions)
-    print(num_questions)
+    # Currently 16 questions are implemented.
+    if num_questions == 16:
+        questions = [13] + list(range(31, 46))
+    else:
+        questions = np.random.choice([13] + list(range(31, 46)), size=num_questions, replace=False)
+
     dict_['QUESTIONS'] = dict()
 
     for i, q in enumerate(questions):
@@ -174,6 +179,9 @@ def random_dict(constr):
 
         if 'start' in constr.keys():
             dict_['ESTIMATION']['start'] = constr['start']
+
+        if 'optimizer' in constr.keys():
+            dict_['ESTIMATION']['optimizer'] = constr['optimizer']
 
     return dict_
 
@@ -270,3 +278,84 @@ def get_cutoffs():
                np.random.choice([upper, HUGE_FLOAT], p=[0.8, 0.2])]
     cutoffs = [np.around(cutoff, decimals=4) for cutoff in cutoffs]
     return cutoffs
+
+
+def visualize_modelfit(df_simulated, df_estimated):
+    """Compare the distribution of choices per question before and after estimation."""
+    # Remove multiindex and merge dataframes
+    df_start = copy.deepcopy(df_simulated)
+    df_stop = copy.deepcopy(df_estimated)
+    df_start.drop(columns=['Question', 'Individual'], inplace=True)
+    df_start.reset_index(inplace=True)
+    df_start['type'] = 'Simulated'
+    df_start.head()
+    df_stop.drop(columns=['Question', 'Individual'], inplace=True)
+    df_stop.reset_index(inplace=True)
+    df_stop['type'] = 'Estimated'
+    df_stop.head()
+
+    df = pd.concat([df_start, df_stop], ignore_index=True)
+    del df_stop, df_start
+
+    df = df.pivot_table(values='Compensation', index=['Individual'], columns=['Question', 'type'])
+    df.reset_index(inplace=True, drop=True)
+
+    # Drop never switchers
+    df[df >= 9999.0] = np.nan
+
+    # Rename columns
+    level0 = df.columns.get_level_values(0).astype(str)
+    level1 = df.columns.get_level_values(1).astype(str)
+    levels = zip(level1, level0)
+    df.columns = [': '.join(col).strip() for col in levels]
+
+    # Drop neverswitchers and drop columns with too few interior observations
+    for col in df.columns.tolist():
+        neverswitcher = df[col].isna().sum()
+        interior = df.shape[0] - neverswitcher
+        if interior <= 100:
+            df.drop(col, axis=1, inplace=True)
+
+    df_temporal = df.filter(regex='(Estimated: [0-2])|(Simulated: [0-2])')
+    df_risky = df.filter(regex='(Estimated: [3-5])|(Simulated: [3-5])')
+
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 10), sharex=False, sharey=False)
+    for row, data in enumerate([df_risky, df_temporal]):
+        # Prepare plot
+        pos = np.arange(data.shape[1])
+        ylabels = data.columns
+        data = [data.values[:, i] for i in range(data.shape[1])]
+        data = [x[~np.isnan(x)] for x in data]
+
+        # Plot
+        violin = axes[row].violinplot(
+            data, pos, points=100, vert=False, widths=1.0,
+            showmeans=True, showextrema=True, showmedians=False,
+            bw_method='silverman')
+        if row == 0:
+            axes[row].set_title('Risky', fontsize=16)
+        else:
+            axes[row].set_title('Temporal', fontsize=16)
+        axes[row].set_yticks(np.arange(0, len(pos), 1.0))
+        axes[row].set_yticklabels(ylabels)
+        axes[row].set_xlabel('Euro')
+
+        # Set color of mean
+        vp = violin['cmeans']
+        vp.set_edgecolor('black')
+        vp.set_linewidth(2)
+
+        # Set color of simulated versus estimated violin plots
+        index = 0
+        for pc in violin['bodies']:
+            if index % 2 == 0:
+                pc.set_facecolor('red')
+            else:
+                pass
+            index += 1
+
+    fig.suptitle("Distribution of Choices", fontsize=20)
+    # fig.subplots_adjust(hspace=0.4)
+
+    # Save output
+    plt.savefig('compare_datasets.png')

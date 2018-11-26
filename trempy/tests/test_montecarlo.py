@@ -3,6 +3,7 @@
 import numpy as np
 import copy
 
+from trempy.estimate.estimate_auxiliary import estimate_cleanup
 from trempy.shared.shared_auxiliary import print_init_dict
 from trempy.config_trempy import PREFERENCE_PARAMETERS
 from trempy.tests.test_auxiliary import random_dict
@@ -15,7 +16,104 @@ from trempy.config_trempy import SMALL_FLOAT
 from trempy.read.read import read
 
 
-def perturbate_econ(init_dict, no_temporal_choices=True):
+def basic_dict(version, fname, optimizer, maxfun, num_agents, std=None,
+               eps=None, ftol=None, gtol=None):
+    """Generate basic dictionary for Monte Carlo Simulations."""
+    constr = {
+        'version': version, 'fname': fname, 'num_agents': num_agents,
+        'maxfun': maxfun, 'optimizer': optimizer, 'all_questions': True,
+    }
+    init_dict = random_dict(constr)
+
+    # Add user-specified std deviations
+    if std is not None:
+        for q, sd in std.items():
+            init_dict['QUESTIONS'][q][0] = sd
+
+    # Handle optimizer options
+    if eps is None:
+        eps = 1e-05
+    if ftol is None:
+        ftol = 1e-08
+    if gtol is None:
+        gtol = 1e-08
+    nuisance_paras = {'eps': eps, 'ftol': ftol, 'gtol': gtol}
+    for label in ['eps', 'ftol', 'gtol']:
+        if label in init_dict[optimizer].keys():
+            init_dict[optimizer][label] = nuisance_paras[label]
+
+    return init_dict
+
+
+def set_questions(init_dict, is_fixed, std=None):
+    """Manipulate questions."""
+    # Change free and fixed status
+    if is_fixed in ['fix_all']:
+        for q in init_dict['QUESTIONS'].keys():
+            init_dict['QUESTIONS'][q][1] = True
+    else:
+        np.testing.assert_equal(len(is_fixed), len(init_dict['QUESTIONS'].keys()))
+        for q, fix_value in enumerate(is_fixed):
+            init_dict['QUESTIONS'][q][1] = fix_value
+    # Change standard deviations
+    if std is not None:
+        np.testing.assert_equal(len(std), len(init_dict['QUESTIONS'].keys()))
+        for q, sd in enumerate(std):
+            init_dict['QUESTIONS'][q][0] = sd
+
+
+def remove_cutoffs(init_dict):
+    """Remove cutoffs."""
+    init_dict['CUTOFFS'] = dict()
+    return dict
+
+
+def estimate_at_truth(fix_question_paras):
+    """Stability of the likelihood at the truth."""
+    estimate_cleanup()
+
+    init_dict = basic_dict(version='nonstationary', optimizer='SCIPY-L-BFGS-B', fname='truth',
+                           num_agents=2000, maxfun=1000)
+
+    set_questions(init_dict, is_fixed=fix_question_paras, std=None)
+
+    seed = init_dict['SIMULATION']['seed']
+    version = init_dict['VERSION']['version']
+
+    print_init_dict(init_dict, fname='truth.trempy.ini')
+
+    df, fval = simulate('truth.trempy.ini')
+    est_output = estimate('truth.trempy.ini')
+
+    # Print output
+    estimated_dict = read('stop/stop.trempy.ini')
+
+    results = list()
+
+    for group in ESTIMATION_GROUP[version]:
+        for key in init_dict[group].keys():
+            start_value, is_fixed, bounds = init_dict[group][key]
+            estimated_value = estimated_dict[group][key][0]
+
+            if start_value is None or is_fixed is True:
+                continue
+
+            results.append([seed, fval, est_output[0], key, start_value, estimated_value])
+
+            print('{0:<25} {1:<15}'.format('Parameter:', key))
+            print('-------------------------')
+            print('{0:<25} {1:5.4f}'.format('Truth:', start_value))
+            print('{0:<25} {1:5.4f}'.format('Estimated value:', estimated_value))
+
+    print(' ------------------------- ')
+    print('sim seed: {:>25}'.format(seed))
+    print('fval at truth: {:>25}'.format(fval))
+    print(' ------------------------- ')
+
+    return results
+
+
+def perturbate_econ(init_dict, no_temporal_choices=True, max_dist=None):
     """Perturbate all economic parameters and set bounds to default bounds."""
     old_dict = copy.deepcopy(init_dict)
 
@@ -32,8 +130,14 @@ def perturbate_econ(init_dict, no_temporal_choices=True):
                     continue
                 lower, upper = DEFAULT_BOUNDS[label]
 
-                # Get new value
-                new_value = np.random.uniform(lower, upper)
+                # Move the parameter by less than max_dist away.
+                if max_dist is not None:
+                    new_value = np.random.uniform(value - max_dist, value + max_dist)
+                    new_value = min(upper, new_value)
+                    new_value = max(lower, new_value)
+                else:
+                    # Get new value
+                    new_value = np.random.uniform(lower, upper)
 
                 if group in ['DISCOUNTING'] and no_temporal_choices is True:
                     is_fixed = True
@@ -44,53 +148,42 @@ def perturbate_econ(init_dict, no_temporal_choices=True):
                 # Update
                 old_dict[group][label] = [value, is_fixed, [lower, upper]]
                 init_dict[group][label] = [new_value, is_fixed, [lower, upper]]
-
-    # Fix variances.
-    for q in init_dict['QUESTIONS'].keys():
-        init_dict['QUESTIONS'][q][1] = True
-        old_dict['QUESTIONS'][q][1] = True
-
     return old_dict, init_dict
 
 
-def pertubation_robustness_all(version, num_agents=None, maxfun=None, no_temporal_choices=True,
-                               all_questions=True, optimizer='SCIPY-BFGS'):
+def pertubation_robustness_all(version, no_temporal_choices=True,
+                               max_dist=None, set_std_to=None):
     """Test pertubation of all parameters."""
     # Get random init file
-    constr = {'version': version, 'fname': 'perturb.all.truth', 'all_questions': all_questions}
-    if num_agents is not None:
-        constr['num_agents'] = num_agents
-    if maxfun is None:
-        constr['maxfun'] = 500
-    else:
-        constr['maxfun'] = maxfun
+    estimate_cleanup()
 
-    init_dict = random_dict(constr)
-    init_dict['ESTIMATION']['optimizer'] = optimizer
-    init_dict['SCIPY-POWELL']['ftol'] = 0.1
-    init_dict['SCIPY-POWELL']['xtol'] = 0.01
+    init_dict = basic_dict(version=version, optimizer='SCIPY-L-BFGS-B', fname='truth',
+                           num_agents=2000, maxfun=1000)
 
-    init_dict['SCIPY-BFGS']['eps'] = 1.4901161193847656e-08
-    init_dict['SCIPY-BFGS']['gtol'] = 1e-05
+    # Set variance for questions
+    if set_std_to is not None:
+        for q in init_dict['QUESTIONS'].keys():
+            init_dict['QUESTIONS'][q][0] = set_std_to
+            init_dict['QUESTIONS'][q][2] = [set_std_to - SMALL_FLOAT, set_std_to + SMALL_FLOAT]
 
-    init_dict['SCIPY-L-BFGS-B']['eps'] = 1.4901161193847656e-08
-    init_dict['SCIPY-L-BFGS-B']['gtol'] = 1e-05
-    init_dict['SCIPY-L-BFGS-B']['ftol'] = 1e-05
+    set_questions(init_dict, is_fixed='fix_all', std=None)
+
+    seed = init_dict['SIMULATION']['seed']
+    version = init_dict['VERSION']['version']
+
+    print_init_dict(init_dict, fname='truth.trempy.ini')
 
     # Perturb parameters
-    start_dict, perturbated_dict = perturbate_econ(init_dict, no_temporal_choices)
+    truth_dict, perturbed_dict = perturbate_econ(
+        init_dict, no_temporal_choices=no_temporal_choices, max_dist=max_dist)
 
-    perturbated_dict
-
-    # Save dicts
-    print_init_dict(start_dict, 'perturb.all.truth')
-    print_init_dict(perturbated_dict, 'perturb.all.perturbed')
+    print_init_dict(perturbed_dict, fname='perturbed.trempy.ini')
 
     # Simulate data from init file
-    simulate('perturb.all.truth')
+    df, fval = simulate('truth.trempy.ini')
 
     # Estimate starting from perturbed values
-    estimate('perturb.all.perturbed')
+    estimate('perturbed.trempy.ini')
 
     # os.chdir('stop')
     estimated_dict = read('stop/stop.trempy.ini')
@@ -98,8 +191,8 @@ def pertubation_robustness_all(version, num_agents=None, maxfun=None, no_tempora
 
     for group in ESTIMATION_GROUP[version]:
         for key in init_dict[group].keys():
-            start_value, is_fixed, bounds = start_dict[group][key]
-            perturbed_value = perturbated_dict[group][key][0]
+            start_value, is_fixed, bounds = truth_dict[group][key]
+            perturbed_value = perturbed_dict[group][key][0]
             estimated_value = estimated_dict[group][key][0]
 
             if start_value is None or is_fixed is True:
@@ -110,6 +203,9 @@ def pertubation_robustness_all(version, num_agents=None, maxfun=None, no_tempora
             print('{0:<25} {1:5.4f}'.format('Start:', start_value))
             print('{0:<25} {1:5.4f}'.format('Perturbated value:', perturbed_value))
             print('{0:<25} {1:5.4f}'.format('Estimated value:', estimated_value))
+
+    print('Seed: {:>25}'.format(seed))
+    print('fval_truth: {:>25}'.format(fval))
 
 
 def perturbate_single(init_dict, label, value=None):

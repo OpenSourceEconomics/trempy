@@ -76,7 +76,7 @@ def simulate(fname):
     write_info(version, x_econ_all_current, df, questions,
                fval, m_optimal, sim_file + '.trempy.info')
 
-    return df
+    return df, fval
 
 
 def write_info(version, x_econ_all_current, df, questions, likl, m_optimal, fname):

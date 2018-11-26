@@ -174,8 +174,8 @@ class ParasCls(BaseCls):
         """Transfer a single parameter to its value used by the optimizer."""
         lower, upper = para_obj.get_attr('bounds')
         # Optimizer that support bounds.
-        if optimizer == 'L-BFGS-B':
-            value = self.get_attr('value')
+        if optimizer == 'SCIPY-L-BFGS-B':
+            value = para_obj.get_attr('value')
         else:
             # Optimizer that do not support bounds.
             value = self._to_real(para_obj.get_attr('value'), lower, upper)
@@ -183,7 +183,7 @@ class ParasCls(BaseCls):
 
     def _to_econ(self, value, bounds, optimizer):
         """Transform parameters over the whole real to a bounded interval."""
-        if optimizer == 'L-BFGS-B':
+        if optimizer == 'SCIPY-L-BFGS-B':
             return value
         # Optimizer without support for bounds need to convert back from real to interval.
         value = self._to_interval(value, *bounds)
