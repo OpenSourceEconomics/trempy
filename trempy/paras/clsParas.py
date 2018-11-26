@@ -184,6 +184,15 @@ class ParasCls(BaseCls):
     def _to_econ(self, value, bounds, optimizer):
         """Transform parameters over the whole real to a bounded interval."""
         if optimizer == 'SCIPY-L-BFGS-B':
+            lower, upper = bounds
+            if np.isclose(value, lower):
+                value += SMALL_FLOAT
+                logger_obj.record_event(0)
+            elif np.isclose(value, upper):
+                value -= SMALL_FLOAT
+                logger_obj.record_event(0)
+            else:
+                pass
             return value
         # Optimizer without support for bounds need to convert back from real to interval.
         value = self._to_interval(value, *bounds)

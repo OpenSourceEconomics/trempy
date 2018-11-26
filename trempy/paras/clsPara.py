@@ -32,5 +32,11 @@ class ParaCls(BaseCls):
 
         # Check whether the parameters are within their specified bounds.
         if value is not None:
+
             cond = lower - SMALL_FLOAT <= value <= upper + SMALL_FLOAT
-            np.testing.assert_equal(cond, True)
+            try:
+                np.testing.assert_equal(cond, True)
+            except AssertionError:
+                print('Value: {}'.format(value))
+                print('Lower: {}'.format(lower))
+                print('Upper: {}'.format(upper))

@@ -327,6 +327,11 @@ def visualize_modelfit(df_simulated, df_estimated):
         data = [data.values[:, i] for i in range(data.shape[1])]
         data = [x[~np.isnan(x)] for x in data]
 
+        # Keep only nonempty arrays
+        nonempty = [(x.size != 0) for x in data]
+        data = [x for x, y in zip(data, nonempty) if y is True]
+        ylabels = [x for x, y in zip(ylabels, nonempty) if y is True]
+
         # Plot
         violin = axes[row].violinplot(
             data, pos, points=100, vert=False, widths=1.0,
