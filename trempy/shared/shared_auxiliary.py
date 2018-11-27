@@ -63,6 +63,9 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
 def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_self,
                                                  r_other, delta, self, other):
     """Return the optimal compensations for all questions."""
+    if questions <= 30 and not questions == 13:
+        raise TrempyError('Temporal decisions not implemented for scaled_archimedean.')
+
     copula = get_copula_scaled_archimedean(upper, marginals, r_self, r_other, delta, self, other)
 
     m_optimal = dict()
@@ -285,6 +288,7 @@ def format_coefficient_line(label_internal, info, str_):
 
 def expected_utility_a(copula, lottery):
     """Calculate the expected utility for lottery A."""
+    # RISKY CHOICES
     if lottery == 13:
         rslt = copula.evaluate(50, 0, t=0)
     elif lottery == 31:
@@ -323,6 +327,25 @@ def expected_utility_a(copula, lottery):
     elif lottery == 45:
         rslt = 0.50 * copula.evaluate(0, 30, t=0) + \
             0.50 * (0.80 * copula.evaluate(0, 47, t=0) + 0.20 * copula.evaluate(0, 12, t=0))
+
+    # TEMPORAL DECISIONS
+    elif lottery in [1, 2, 3, 4, 5, 19, 20, 21, 22, 23]:
+        rslt = copula.evaluate(50, 0, t=0)
+    # Note: question 13 is temporal but t=0. So it is handled under risky choices.
+    elif lottery in [7, 8, 9, 10, 11, 25, 26, 27, 28, 29]:
+        rslt = copula.evaluate(0, 50, t=0)
+    elif lottery in [6, 16, 24]:
+        rslt = copula.evaluate(50, 0, t=6)
+    elif lottery in [12, 30]:
+        rslt = copula.evaluate(0, 50, t=6)
+    elif lottery == 14:
+        rslt = copula.evaluate(50, 0, t=1)
+    elif lottery == 15:
+        rslt = copula.evaluate(50, 0, t=3)
+    elif lottery == 17:
+        rslt = copula.evaluate(50, 0, t=12)
+    elif lottery == 18:
+        rslt = copula.evaluate(50, 0, t=24)
     else:
         raise AssertionError
 
@@ -331,6 +354,7 @@ def expected_utility_a(copula, lottery):
 
 def expected_utility_b(copula, lottery, m):
     """Calculate the expected utility for lottery B."""
+    # RISKY CHOICES
     if lottery == 13:
         rslt = copula.evaluate(0, m, t=0)
     elif lottery == 31:
@@ -369,6 +393,77 @@ def expected_utility_b(copula, lottery, m):
     elif lottery == 45:
         rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m, t=0) + 0.20 *
                        copula.evaluate(0, 2 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
+
+    # TEMPORAL CHOICES
+
+    # Univariate discounting: SELF. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    elif lottery == 1:
+        rslt = copula.evaluate(m, 0, t=1)
+    elif lottery == 2:
+        rslt = copula.evaluate(m, 0, t=3)
+    elif lottery == 3:
+        rslt = copula.evaluate(m, 0, t=6)
+    elif lottery == 4:
+        rslt = copula.evaluate(m, 0, t=12)
+    elif lottery == 5:
+        rslt = copula.evaluate(m, 0, t=24)
+    elif lottery == 6:
+        rslt = copula.evaluate(m, 0, t=12)
+
+    # Univariate discounting: CHARITY. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    elif lottery == 7:
+        rslt = copula.evaluate(0, m, t=1)
+    elif lottery == 8:
+        rslt = copula.evaluate(0, m, t=3)
+    elif lottery == 9:
+        rslt = copula.evaluate(0, m, t=6)
+    elif lottery == 10:
+        rslt = copula.evaluate(0, m, t=12)
+    elif lottery == 11:
+        rslt = copula.evaluate(0, m, t=24)
+    elif lottery == 12:
+        rslt = copula.evaluate(0, m, t=12)
+
+    # Exchange rate. 0-0, 1-1, 3-3, 6-6, 12-12, 24-24
+    # Question 13 is counted as a riskless lottery question because t=0.
+    elif lottery == 14:
+        rslt = copula.evaluate(0, m, t=1)
+    elif lottery == 15:
+        rslt = copula.evaluate(0, m, t=3)
+    elif lottery == 16:
+        rslt = copula.evaluate(0, m, t=6)
+    elif lottery == 17:
+        rslt = copula.evaluate(0, m, t=12)
+    elif lottery == 18:
+        rslt = copula.evaluate(0, m, t=24)
+
+    # Multivariate discounting: SELF. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    elif lottery == 19:
+        rslt = copula.evaluate(0, m, t=1)
+    elif lottery == 20:
+        rslt = copula.evaluate(0, m, t=3)
+    elif lottery == 21:
+        rslt = copula.evaluate(0, m, t=6)
+    elif lottery == 22:
+        rslt = copula.evaluate(0, m, t=12)
+    elif lottery == 23:
+        rslt = copula.evaluate(0, m, t=24)
+    elif lottery == 24:
+        rslt = copula.evaluate(0, m, t=12)
+
+    # Multivariate discounting: CHARITY. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
+    elif lottery == 25:
+        rslt = copula.evaluate(m, 0, t=1)
+    elif lottery == 26:
+        rslt = copula.evaluate(m, 0, t=3)
+    elif lottery == 27:
+        rslt = copula.evaluate(m, 0, t=6)
+    elif lottery == 28:
+        rslt = copula.evaluate(m, 0, t=12)
+    elif lottery == 29:
+        rslt = copula.evaluate(m, 0, t=24)
+    elif lottery == 30:
+        rslt = copula.evaluate(m, 0, t=12)
     else:
         raise AssertionError
 
@@ -381,9 +476,7 @@ def determine_optimal_compensation(copula, lottery):
         """Criterion function for the root-finding function."""
         stat_a = expected_utility_a(copula, lottery)
         stat_b = expected_utility_b(copula, lottery, m)
-
         stat = stat_a - stat_b
-
         return stat
 
     lower, upper = LOTTERY_BOUNDS[lottery]

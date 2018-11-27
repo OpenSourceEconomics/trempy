@@ -42,7 +42,7 @@ def random_dict(constr):
     dict_['VERSION'] = {'version': version}
 
     if 'all_questions' in constr.keys():
-        num_questions = 16
+        num_questions = 45
     else:
         num_questions = np.random.randint(8, 14)
     sim_agents = np.random.randint(2, 10)
@@ -107,10 +107,15 @@ def random_dict(constr):
     # General part of the init file that does not change with the version.
 
     # Currently 16 questions are implemented.
-    if num_questions == 16:
-        questions = [13] + list(range(31, 46))
+    if num_questions >= 45:
+        questions = list(range(1, 46))
     else:
-        questions = np.random.choice([13] + list(range(31, 46)), size=num_questions, replace=False)
+        if version in ['scaled_archimedean']:
+            questions = np.random.choice(
+                [13] + list(range(31, 46)), size=num_questions, replace=False)
+            print('Generated only atemporal questions because version is scaled_archimedean')
+        else:
+            questions = np.random.choice(list(range(1, 46)), size=num_questions, replace=False)
 
     dict_['QUESTIONS'] = dict()
 
@@ -199,10 +204,10 @@ def get_rmse():
 
 def get_bounds(label, version):
     """Return a set of valid bounds tailored for each parameter."""
-    wedge = float(np.random.uniform(0.03, 0.10))
+    wedge = float(np.random.uniform(0.03, 0.50))
 
     # Questions
-    if label in [13] + list(range(31, 46)):
+    if label in list(range(1, 46)):
         lower = float(np.random.uniform(0.01, 0.98 - wedge))
     else:
         # Handle version
@@ -311,13 +316,22 @@ def visualize_modelfit(df_simulated, df_estimated):
 
     # Drop neverswitchers and drop columns with too few interior observations
     for col in df.columns.tolist():
+        # Make sure we haven't dropped the column already.
+        if col not in df.columns.tolist():
+            continue
+        # Calculate percent interior
         neverswitcher = df[col].isna().sum()
         interior = df.shape[0] - neverswitcher
-        if interior <= 100:
-            df.drop(col, axis=1, inplace=True)
+        percent_interior = (interior / df.shape[0])
+        if percent_interior <= 0.20:
+            data_type, question = col.split(": ")
+            print('Dropped question: {}'.format(question))
+            print('Interior: {}'.format(percent_interior))
+            df.drop('Estimated: ' + question, axis=1, inplace=True)
+            df.drop('Simulated: ' + question, axis=1, inplace=True)
 
-    df_temporal = df.filter(regex='(Estimated: [0-2])|(Simulated: [0-2])')
-    df_risky = df.filter(regex='(Estimated: [3-5])|(Simulated: [3-5])')
+    df_temporal = df.filter(regex='(Estimated|Simulated): ([1-9]$)|(([1-2][0-9])|30)')
+    df_risky = df.filter(regex='(Estimated|Simulated): ((3[1-9])|([4-5][0-9]))')
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(16, 10), sharex=False, sharey=False)
     for row, data in enumerate([df_risky, df_temporal]):

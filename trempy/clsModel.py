@@ -221,7 +221,7 @@ class ModelCls(BaseCls):
             start, num_skip = dist_class_attributes(self, *args)
 
         # We restrict the identifiers for the questions between 1 and 16
-        np.testing.assert_equal(12 < min(questions) <= max(questions) < 46, True)
+        np.testing.assert_equal(0 < min(questions) <= max(questions) < 46, True)
 
         # The number of skipped individuals has to be non-negative.
         np.testing.assert_equal(0 <= num_skip, True)

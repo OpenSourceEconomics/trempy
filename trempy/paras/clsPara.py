@@ -25,6 +25,7 @@ class ParaCls(BaseCls):
         lower, upper = self.attr['bounds']
         is_fixed = self.attr['is_fixed']
         value = self.attr['value']
+        label = self.attr['label']
 
         # Check several conditions that need to hold true at all times.
         cond = is_fixed in [True, False]
@@ -37,6 +38,8 @@ class ParaCls(BaseCls):
             try:
                 np.testing.assert_equal(cond, True)
             except AssertionError:
-                print('Value: {}'.format(value))
+                print('Parameter: {:>20} is very close to bounds.'.format(label))
+                print('------------------------------------------')
                 print('Lower: {}'.format(lower))
+                print('Value: {}'.format(value))
                 print('Upper: {}'.format(upper))

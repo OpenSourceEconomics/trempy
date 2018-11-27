@@ -179,15 +179,13 @@ def pertubation_robustness_all(version, no_temporal_choices=True,
 
     print_init_dict(perturbed_dict, fname='perturbed.trempy.ini')
 
-    # Simulate data from init file
+    # Simulate data from init file and report criterion function.
     df, fval = simulate('truth.trempy.ini')
+    print('fval at truth: {:>25}'.format(fval))
 
     # Estimate starting from perturbed values
     estimate('perturbed.trempy.ini')
-
-    # os.chdir('stop')
     estimated_dict = read('stop/stop.trempy.ini')
-    # os.chdir('../')
 
     for group in ESTIMATION_GROUP[version]:
         for key in init_dict[group].keys():
