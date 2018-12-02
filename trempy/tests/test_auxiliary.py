@@ -327,8 +327,11 @@ def visualize_modelfit(df_simulated, df_estimated):
             data_type, question = col.split(": ")
             print('Dropped question: {}'.format(question))
             print('Interior: {}'.format(percent_interior))
-            df.drop('Estimated: ' + question, axis=1, inplace=True)
-            df.drop('Simulated: ' + question, axis=1, inplace=True)
+            try:
+                df.drop('Simulated: ' + question, axis=1, inplace=True)
+                df.drop('Estimated: ' + question, axis=1, inplace=True)
+            except:
+                print('Question {} was not in estimation file.'.format(question))
 
     df_temporal = df.filter(regex='(Estimated|Simulated): ([1-9]$)|(([1-2][0-9])|30)')
     df_risky = df.filter(regex='(Estimated|Simulated): ((3[1-9])|([4-5][0-9]))')
