@@ -14,7 +14,7 @@ from trempy import estimate
 def test_1():
     """Run the core workflow of simulation and estimation."""
     constr = dict()
-    constr['maxfun'] = np.random.random_integers(1, 5)
+    constr['maxfun'] = np.random.randint(1, 5 + 1)
 
     get_random_init(constr)
     simulate('test.trempy.ini')

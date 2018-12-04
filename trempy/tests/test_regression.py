@@ -22,6 +22,7 @@ def run_regression_test(test):
 
     # TEMPORARY: for old regression vault, 'version' is missing. Delete for new batch.
     if 'VERSION' not in init_dict.keys():
+        init_dict['VERSION'] = dict()
         init_dict['VERSION']['version'] = 'scaled_archimedean'
 
     print_init_dict(init_dict)

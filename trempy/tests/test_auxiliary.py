@@ -66,7 +66,7 @@ def random_dict(constr):
     if version in ['scaled_archimedean']:
         # Initial setup to ensure constraints across options.
         marginals = np.random.choice(['exponential', 'power'], 2)
-        upper_bounds = np.random.random_integers(500, 800, 2)
+        upper_bounds = np.random.randint(500, 800 + 1, 2)
 
         # We start with sampling all preference parameters.
         dict_['UNIATTRIBUTE SELF'], i = dict(), 0
