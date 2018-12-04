@@ -20,6 +20,10 @@ def run_regression_test(test):
     # Create and process initialization file
     init_dict, crit_val = test
 
+    # TEMPORARY: for old regression vault, 'version' is missing. Delete for new batch.
+    if 'VERSION' not in init_dict.keys():
+        init_dict['VERSION']['version'] = 'scaled_archimedean'
+
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
     df = simulate('test.trempy.ini')

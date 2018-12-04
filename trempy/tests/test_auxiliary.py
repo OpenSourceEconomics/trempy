@@ -113,7 +113,7 @@ def random_dict(constr):
         if version in ['scaled_archimedean']:
             questions = np.random.choice(
                 [13] + list(range(31, 46)), size=num_questions, replace=False)
-            print('Generated only atemporal questions because version is scaled_archimedean')
+            # print('Generated only atemporal questions because version is scaled_archimedean')
         else:
             questions = np.random.choice(list(range(1, 46)), size=num_questions, replace=False)
 
@@ -330,7 +330,7 @@ def visualize_modelfit(df_simulated, df_estimated):
             try:
                 df.drop('Simulated: ' + question, axis=1, inplace=True)
                 df.drop('Estimated: ' + question, axis=1, inplace=True)
-            except:
+            except Exception:
                 print('Question {} was not in estimation file.'.format(question))
 
     df_temporal = df.filter(regex='(Estimated|Simulated): ([1-9]$)|(([1-2][0-9])|30)')

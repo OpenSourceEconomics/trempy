@@ -12,7 +12,7 @@ from trempy import estimate
 
 
 def test_1():
-    """This test simply runs the core workflow of simulation and estimation."""
+    """Run the core workflow of simulation and estimation."""
     constr = dict()
     constr['maxfun'] = np.random.random_integers(1, 5)
 
@@ -22,8 +22,10 @@ def test_1():
 
 
 def test_2():
-    """This test runs flake8 to ensure the code quality. However, this is only relevant during
-    development."""
+    """Run flake8 to ensure the code quality.
+
+    However, this is only relevant during development.
+    """
     try:
         import flake8    # noqa: F401
     except ImportError:

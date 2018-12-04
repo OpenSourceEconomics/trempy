@@ -63,8 +63,9 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
 def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_self,
                                                  r_other, delta, self, other):
     """Return the optimal compensations for all questions."""
-    if questions <= 30 and not questions == 13:
-        raise TrempyError('Temporal decisions not implemented for scaled_archimedean.')
+    for question in questions:
+        if question <= 30 and not question == 13:
+            raise TrempyError('Temporal decisions not implemented for scaled_archimedean.')
 
     copula = get_copula_scaled_archimedean(upper, marginals, r_self, r_other, delta, self, other)
 

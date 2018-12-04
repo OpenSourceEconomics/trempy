@@ -17,7 +17,7 @@ from trempy import estimate
 def test_1():
     """Check that the random initialization files can all be properly processed."""
     for _ in range(100):
-        constr = {'fname': 'test.trempy.dict'}
+        constr = {'fname': 'test.trempy.ini'}
         get_random_init(constr)
         read('test.trempy.ini')
 
