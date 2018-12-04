@@ -1,4 +1,4 @@
 [submodule "submodules/copulpy"]
 	path = submodules/copulpy
 	url = https://github.com/briqInstitute/copulpy
-        branch = master
+        branch = felix
