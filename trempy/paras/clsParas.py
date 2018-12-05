@@ -85,7 +85,6 @@ class ParasCls(BaseCls):
         optimizer = self.attr['optimizer']
 
         count = 0
-
         for label in self.attr['para_labels']:
             for para_obj in para_objs:
                 # We are only interested in the free parameters.
@@ -104,9 +103,7 @@ class ParasCls(BaseCls):
                     raise TrempyError('misspecified request')
 
                 para_obj.set_attr('value', value)
-
                 para_obj.check_integrity()
-
                 count += 1
 
     def get_values(self, perspective, which):

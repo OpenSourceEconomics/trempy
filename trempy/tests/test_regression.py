@@ -22,16 +22,28 @@ def run_regression_test(test):
 
     # TEMPORARY: for old regression vault, 'version' is missing. Delete for new batch.
     if 'VERSION' not in init_dict.keys():
+        init_dict['scaled_archimedean'] = init_dict
         init_dict['VERSION'] = dict()
         init_dict['VERSION']['version'] = 'scaled_archimedean'
+        init_dict['SCIPY-L-BFGS-B'] = dict()
+        init_dict['SCIPY-L-BFGS-B']['gtol'] = 1e-5
+        init_dict['SCIPY-L-BFGS-B']['ftol'] = 1e-5
+        init_dict['SCIPY-L-BFGS-B']['eps'] = 1e-5
 
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
-    df = simulate('test.trempy.ini')
+    df, fval = simulate('test.trempy.ini')
 
     # Distribute class attributes for further processing.
     args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
     paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
+
+    if version in ['scaled_archimedean']:
+        args = [model_obj, 'marginals', 'upper']
+        marginals, upper = dist_class_attributes(*args)
+        version_specific = {'marginals': marginals, 'upper': upper}
+    else:
+        version_specific = None
 
     # The number of actual economic parameters in paras_obj not counting questions.
     n_econ_params = paras_obj.attr['nparas_econ']
@@ -44,7 +56,8 @@ def run_regression_test(test):
         stands = x_econ_all[n_econ_params:]
 
     stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
-                              model_obj=model_obj, version=version, sds=stands)
+                              paras_obj=paras_obj, version=version, sds=stands,
+                              **version_specific)
 
     np.testing.assert_almost_equal(stat, crit_val)
 
@@ -52,5 +65,8 @@ def run_regression_test(test):
 def test_1():
     """Run a small sample of the regression test battery."""
     tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb'))
+    i = 0
     for test in tests[:5]:
+        print(i)
+        i = i + 1
         run_regression_test(test)
