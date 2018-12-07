@@ -34,55 +34,34 @@ def get_copula_nonstationary(alpha, beta, gamma, y_scale,
                              unrestricted_weights_0, unrestricted_weights_1,
                              unrestricted_weights_3, unrestricted_weights_6,
                              unrestricted_weights_12, unrestricted_weights_24,
-                             # Quick and dirty implementation of other discounting functions.
-                             exp_discounting=False,
-                             beta_delta_discounting=False,
+                             discounting=None,
                              stationary_model=False
                              ):
     """Access the nonstationary utility copula."""
+    # Anti-bugging.
+    np.testing.assert_equal(discounting in [None, 'hyperbolic', 'exponential'], True)
+
     version = 'nonstationary'
     copula_spec = {'version': version}
     copula_spec[version] = {
+        'discounting': discounting,
         'version': version,
         'y_scale': y_scale,
         'alpha': alpha,
         'gamma': gamma,
         'beta': beta,
     }
-    # Anti-bugging.
-    np.testing.assert_equal(exp_discounting and beta_delta_discounting, False)
 
-    if exp_discounting is True:
-        # Use discount_factors_0 for delta. Here, one "period" has length 1 month.
-        dict_discount_f = {
-            0: 1,
-            1: discount_factors_0,
-            3: discount_factors_0 ** 3,
-            6: discount_factors_0 ** 6,
-            12: discount_factors_0 ** 12,
-            24: discount_factors_0 ** 24,
-        }
-    elif beta_delta_discounting is True:
-        # Use discount_factors_0 and _1 for beta and delta.
-        dict_discount_f = {
-            0: 1,
-            1: discount_factors_0 * discount_factors_1,
-            3: discount_factors_0 * discount_factors_1 ** 3,
-            6: discount_factors_0 * discount_factors_1 ** 6,
-            12: discount_factors_0 * discount_factors_1 ** 12,
-            24: discount_factors_0 * discount_factors_1 ** 24,
-        }
-    else:
-        # "Nonparametric" discount factors D_t for t in 0,1,3,6,12,24.
-        dict_discount_f = {
-            0: discount_factors_0,
-            1: discount_factors_1,
-            3: discount_factors_3,
-            6: discount_factors_6,
-            12: discount_factors_12,
-            24: discount_factors_24,
-        }
-    copula_spec[version]['discount_factors'] = dict_discount_f
+    # "Nonparametric" discount factors D_t for t in 0,1,3,6,12,24.
+    dfx = {
+        0: discount_factors_0,
+        1: discount_factors_1,
+        3: discount_factors_3,
+        6: discount_factors_6,
+        12: discount_factors_12,
+        24: discount_factors_24,
+    }
+    copula_spec[version]['discount_factors'] = dfx
 
     # Optional argument: unrestricted weights
     dict_unrestriced = {

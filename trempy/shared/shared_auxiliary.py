@@ -81,7 +81,9 @@ def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_sca
                                             discount_factors_12, discount_factors_24,
                                             unrestricted_weights_0, unrestricted_weights_1,
                                             unrestricted_weights_3, unrestricted_weights_6,
-                                            unrestricted_weights_12, unrestricted_weights_24
+                                            unrestricted_weights_12, unrestricted_weights_24,
+                                            # Optional arguments that determine the model type
+                                            discounting, stationary_model
                                             ):
     """Optimal compensation for the nonstationary utility function."""
     copula = get_copula_nonstationary(
@@ -91,7 +93,9 @@ def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_sca
         discount_factors_12, discount_factors_24,
         unrestricted_weights_0, unrestricted_weights_1,
         unrestricted_weights_3, unrestricted_weights_6,
-        unrestricted_weights_12, unrestricted_weights_24)
+        unrestricted_weights_12, unrestricted_weights_24,
+        discounting=discounting,
+        stationary_model=stationary_model)
 
     m_optimal = dict()
     for q in questions:
@@ -127,13 +131,19 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
             unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24 = \
             paras_obj.get_values('econ', 'all')[:nparas_econ]
 
+        # Optional arguments
+        discounting = paras_obj.attr['discounting']
+        stationary_model = paras_obj.attr['stationary_model']
+
         # Optimal compensation
         args = [questions, alpha, beta, gamma, y_scale,
                 discount_factors_0, discount_factors_1,
                 discount_factors_3, discount_factors_6,
                 discount_factors_12, discount_factors_24,
                 unrestricted_weights_0, unrestricted_weights_1, unrestricted_weights_3,
-                unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24]
+                unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24,
+                # Optional arguments:
+                discounting, stationary_model]
         m_optimal = get_optimal_compensations_nonstationary(*args)
     else:
         raise TrempyError('version not implemented')
@@ -198,6 +208,11 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                 # Handle string output (e.g. "True" or "None")
                 if label in ['detailed', 'version']:
                     info = str(info)
+                if label in ['discounting', 'stationary_model']:
+                    if info is None:
+                        info = 'None'
+                    else:
+                        info = str(info)
 
                 if (label_internal in PREFERENCE_PARAMETERS[version] + questions and
                    key_ != 'CUTOFFS'):

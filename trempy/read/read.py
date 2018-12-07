@@ -32,7 +32,25 @@ def read(fname):
 
     with open(fname) as in_file:
 
-        for line in in_file.readlines():
+        # Get lines
+        file_lines = in_file.readlines()
+        lines = list(file_lines)
+
+        # Get the version. This is necessary because version is needed always first!
+        for line in lines:
+            list_ = shlex.split(line)
+            # Determine special cases
+            is_empty, is_group, is_comment = process_cases(list_)
+            if is_group or is_comment or is_empty:
+                continue
+            flag, value = list_[:2]
+            if flag in ['version']:
+                version = value
+                # We only needed the version flag
+                break
+
+        # Now process the file again.
+        for line in lines:
 
             list_ = shlex.split(line)
 
@@ -58,7 +76,7 @@ def read(fname):
 
             # Type conversions for the NON-CUTOFF block
             if group not in ['CUTOFFS']:
-                value = type_conversions(version, flag, value)
+                value = type_conversions(flag, value)
 
             # We need to make sure questions and cutoffs are not duplicated.
             if flag in dict_[group].keys():
@@ -106,6 +124,7 @@ def read(fname):
                     dict_['CUTOFFS'][q][i] = (-1)**i * -HUGE_FLOAT
 
     # Enforce input requirements for optional arguments
+    # such as: discounting, stationary_model, unrestricted_weights
     check_optional_args(dict_)
 
     return dict_
@@ -186,14 +205,14 @@ def process_cases(list_):
     return is_empty, is_group, is_comment
 
 
-def type_conversions(version, flag, value):
-    """Type conversions by version."""
+def type_conversions(flag, value):
+    """Type conversions."""
     # Handle ESTIMATION, SIMULATION and VERSION
     if flag in ['seed', 'agents', 'maxfun', 'skip']:
         value = int(value)
     elif flag in ['version', 'file', 'optimizer', 'start']:
         value = str(value)
-    elif flag in ['detailed']:
+    elif flag in ['detailed', 'stationary_model']:
         assert (value.upper() in ['TRUE', 'FALSE'])
         value = (value.upper() == 'TRUE')
     # Handle SCIPY-BFGS, SCIPY-L-BFGS-B and SCIPY-POWELL
@@ -212,6 +231,11 @@ def type_conversions(version, flag, value):
     # Handle nonstationary
     elif flag in ['alpha', 'beta', 'gamma', 'y_scale'] or flag.startswith('discount_factors'):
         value = float(value)
+    elif flag in ['discounting']:
+        value = str(value)
+        value = value.lower()
+        if value == 'none':
+            value = None
     elif flag.startswith('unrestricted_weights_'):
         if value == 'None':
             value = None
@@ -232,7 +256,21 @@ def check_optional_args(init_dict):
     version = init_dict['VERSION']['version']
     if version in ['scaled_archimedean']:
         pass
+
     elif version in ['nonstationary']:
+        # Set discounting to None if not specified; check correct input.
+        if 'discounting' in init_dict['VERSION'].keys():
+            discounting = init_dict['VERSION']['discounting']
+            np.testing.assert_equal(discounting in ['hyperbolic', 'exponential', None], True)
+        else:
+            init_dict['VERSION']['discounting'] = None
+
+        # Fill in stationary_model if not specified by user
+        if 'stationary_model' in init_dict['VERSION'].keys():
+            pass
+        else:
+            init_dict['VERSION']['stationary_model'] = False
+
         optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
         for label in optional_args:
             # If optional argument is not used (None), then we fix it at None.

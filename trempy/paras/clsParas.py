@@ -23,6 +23,12 @@ class ParasCls(BaseCls):
         self.attr['para_labels'] = []
         self.attr['para_objs'] = []
 
+        if version in ['nonstationary']:
+            discounting = init_dict['VERSION']['discounting']
+            stationary_model = init_dict['VERSION']['stationary_model']
+            self.attr['discounting'] = discounting
+            self.attr['stationary_model'] = stationary_model
+
         # Preference parameters are handled for each version separately.
         for label in PREFERENCE_PARAMETERS[version]:
 

@@ -34,24 +34,30 @@ def random_dict(constr):
     """Create a random initialization file."""
     dict_ = dict()
 
-    # Handle version specific data.
     version = np.random.choice(['scaled_archimedean', 'nonstationary'])
-    if constr is not None and 'version' in constr.keys():
-        version = constr['version']
+    num_questions = np.random.randint(8, 14)
+    fname = get_random_string()
+    discounting = np.random.choice([None, 'exponential', 'hyperbolic'], p=[0.8, 0.1, 0.1])
+
+    if constr is not None:
+        # Handle version specific data.
+        if 'version' in constr.keys():
+            version = constr['version']
+        if 'all_questions' in constr.keys():
+            num_questions = 45
+        if 'fname' in constr.keys():
+            fname = constr['fname']
+        if 'discounting' in constr.keys():
+            discounting = constr['discounting']
 
     dict_['VERSION'] = {'version': version}
 
-    if 'all_questions' in constr.keys():
-        num_questions = 45
-    else:
-        num_questions = np.random.randint(8, 14)
+    # Optional arguments for model type
+    if version in ['nonstationary']:
+        dict_['VERSION']['discounting'] = discounting
+        dict_['VERSION']['stationary_model'] = np.random.choice([False, True], p=[0.9, 0.1])
+
     sim_agents = np.random.randint(2, 10)
-
-    if constr is not None and 'fname' in constr.keys():
-        fname = constr['fname']
-    else:
-        fname = get_random_string()
-
     is_fixed = np.random.choice(
         [True, False], size=num_questions + len(PREFERENCE_PARAMETERS[version]))
     # We need to ensure at least one parameter is free for a valid estimation request.
@@ -234,6 +240,10 @@ def get_bounds(label, version):
 
     # Get upper bound by adding the wedge
     upper = lower + wedge
+
+    # To handle exponential discounting and hyperbolic discounting.
+    if label not in list(range(1, 46)) and label.startswith('discount_factors'):
+        lower = 0.00
 
     # We want to check the case of the default bounds as well.
     if np.random.choice([True, False], p=[0.1, 0.9]):
