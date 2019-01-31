@@ -39,6 +39,13 @@ def create_regression_vault(num_tests):
         args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
         paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
 
+        # Handle version-specific objects not included in the para_obj
+        if version in ['scaled_archimedean']:
+            upper, marginals = dist_class_attributes(*[model_obj, 'upper', 'marginals'])
+            version_specific = {'upper': upper, 'marginals': marginals}
+        elif version in ['nonstationary']:
+            version_specific = dict()
+
         # Get number of economic parameters. Paras with higher index belong to questions.
         nparas_econ = paras_obj.attr['nparas_econ']
 
@@ -48,7 +55,8 @@ def create_regression_vault(num_tests):
 
         # Evaluate criterion function and process results
         stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
-                                  model_obj=model_obj, version=version, sds=stands)
+                                  paras_obj=paras_obj, version=version, sds=stands,
+                                  **version_specific)
         tests += [(init_dict, stat)]
 
         cleanup()

@@ -33,7 +33,7 @@ def run_regression_test(test):
         marginals, upper = dist_class_attributes(*args)
         version_specific = {'marginals': marginals, 'upper': upper}
     else:
-        version_specific = None
+        version_specific = dict()
 
     # The number of actual economic parameters in paras_obj not counting questions.
     n_econ_params = paras_obj.attr['nparas_econ']
