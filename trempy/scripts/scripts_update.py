@@ -7,7 +7,7 @@ from trempy.clsModel import ModelCls
 
 
 def run(args):
-    """This function updates the initialization file."""
+    """Update the initialization file."""
     args = distribute_command_line_arguments(args)
 
     x_econ_all_step = []

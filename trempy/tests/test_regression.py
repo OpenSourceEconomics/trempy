@@ -12,27 +12,50 @@ from trempy import simulate
 
 
 def run_regression_test(test):
-    """This function runs a single regression test. It is repeatedly used by the testing
-    infrastructure. Thus, manual modifications are only required here."""
+    """Run a single regression test.
+
+    It is repeatedly used by the testing infrastructure.
+    Thus, manual modifications are only required here.
+    """
     # Create and process initialization file
     init_dict, crit_val = test
 
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
-    df = simulate('test.trempy.ini')
+    df, fval = simulate('test.trempy.ini')
 
     # Distribute class attributes for further processing.
-    args = [model_obj, 'paras_obj', "questions", 'upper', 'cutoffs', 'marginals']
-    paras_obj, questions, upper, cutoffs, marginals = dist_class_attributes(*args)
+    args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
+    paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
 
+    if version in ['scaled_archimedean']:
+        args = [model_obj, 'marginals', 'upper']
+        marginals, upper = dist_class_attributes(*args)
+        version_specific = {'marginals': marginals, 'upper': upper}
+    else:
+        version_specific = dict()
+
+    # The number of actual economic parameters in paras_obj not counting questions.
+    n_econ_params = paras_obj.attr['nparas_econ']
+
+    # Standard deviations
     x_econ_all = paras_obj.get_values('econ', 'all')
-    stat = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all)
+    if version in ['scaled_archimedean']:
+        stands = x_econ_all[5:]
+    elif version in ['nonstationary']:
+        stands = x_econ_all[n_econ_params:]
+
+    stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
+                              paras_obj=paras_obj, version=version, sds=stands,
+                              **version_specific)
 
     np.testing.assert_almost_equal(stat, crit_val)
 
 
 def test_1():
-    """This test simply runs a small sample of the regression test battery."""
+    """Run a small sample of the regression test battery."""
     tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb'))
-    for test in tests[:5]:
+    i = 0
+    for test in tests[:10]:
+        i = i + 1
         run_regression_test(test)

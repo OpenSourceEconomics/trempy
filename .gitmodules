@@ -1,4 +1,3 @@
 [submodule "submodules/copulpy"]
-	path = submodules/copulpy
-	url = https://github.com/briqInstitute/copulpy
-        branch = master
+    path = submodules/copulpy
+    url = https://github.com/OpenSourceEconomics/copulpy

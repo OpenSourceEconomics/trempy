@@ -14,20 +14,30 @@ from trempy.shared.clsBase import BaseCls
 
 class EstimateClass(BaseCls):
     """This class manages all issues about the model estimation."""
-    def __init__(self, df, cutoffs, upper, marginals, questions, paras_obj, max_eval):
 
+    def __init__(self, df, cutoffs, questions, paras_obj, max_eval, optimizer,
+                 version, **version_specific):
+        """Init class."""
         self.attr = dict()
+        self.attr['version'] = version
+
+        # Handle version-specific objects outside paras_obj.
+        if version in ['scaled_archimedean']:
+            for key, value in version_specific.items():
+                self.attr[key] = value
+        elif version in ['nonstationary']:
+            # Currently nothing to do.
+            pass
 
         # Initialization attributes
         self.attr['paras_obj'] = paras_obj
         self.attr['questions'] = questions
-        self.attr['marginals'] = marginals
         self.attr['max_eval'] = max_eval
         self.attr['cutoffs'] = cutoffs
-        self.attr['upper'] = upper
         self.attr['df'] = df
 
         # Housekeeping attributes
+        self.attr['optimizer'] = optimizer
         self.attr['num_step'] = 0
         self.attr['num_eval'] = 0
 
@@ -43,40 +53,62 @@ class EstimateClass(BaseCls):
         self.attr['f_start'] = HUGE_FLOAT
         self.attr['f_step'] = HUGE_FLOAT
 
-        self.attr['paras_label'] = PREFERENCE_PARAMETERS + questions
+        self.attr['paras_label'] = PREFERENCE_PARAMETERS[version] + questions
 
         self._logging_start()
 
     def evaluate(self, x_optim_free_current):
-        """This method allows to evaluate the criterion function during an estimation"""
-        # Distribute class attributes
+        """Evaluate the criterion function during an estimation."""
+        # Distribute general class attributes
         paras_obj = self.attr['paras_obj']
         questions = self.attr['questions']
-        marginals = self.attr['marginals']
+        version = self.attr['version']
         cutoffs = self.attr['cutoffs']
-        upper = self.attr['upper']
         df = self.attr['df']
+
+        # Handle versions-specific objects outside para_obj
+        if version in ['scaled_archimedean']:
+            marginals = self.attr['marginals']
+            upper = self.attr['upper']
+            version_specific = {'upper': upper, 'marginals': marginals}
+        elif version in ['nonstationary']:
+            version_specific = dict()
 
         # Construct relevant set of parameters
         paras_obj.set_values('optim', 'free', x_optim_free_current)
         x_optim_all_current = paras_obj.get_values('optim', 'all')
         x_econ_all_current = paras_obj.get_values('econ', 'all')
-        fval = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all_current)
+
+        # Get standard deviations. They have a larger index than nparas_econ.
+        nparas_econ = paras_obj.attr['nparas_econ']
+        stands = x_econ_all_current[nparas_econ:]
+
+        fval = criterion_function(df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj,
+                                  version=version, sds=stands, **version_specific)
 
         self._update_evaluation(fval, x_econ_all_current, x_optim_all_current)
 
         return fval
 
     def _update_evaluation(self, fval, x_econ_all_current, x_optim_all_current):
-        """This method updates all attributes based on the new evaluation and writes some
-        information to files."""
+        """Update all attributes based on the new evaluation and write some information to file."""
         # Distribute class attribute
+
+        paras_obj = self.attr['paras_obj']
         questions = self.attr['questions']
-        marginals = self.attr['marginals']
-        upper = self.attr['upper']
+        version = self.attr['version']
+
+        if version in ['scaled_archimedean']:
+            marginals = self.attr['marginals']
+            upper = self.attr['upper']
+            version_specific = {'upper': upper, 'marginals': marginals}
+        elif version in ['nonstationary']:
+            version_specific = dict()
 
         # Update current information]
-        m_optimal = get_optimal_compensations(questions, upper, marginals, *x_econ_all_current[:5])
+        m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj,
+                                              questions=questions,
+                                              **version_specific)
 
         self.attr['x_econ_all_current'] = x_econ_all_current
         self.attr['m_optimal_current'] = m_optimal
@@ -104,7 +136,7 @@ class EstimateClass(BaseCls):
         self._logging_evaluation(x_econ_all_current, x_optim_all_current)
 
     def _logging_start(self):
-        """This method records some basic properties of the estimation at the beginning."""
+        """Record some basic properties of the estimation at the beginning."""
         # Distribute class attributes
         paras_obj = self.attr['paras_obj']
         df = self.attr['df']
@@ -130,14 +162,15 @@ class EstimateClass(BaseCls):
                 outfile.write(fmt_.format(*line) + '\n')
 
     def _logging_evaluation(self, x_econ_all_current, x_optim_all_current):
-        """This methods manages all issues related to the logging of the estimation."""
+        """Manage all issues related to the logging of the estimation."""
         # Distribute attributes
         para_labels = self.attr['paras_label']
         questions = self.attr['questions']
+        version = self.attr['version']
 
         # Update class attributes
         with open('est.trempy.info', 'w') as outfile:
-            fmt_ = ' {:>10}    ' + '{:<10}    ' + '{:>25}    ' * 3
+            fmt_ = ' {:>10}    ' + '{:<20}    ' + '{:>25}    ' * 3
 
             # Write out information about criterion function
             outfile.write('\n {:<25}\n\n'.format('Criterion Function'))
@@ -146,19 +179,26 @@ class EstimateClass(BaseCls):
             line = ['', ''] + char_floats(args) + ['']
             outfile.write(fmt_.format(*line) + '\n\n')
 
+            # Economic Parameters
             outfile.write('\n {:<25}\n\n'.format('Economic Parameters'))
-            line = ['Identifier', 'Label',  'Start', 'Step', 'Current']
+            line = ['Identifier', 'Label', 'Start', 'Step', 'Current']
             outfile.write(fmt_.format(*line) + '\n\n')
-            for i, _ in enumerate(range(len(questions) + 5)):
+            # Handle version
+            for i, _ in enumerate(range(len(questions) + len(PREFERENCE_PARAMETERS[version]))):
                 line = [i]
                 line += [para_labels[i]]
-                line += char_floats(self.attr['x_econ_all_start'][i])
-                line += char_floats(self.attr['x_econ_all_step'][i])
-                line += char_floats(self.attr['x_econ_all_current'][i])
-                outfile.write(fmt_.format(*line) + '\n')
+                # Handle optional arguments indicated by None value.
+                if self.attr['x_econ_all_start'][i] is None:
+                    continue
+                else:
+                    line += char_floats(self.attr['x_econ_all_start'][i])
+                    line += char_floats(self.attr['x_econ_all_step'][i])
+                    line += char_floats(self.attr['x_econ_all_current'][i])
+                    outfile.write(fmt_.format(*line) + '\n')
 
+            # Optimal Compensation
             outfile.write('\n\n {:<25}\n\n'.format('Optimal Compensations'))
-            line = ['Questions', '',  'Start', 'Step', 'Current']
+            line = ['Questions', '', 'Start', 'Step', 'Current']
             outfile.write(fmt_.format(*line) + '\n\n')
             for q in questions:
                 line = [q, '']
@@ -167,6 +207,7 @@ class EstimateClass(BaseCls):
                 line += char_floats(self.attr['m_optimal_current'][q])
                 outfile.write(fmt_.format(*line) + '\n')
 
+            # Steps and Duration
             outfile.write('\n')
             fmt_ = '\n {:<25}   {:>25}\n'
             outfile.write(fmt_.format(*['Number of Evaluations', self.attr['num_eval']]))
@@ -181,23 +222,27 @@ class EstimateClass(BaseCls):
             fmt_ = '\n Criterion {:>28}  \n\n\n'
             outfile.write(fmt_.format(char_floats(self.attr['f_current'])[0]))
 
-            fmt_ = ' {:>10}   ' + '{:<10}   ' + '{:>25}    ' * 2
+            fmt_ = ' {:>10}   ' + '{:<20}   ' + '{:>25}    ' * 2
             line = ['Identifier', 'Label', 'Economic', 'Optimizer']
             outfile.write(fmt_.format(*line) + '\n\n')
 
-            for i, _ in enumerate(range(len(questions) + 5)):
+            for i, _ in enumerate(range(len(questions) + len(PREFERENCE_PARAMETERS[version]))):
                 line = [i]
                 line += [para_labels[i]]
+                # Handle optional arguments with None value
+                if (x_econ_all_current[i] or x_optim_all_current[i]) is None:
+                    continue
                 line += char_floats([x_econ_all_current[i], x_optim_all_current[i]])
                 outfile.write(fmt_.format(*line) + '\n')
             # We need to keep track of captured warnings.
             logger_obj.flush(outfile)
 
-            # We also record the results from the fitting of the copula.
-            outfile.write('\n')
-            with open('fit.copulpy.info') as infile:
-                outfile.write(infile.read())
-            os.remove('fit.copulpy.info')
+            if version in ['scaled_archimedean']:
+                # We also record the results from the fitting of the copula.
+                outfile.write('\n')
+                with open('fit.copulpy.info') as infile:
+                    outfile.write(infile.read())
+                os.remove('fit.copulpy.info')
 
         # We can determine the estimation if the number of requested function evaluations is
         # reached or the user requests a stop.
@@ -211,12 +256,12 @@ class EstimateClass(BaseCls):
 
     @staticmethod
     def finish(opt):
-        """This method collects all operations to wrap up an estimation."""
+        """Collect all operations to wrap up an estimation."""
         with open('est.trempy.info', 'a') as outfile:
             outfile.write('\n {:<25}'.format('TERMINATED'))
 
         with open('est.trempy.log', 'a') as outfile:
             outfile.write('\n {:<25}\n'.format('OPTIMIZER RETURN'))
-            outfile.write('\n Message    {:<25}'.format(opt['message']))
-            outfile.write('\n Success    {:<25}'.format(str(opt['success'])))
+            outfile.write('\n Message    {:<40}'.format(str(opt['message'])))
+            outfile.write('\n Success    {:<40}'.format(str(opt['success'])))
             outfile.write('\n')

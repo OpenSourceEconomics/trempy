@@ -9,13 +9,21 @@ from trempy.config_trempy import DEFAULT_BOUNDS
 from trempy.config_trempy import QUESTIONS_ALL
 from trempy.config_trempy import HUGE_FLOAT
 
-ESTIMATION_GROUP = []
-ESTIMATION_GROUP += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
-ESTIMATION_GROUP += ['QUESTIONS']
+# Blocks that should be processed all the time.
+BASIC_GROUPS = [
+    'VERSION', 'SIMULATION', 'ESTIMATION', 'SCIPY-BFGS', 'SCIPY-POWELL', 'SCIPY-L-BFGS-B',
+    'CUTOFFS', 'QUESTIONS',
+]
+
+# Blocks that are specific to the 'version' of the utility function.
+ESTIMATION_GROUP = {
+    'scaled_archimedean': ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA'],
+    'nonstationary': ['ATEMPORAL', 'DISCOUNTING'],
+}
 
 
 def read(fname):
-    """This function reads the initialization file."""
+    """Read the initialization file."""
     # Check input
     np.testing.assert_equal(os.path.exists(fname), True)
 
@@ -24,7 +32,25 @@ def read(fname):
 
     with open(fname) as in_file:
 
-        for line in in_file.readlines():
+        # Get lines
+        file_lines = in_file.readlines()
+        lines = list(file_lines)
+
+        # Get the version. This is necessary because version is needed always first!
+        for line in lines:
+            list_ = shlex.split(line)
+            # Determine special cases
+            is_empty, is_group, is_comment = process_cases(list_)
+            if is_group or is_comment or is_empty:
+                continue
+            flag, value = list_[:2]
+            if flag in ['version']:
+                version = value
+                # We only needed the version flag
+                break
+
+        # Now process the file again.
+        for line in lines:
 
             list_ = shlex.split(line)
 
@@ -38,12 +64,17 @@ def read(fname):
             # Prepare dictionary
             if is_group:
                 group = ' '.join(list_)
-                dict_[group] = {}
+                dict_[group] = dict()
                 continue
 
+            # Code below is only executed if the current line is not a group name
             flag, value = list_[:2]
 
-            # Type conversions
+            # Handle the VERSION block.
+            if (group in ['VERSION']) and (flag in ['version']):
+                version = value
+
+            # Type conversions for the NON-CUTOFF block
             if group not in ['CUTOFFS']:
                 value = type_conversions(flag, value)
 
@@ -51,14 +82,28 @@ def read(fname):
             if flag in dict_[group].keys():
                 raise TrempyError('duplicated information')
 
-            # We need to allow for additional information about the potential estimation
-            # parameters.
-            if group in ESTIMATION_GROUP and flag not in ['max', 'marginal']:
-                dict_[group][flag] = process_coefficient_line(group, list_, value)
-            elif group in ['CUTOFFS']:
-                dict_[group][flag] = process_cutoff_line(list_)
-            else:
-                dict_[group][flag] = value
+            # Handle the basic blocks
+            if group in BASIC_GROUPS:
+                if group in ['CUTOFFS']:
+                    dict_[group][flag] = process_cutoff_line(list_)
+                elif group in ['QUESTIONS']:
+                    dict_[group][flag] = process_coefficient_line(group, list_, value)
+                else:
+                    dict_[group][flag] = value
+
+            # Handle blocks specific to the 'version' of the utility function.
+            if group in ESTIMATION_GROUP[version]:
+                if version in ['scaled_archimedean']:
+                    if flag not in ['max', 'marginal']:
+                        dict_[group][flag] = process_coefficient_line(group, list_, value)
+                    else:
+                        dict_[group][flag] = value
+
+                elif version in ['nonstationary']:
+                    dict_[group][flag] = process_coefficient_line(group, list_, value)
+
+                else:
+                    raise TrempyError('version not implemented')
 
     # We allow for initialization files where no CUTOFFS are specified.
     if "CUTOFFS" not in dict_.keys():
@@ -78,11 +123,15 @@ def read(fname):
                 if dict_['CUTOFFS'][q][i] is None:
                     dict_['CUTOFFS'][q][i] = (-1)**i * -HUGE_FLOAT
 
+    # Enforce input requirements for optional arguments
+    # such as: discounting, stationary_model, unrestricted_weights
+    check_optional_args(dict_)
+
     return dict_
 
 
 def process_cutoff_line(list_):
-    """This function processes a cutoff line."""
+    """Process a cutoff line."""
     cutoffs = []
     for i in [1, 2]:
         if list_[i] == 'None':
@@ -94,13 +143,13 @@ def process_cutoff_line(list_):
 
 
 def process_bounds(bounds, label):
-    """This function extracts the proper bounds."""
+    """Extract the proper bounds."""
     bounds = bounds.replace(')', '')
     bounds = bounds.replace('(', '')
     bounds = bounds.split(',')
     for i in range(2):
         if bounds[i] == 'None':
-            bounds[i] = DEFAULT_BOUNDS[label][i]
+            bounds[i] = float(DEFAULT_BOUNDS[label][i])
         else:
             bounds[i] = float(bounds[i])
 
@@ -108,8 +157,10 @@ def process_bounds(bounds, label):
 
 
 def process_coefficient_line(group, list_, value):
-    """This function processes a coefficient line and extracts the relevant information. We also
-    impose the default values for the bounds here."""
+    """Process a coefficient line and extracts the relevant information.
+
+    We also impose the default values for the bounds here.
+    """
     try:
         label = int(list_[0])
     except ValueError:
@@ -155,20 +206,78 @@ def process_cases(list_):
 
 
 def type_conversions(flag, value):
-    """ Type conversions
-    """
-    # Type conversion
-    if flag in ['seed', 'agents', 'maxfun', 'max', 'skip']:
+    """Type conversions."""
+    # Handle ESTIMATION, SIMULATION and VERSION
+    if flag in ['seed', 'agents', 'maxfun', 'skip']:
         value = int(value)
-    elif flag in ['file', 'optimizer', 'start', 'marginal']:
+    elif flag in ['version', 'file', 'optimizer', 'start']:
         value = str(value)
-    elif flag in ['detailed']:
+    elif flag in ['detailed', 'stationary_model']:
         assert (value.upper() in ['TRUE', 'FALSE'])
         value = (value.upper() == 'TRUE')
+    # Handle SCIPY-BFGS, SCIPY-L-BFGS-B and SCIPY-POWELL
+    elif flag in ['eps', 'gtol', 'ftol', 'xtol']:
+        value = float(value)
+    # Empty flags
     elif flag in []:
         value = value.upper()
+    # Handle Scaled Archimedean
+    elif flag in ['marginal']:
+        value = str(value)
+    elif flag in ['max']:
+        value = int(value)
+    elif flag in ['r', 'delta', 'other', 'self']:
+        value = float(value)
+    # Handle nonstationary
+    elif flag in ['alpha', 'beta', 'gamma', 'y_scale'] or flag.startswith('discount_factors'):
+        value = float(value)
+    elif flag in ['discounting']:
+        value = str(value)
+        value = value.lower()
+        if value == 'none':
+            value = None
+    elif flag.startswith('unrestricted_weights_'):
+        if value == 'None':
+            value = None
+        else:
+            value = float(value)
     else:
         value = float(value)
 
+    # TODO: add consistency check for unrestricted weights and
+    # TODO: add additional tests for the init dict in separate file "read_init_check.py"
+
     # Finishing
     return value
+
+
+def check_optional_args(init_dict):
+    """Enforce input requirements for the init_dict."""
+    version = init_dict['VERSION']['version']
+    if version in ['scaled_archimedean']:
+        pass
+
+    elif version in ['nonstationary']:
+        # Set discounting to None if not specified; check correct input.
+        if 'discounting' in init_dict['VERSION'].keys():
+            discounting = init_dict['VERSION']['discounting']
+            np.testing.assert_equal(discounting in ['hyperbolic', 'exponential', None], True)
+        else:
+            init_dict['VERSION']['discounting'] = None
+
+        # Fill in stationary_model if not specified by user
+        if 'stationary_model' in init_dict['VERSION'].keys():
+            pass
+        else:
+            init_dict['VERSION']['stationary_model'] = False
+
+        optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
+        for label in optional_args:
+            # If optional argument is not used (None), then we fix it at None.
+            # In this case, the optimizer is not confused!
+            if label in init_dict['DISCOUNTING'].keys():
+                value, is_fixed, bounds = init_dict['DISCOUNTING'][label]
+                if value is None and is_fixed is False:
+                    raise TrempyError('Optional argument misspecified.')
+            else:
+                raise TrempyError('Please set unused optional arguments to None in init file.')

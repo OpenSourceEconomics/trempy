@@ -1,1 +1,4 @@
 .idea/*
+*.pyc
+*.pbs
+*-checkpoint.ipynb

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Contains estimate function."""
 import shutil
 import copy
 
@@ -16,18 +17,24 @@ from trempy.clsModel import ModelCls
 
 
 def estimate(fname):
-    """This function estimates the model by the method of maximum likelihood."""
+    """Estimate the model by the method of maximum likelihood."""
     estimate_cleanup()
 
     model_obj = ModelCls(fname)
 
-    args = []
-    args += [model_obj, 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs', 'maxfun']
-    args += ['est_detailed', 'opt_options', 'optimizer', 'est_agents', 'upper', 'num_skip']
-    args += ['marginals']
+    # Distribute class parameters except for economic parameters and version-specific thing
+    args = [model_obj, 'version', 'est_file', 'questions', 'paras_obj', 'start', 'cutoffs',
+            'maxfun', 'est_detailed', 'opt_options', 'optimizer', 'est_agents', 'num_skip']
 
-    est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, opt_options, optimizer, \
-        est_agents, upper, num_skip, marginals = dist_class_attributes(*args)
+    version, est_file, questions, paras_obj, start, cutoffs, maxfun, est_detailed, \
+        opt_options, optimizer, est_agents, num_skip = dist_class_attributes(*args)
+
+    # Handle version-specific objects not included in the para_obj
+    if version in ['scaled_archimedean']:
+        upper, marginals = dist_class_attributes(*[model_obj, 'upper', 'marginals'])
+        version_specific = {'upper': upper, 'marginals': marginals}
+    elif version in ['nonstationary']:
+        version_specific = dict()
 
     # We only need to continue if there is at least one parameter to actually estimate.
     if len(paras_obj.get_values('optim', 'free')) == 0:
@@ -36,14 +43,19 @@ def estimate(fname):
     # Some initial setup
     df_obs = process(est_file, questions, num_skip, est_agents, cutoffs)
 
-    args = [df_obs, cutoffs, upper, marginals, questions, copy.deepcopy(paras_obj), maxfun]
-    estimate_obj = EstimateClass(*args)
+    estimate_obj = EstimateClass(
+        df=df_obs, cutoffs=cutoffs, questions=questions, paras_obj=copy.deepcopy(paras_obj),
+        max_eval=maxfun, optimizer=optimizer, version=version, **version_specific)
 
     # We lock in an evaluation at the starting values as not all optimizers actually start there.
     if start in ['auto']:
-        paras_obj = get_automatic_starting_values(paras_obj, df_obs, upper, marginals, questions)
+        paras_obj = get_automatic_starting_values(
+            paras_obj=paras_obj, df_obs=df_obs,
+            questions=questions, version=version, **version_specific)
 
+    # Objects for scipy.minimize
     x_optim_free_start = paras_obj.get_values('optim', 'free')
+    x_free_bounds = paras_obj.get_bounds('free')
     estimate_obj.evaluate(x_optim_free_start)
 
     # We simulate a sample at the starting point.
@@ -59,16 +71,25 @@ def estimate(fname):
             options['gtol'] = opt_options['SCIPY-BFGS']['gtol']
             options['eps'] = opt_options['SCIPY-BFGS']['eps']
             method = 'BFGS'
+            bounds = None
         elif optimizer == 'SCIPY-POWELL':
             options['ftol'] = opt_options['SCIPY-POWELL']['ftol']
             options['xtol'] = opt_options['SCIPY-POWELL']['xtol']
             method = 'POWELL'
+            bounds = None
+        elif optimizer == 'SCIPY-L-BFGS-B':
+            options['gtol'] = opt_options['SCIPY-L-BFGS-B']['gtol']
+            options['ftol'] = opt_options['SCIPY-L-BFGS-B']['ftol']
+            options['eps'] = opt_options['SCIPY-L-BFGS-B']['eps']
+            method = 'L-BFGS-B'
+            bounds = x_free_bounds
+            # Add bounds
         else:
             raise TrempyError('flawed choice of optimization method')
 
         try:
             opt = minimize(estimate_obj.evaluate, x_optim_free_start, method=method,
-                           options=options)
+                           options=options, bounds=bounds)
         except MaxfunError:
             opt = dict()
             opt['message'] = 'Optimization reached maximum number of function evaluations.'

@@ -15,21 +15,23 @@ from trempy import estimate
 
 
 def test_1():
-    """This test checks that the random initialization files can all be properly processed."""
+    """Check that the random initialization files can all be properly processed."""
     for _ in range(100):
-        get_random_init()
+        constr = {'fname': 'test.trempy.ini'}
+        get_random_init(constr)
         read('test.trempy.ini')
 
 
 def test_2():
-    """This test ensures the back an forth transformations for the parameter values."""
+    """Ensure the back an forth transformations for the parameter values."""
     get_random_init()
 
     model_obj = ModelCls('test.trempy.ini')
     paras_obj, num_questions = dist_class_attributes(model_obj, 'paras_obj', 'num_questions')
+    nparas_econ = paras_obj.attr['nparas_econ']
 
     for _ in range(500):
-        x_optim_all_current = np.random.uniform(-1, 1, size=num_questions + 5)
+        x_optim_all_current = np.random.uniform(-1, 1, size=num_questions + nparas_econ)
         paras_obj.set_values('optim', 'all', x_optim_all_current)
 
         x_econ_all_current = paras_obj.get_values('econ', 'all')
@@ -40,10 +42,8 @@ def test_2():
 
 
 def test_3():
-    """This test ensures that writing out an initialization results in exactly the same value of
-    the criterion function."""
-    constr = dict()
-    constr['maxfun'] = 2
+    """Ensure that writing out an init_dict results in the same value of the criterion function."""
+    constr = {'maxfun': 2}
 
     get_random_init(constr)
     simulate('test.trempy.ini')
@@ -57,17 +57,19 @@ def test_3():
 
 
 def test_4():
-    """This test checks for valid bounds."""
+    """Check for valid bounds."""
     for _ in range(1000):
-        for label in PREFERENCE_PARAMETERS:
-            lower, upper = get_bounds(label)
-            value = get_value((lower, upper), label)
-            np.testing.assert_equal(lower < value < upper, True)
+        version = np.random.choice(['scaled_archimedean', 'nonstationary'])
+
+        for label in PREFERENCE_PARAMETERS[version]:
+            lower, upper = get_bounds(label, version)
+            value = get_value((lower, upper), label, version)
+            if value is not None:
+                np.testing.assert_equal(lower < value < upper, True)
 
 
 def test_5():
-    """This test ensures that the original and printed version of the initialization file are
-    identical."""
+    """Ensure that the original and printed version of the initialization file are identical."""
     get_random_init()
     model_obj = ModelCls('test.trempy.ini')
     model_obj.write_out('alt.trempy.ini')

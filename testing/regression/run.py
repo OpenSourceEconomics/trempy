@@ -19,7 +19,7 @@ from trempy import simulate
 
 
 def create_regression_vault(num_tests):
-    """This function creates a set of regression tests."""
+    """Create a set of regression tests."""
     np.random.seed(123)
 
     tests = []
@@ -33,14 +33,30 @@ def create_regression_vault(num_tests):
         # Create and process initialization file
         init_dict = get_random_init(constr)
         model_obj = ModelCls('test.trempy.ini')
-        df = simulate('test.trempy.ini')
+        df, fval = simulate('test.trempy.ini')
 
         # Distribute class attributes for further processing.
-        args = (model_obj, 'paras_obj', 'questions', 'cutoffs', 'upper', 'marginals')
-        paras_obj, questions, cutoffs, upper, marginals = dist_class_attributes(*args)
+        args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']
+        paras_obj, questions, cutoffs, version = dist_class_attributes(*args)
 
+        # Handle version-specific objects not included in the para_obj
+        if version in ['scaled_archimedean']:
+            upper, marginals = dist_class_attributes(*[model_obj, 'upper', 'marginals'])
+            version_specific = {'upper': upper, 'marginals': marginals}
+        elif version in ['nonstationary']:
+            version_specific = dict()
+
+        # Get number of economic parameters. Paras with higher index belong to questions.
+        nparas_econ = paras_obj.attr['nparas_econ']
+
+        # Now get correct standard deviations. Versions are handled implicitly.
         x_econ_all = paras_obj.get_values('econ', 'all')
-        stat = criterion_function(df, questions, cutoffs, upper, marginals, *x_econ_all)
+        stands = x_econ_all[nparas_econ:]
+
+        # Evaluate criterion function and process results
+        stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
+                                  paras_obj=paras_obj, version=version, sds=stands,
+                                  **version_specific)
         tests += [(init_dict, stat)]
 
         cleanup()
@@ -49,7 +65,7 @@ def create_regression_vault(num_tests):
 
 
 def check_regression_vault(num_tests):
-    """This function checks an existing regression tests."""
+    """Check an existing regression tests."""
     fname = PACKAGE_DIR + '/tests/regression_vault.trempy.pkl'
     tests = pkl.load(open(fname, 'rb'))
 

@@ -3,17 +3,19 @@ from trempy.shared.clsBase import BaseCls
 
 
 class LoggerCls(BaseCls):
-    """This class manages the record of events."""
+    """Manage the record of events."""
+
     def __init__(self):
+        """Init class."""
         self.attr = dict()
         self.attr['errors'] = []
 
     def record_event(self, error_code):
-        """This method records the error codes of events."""
+        """Record the error codes of events."""
         self.attr['errors'].append(error_code)
 
     def flush(self, outfile):
-        """This method records all things related to an evaluation"""
+        """Record all things related to an evaluation."""
         for error_code in set(self.attr['errors']):
             msg = '\n Warning: '
 
