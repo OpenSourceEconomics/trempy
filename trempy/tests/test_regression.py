@@ -20,15 +20,6 @@ def run_regression_test(test):
     # Create and process initialization file
     init_dict, crit_val = test
 
-    # TEMPORARY: for old regression vault, 'version' is missing. Delete for new batch.
-    if 'VERSION' not in init_dict.keys():
-        init_dict['VERSION'] = dict()
-        init_dict['VERSION']['version'] = 'scaled_archimedean'
-        init_dict['SCIPY-L-BFGS-B'] = dict()
-        init_dict['SCIPY-L-BFGS-B']['gtol'] = 1e-5
-        init_dict['SCIPY-L-BFGS-B']['ftol'] = 1e-5
-        init_dict['SCIPY-L-BFGS-B']['eps'] = 1e-5
-
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
     df, fval = simulate('test.trempy.ini')
@@ -65,12 +56,6 @@ def test_1():
     """Run a small sample of the regression test battery."""
     tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb'))
     i = 0
-    for test in tests[:5]:
+    for test in tests[:10]:
         i = i + 1
-
-        print(i)
-        print('\n')
-        print(test)
-        print('\n')
-
         run_regression_test(test)

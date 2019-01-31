@@ -44,10 +44,6 @@ def process_checks(df, est_agents, questions, cutoffs):
     # Check that compensation levels line up with cutoffs and the NEVER_SWITCHERS
     for q in questions:
         lower, upper = cutoffs[q]
-        print('Q: {0}, lower: {1}, upper: {2}'.format(q, lower, upper))
-        print(df.loc[(slice(None), q), 'Compensation'].describe())
-        print(df.loc[(slice(None), q), 'Compensation'].isin([NEVER_SWITCHERS]).sum())
         cond = df.loc[(slice(None), q), 'Compensation'].between(lower, upper, inclusive=True)
-
         cond = cond | (df.loc[(slice(None), q), 'Compensation'].isin([NEVER_SWITCHERS]))
         np.testing.assert_equal(np.all(cond), True)
