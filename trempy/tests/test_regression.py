@@ -22,7 +22,6 @@ def run_regression_test(test):
 
     # TEMPORARY: for old regression vault, 'version' is missing. Delete for new batch.
     if 'VERSION' not in init_dict.keys():
-        init_dict['scaled_archimedean'] = init_dict
         init_dict['VERSION'] = dict()
         init_dict['VERSION']['version'] = 'scaled_archimedean'
         init_dict['SCIPY-L-BFGS-B'] = dict()
@@ -67,6 +66,11 @@ def test_1():
     tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.trempy.pkl', 'rb'))
     i = 0
     for test in tests[:5]:
-        print(i)
         i = i + 1
+
+        print(i)
+        print('\n')
+        print(test)
+        print('\n')
+
         run_regression_test(test)

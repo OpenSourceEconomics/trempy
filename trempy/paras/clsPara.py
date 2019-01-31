@@ -32,7 +32,7 @@ class ParaCls(BaseCls):
         np.testing.assert_equal(cond, True)
 
         # Check whether the parameters are within their specified bounds.
-        if value is not None and isinstance(value, float):
+        if value is not None:
 
             cond = lower - SMALL_FLOAT <= value <= upper + SMALL_FLOAT
             try:
