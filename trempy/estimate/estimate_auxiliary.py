@@ -258,18 +258,26 @@ def compare_datasets(which, df_obs, questions, m_optimal):
     df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
 
     stats = dict()
+
+    # Summary statistics -- simulated data
     stats['sim'] = dict()
-    for q in questions:
-        num_obs = df_sim.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stat = df_sim_masked.loc[slice(None), slice(q, q)].describe().tolist()
-        stats['sim'][q] = [num_obs] + stat
+    number_of_indiv = int(df_sim_masked.shape[0] / len(questions))
+    stats_sim = df_sim_masked.groupby(['Question']).describe().to_dict(orient='index')
+    stats_sim = {q: [number_of_indiv, val['count'], val['mean'], val['std'], val['min'],
+                     val['25%'], val['50%'], val['75%'], val['max']]
+                 for q, val in stats_sim.items()}
+    stats['sim'] = stats_sim
 
+    # Summary statistics -- observed data
     stats['obs'] = dict()
-    for q in questions:
-        num_obs = df_obs.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stat = df_obs_masked.loc[slice(None), slice(q, q)].describe().tolist()
-        stats['obs'][q] = [num_obs] + stat
+    number_of_indiv = int(df_obs_masked.shape[0] / len(questions))
+    stats_obs = df_obs_masked.groupby(['Question']).describe().to_dict(orient='index')
+    stats_obs = {q: [number_of_indiv, val['count'], val['mean'], val['std'], val['min'],
+                     val['25%'], val['50%'], val['75%'], val['max']]
+                 for q, val in stats_obs.items()}
+    stats['obs'] = stats_obs
 
+    # Write statistics to file.
     with open('compare.trempy.info', 'w') as outfile:
 
         outfile.write('\n')
@@ -325,15 +333,14 @@ def compare_datasets(which, df_obs, questions, m_optimal):
         line = '{:>15}'.format('RMSE') + '{:>15}\n'.format(rmse)
         outfile.write(line)
 
+        fmt_ = ' {:>10}    ' + '{:>25}    ' * 3
         for identifier, df_individual in df_obs['Compensation'].groupby(level=0):
             outfile.write('\n Individual {:d}\n\n'.format(identifier))
-
-            fmt_ = ' {:>10}    ' + '{:>25}    ' * 3
             outfile.write(fmt_.format(*['Question', 'Optimal', 'Observed', 'Difference']) + '\n\n')
 
-            for q in questions:
-
-                m_obs = df_individual.loc[(slice(None), slice(q, q))].values[0]
+            for index, row in df_individual.iteritems():
+                q = index[1]
+                m_obs = row
                 m_opt = m_optimal[q]
 
                 info = []

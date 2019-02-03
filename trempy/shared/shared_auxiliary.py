@@ -5,6 +5,7 @@ import copy
 
 from scipy.stats import norm
 from scipy import optimize
+import pandas as pd
 import numpy as np
 
 from trempy.interface.interface_copulpy import get_copula_nonstationary
@@ -19,45 +20,99 @@ from trempy.config_trempy import HUGE_FLOAT
 
 
 def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **version_specific):
-    """Calculate the likelihood of the observed sample.
+    """Calculate the likelihood of the observed sample."""
+    m_optimal = get_optimal_compensations(
+        version=version, paras_obj=paras_obj, questions=questions, **version_specific)
+    data = copy.deepcopy(df)
 
-    sds: standard deviations for each question.
-    model_obj: the ModelCls object
-    version: nonstationary or scaled_archimedean
-    """
-    # Distribute parameters
-    m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj, questions=questions,
-                                          **version_specific)
+    # Add cutoff column
+    df_cutoff = pd.DataFrame.from_dict(cutoffs, orient='index', columns=['lower', 'upper'])
+    df_cutoff.index.name = 'Question'
+    data = data.join(df_cutoff, how='left')
 
-    contribs = []
-    for i, q in enumerate(questions):
-        df_subset = df.loc[(slice(None), q), "Compensation"].copy().to_frame('Compensation')
-        lower, upper = cutoffs[q]
+    # Add column with the theortically optimal decision for each question
+    df_m_optimal = pd.DataFrame.from_dict(m_optimal, orient='index', columns=['m_optim'])
+    df_m_optimal.index.name = 'Question'
+    data = data.join(df_m_optimal, how='left')
 
-        is_not = df_subset['Compensation'].between(lower, upper, inclusive=False)
-        is_upper = df_subset['Compensation'].isin([NEVER_SWITCHERS])
-        is_lower = df_subset['Compensation'].isin([lower])
+    # Add column with standard deviation of the implementation error for each question
+    df_std = pd.DataFrame(sds, index=questions, columns=['std'])
+    df_std.index.name = 'Question'
+    data = data.join(df_std, how='left')
 
-        rv = norm(loc=m_optimal[q], scale=sds[i])
+    # Add indicator for interior/boundary choices.
+    data['is_interior'] = (data.lower < data.Compensation) & (data.Compensation <= data.upper)
+    data['is_upper'] = (data['Compensation'].isin([NEVER_SWITCHERS]))
+    data['is_lower'] = data.Compensation <= data.lower
 
-        # Calculate likelihoods
-        df_subset['likl_not'] = np.nan
-        df_subset['likl_not'] = df_subset['likl_not'].mask(~is_not)
+    # Debugging. Delete later.
+    np.testing.assert_equal(data.isna().sum().sum() == 0, True)
+    np.testing.assert_equal(data.shape[0] == df.shape[0], True)
 
-        df_subset['likl_not'].loc[is_not, :] = rv.pdf(df_subset['Compensation'].loc[is_not, :])
-        df_subset['likl_upper'] = 1.0 - rv.cdf(upper)
-        df_subset['likl_lower'] = rv.cdf(lower)
+    # Add standardized choices
+    data['choice_standardized'] = (data['Compensation'] - data['m_optim']) / data['std']
+    data['lower_standardized'] = (data['lower'] - data['m_optim']) / data['std']
+    data['upper_standardized'] = (data['upper'] - data['m_optim']) / data['std']
 
-        df_subset['likl'] = 0.0
-        df_subset['likl'][is_upper] = df_subset['likl_upper'].loc[is_upper]
-        df_subset['likl'][is_lower] = df_subset['likl_lower'].loc[is_lower]
-        df_subset['likl'][is_not] = df_subset['likl_not'].loc[is_not]
+    # We only need the standard normal distribution for standardized choices.
+    rv = norm(loc=0.0, scale=1.0)
 
-        contribs += df_subset['likl'].values.tolist()
+    # Compute likelihood of each question-subject pair based on interior/boundary status.
+    likl_interior = (rv.pdf(data['choice_standardized'].loc[data['is_interior']]) /
+                     data['std'].loc[data['is_interior']])
 
-    rslt = -np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
+    likl_upper = 1.0 - rv.cdf(data['upper_standardized'].loc[data['is_upper']])
+    likl_lower = rv.cdf(data['lower_standardized'].loc[data['is_lower']])
+
+    # Add all summands to one list.
+    contribs = likl_interior.tolist() + likl_lower.tolist() + likl_upper.tolist()
+
+    # Compute the average negative log-likelihood
+    rslt = - np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
 
     return rslt
+
+# # Old criterion_function!
+# def criterion_function_old(df, questions, cutoffs, paras_obj, version, sds, **version_specific):
+#     """Calculate the likelihood of the observed sample.
+
+#     sds: standard deviations for each question.
+#     model_obj: the ModelCls object
+#     version: nonstationary or scaled_archimedean
+#     """
+#     # Distribute parameters
+#     m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj,
+#                                           questions=questions, **version_specific)
+
+#     contribs = []
+#     for i, q in enumerate(questions):
+#         df_subset = df.loc[(slice(None), q), "Compensation"].copy().to_frame('Compensation')
+#         lower, upper = cutoffs[q]
+
+#         is_not = df_subset['Compensation'].between(lower, upper, inclusive=False)
+#         is_upper = df_subset['Compensation'].isin([NEVER_SWITCHERS])
+#         is_lower = df_subset['Compensation'].isin([lower])
+
+#         rv = norm(loc=m_optimal[q], scale=sds[i])
+
+#         # Calculate likelihoods
+#         df_subset['likl_not'] = np.nan
+#         df_subset['likl_not'] = df_subset['likl_not'].mask(~is_not)
+
+#         df_subset['likl_not'].loc[is_not, :] = rv.pdf(df_subset['Compensation'].loc[is_not, :])
+#         df_subset['likl_upper'] = 1.0 - rv.cdf(upper)
+#         df_subset['likl_lower'] = rv.cdf(lower)
+
+#         df_subset['likl'] = 0.0
+#         df_subset['likl'][is_upper] = df_subset['likl_upper'].loc[is_upper]
+#         df_subset['likl'][is_lower] = df_subset['likl_lower'].loc[is_lower]
+#         df_subset['likl'][is_not] = df_subset['likl_not'].loc[is_not]
+
+#         contribs += df_subset['likl'].values.tolist()
+
+#     rslt = -np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
+
+#     return rslt
 
 
 def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_self,
@@ -304,8 +359,27 @@ def format_coefficient_line(label_internal, info, str_):
 
 def expected_utility_a(copula, lottery):
     """Calculate the expected utility for lottery A."""
+    # TEMPORAL DECISIONS
+    if lottery in [1, 2, 3, 4, 5, 19, 20, 21, 22, 23]:
+        rslt = copula.evaluate(50, 0, t=0)
+    # Note: question 13 is temporal but t=0. So it is handled under risky choices.
+    elif lottery in [7, 8, 9, 10, 11, 25, 26, 27, 28, 29]:
+        rslt = copula.evaluate(0, 50, t=0)
+    elif lottery in [6, 16, 24]:
+        rslt = copula.evaluate(50, 0, t=6)
+    elif lottery in [12, 30]:
+        rslt = copula.evaluate(0, 50, t=6)
+    elif lottery == 14:
+        rslt = copula.evaluate(50, 0, t=1)
+    elif lottery == 15:
+        rslt = copula.evaluate(50, 0, t=3)
+    elif lottery == 17:
+        rslt = copula.evaluate(50, 0, t=12)
+    elif lottery == 18:
+        rslt = copula.evaluate(50, 0, t=24)
+
     # RISKY CHOICES
-    if lottery == 13:
+    elif lottery == 13:
         rslt = copula.evaluate(50, 0, t=0)
     elif lottery == 31:
         rslt = 0.50 * copula.evaluate(15, 0, t=0) + 0.50 * copula.evaluate(20, 0, t=0)
@@ -343,25 +417,6 @@ def expected_utility_a(copula, lottery):
     elif lottery == 45:
         rslt = 0.50 * copula.evaluate(0, 30, t=0) + \
             0.50 * (0.80 * copula.evaluate(0, 47, t=0) + 0.20 * copula.evaluate(0, 12, t=0))
-
-    # TEMPORAL DECISIONS
-    elif lottery in [1, 2, 3, 4, 5, 19, 20, 21, 22, 23]:
-        rslt = copula.evaluate(50, 0, t=0)
-    # Note: question 13 is temporal but t=0. So it is handled under risky choices.
-    elif lottery in [7, 8, 9, 10, 11, 25, 26, 27, 28, 29]:
-        rslt = copula.evaluate(0, 50, t=0)
-    elif lottery in [6, 16, 24]:
-        rslt = copula.evaluate(50, 0, t=6)
-    elif lottery in [12, 30]:
-        rslt = copula.evaluate(0, 50, t=6)
-    elif lottery == 14:
-        rslt = copula.evaluate(50, 0, t=1)
-    elif lottery == 15:
-        rslt = copula.evaluate(50, 0, t=3)
-    elif lottery == 17:
-        rslt = copula.evaluate(50, 0, t=12)
-    elif lottery == 18:
-        rslt = copula.evaluate(50, 0, t=24)
     else:
         raise AssertionError
 
@@ -370,50 +425,10 @@ def expected_utility_a(copula, lottery):
 
 def expected_utility_b(copula, lottery, m):
     """Calculate the expected utility for lottery B."""
-    # RISKY CHOICES
-    if lottery == 13:
-        rslt = copula.evaluate(0, m, t=0)
-    elif lottery == 31:
-        rslt = 0.50 * copula.evaluate(10 + m, 0, t=0) + 0.50 * copula.evaluate(25 + m, 0, t=0)
-    elif lottery == 32:
-        rslt = 0.50 * copula.evaluate(20 + m, 0, t=0) + 0.50 * copula.evaluate(50 + m, 0, t=0)
-    elif lottery == 33:
-        rslt = 0.50 * copula.evaluate(40 + m, 0, t=0) + 0.50 * copula.evaluate(100 + m, 0, t=0)
-    elif lottery == 34:
-        rslt = 0.50 * copula.evaluate(0, 10 + m, t=0) + 0.50 * copula.evaluate(0, 25 + m, t=0)
-    elif lottery == 35:
-        rslt = 0.50 * copula.evaluate(0, 20 + m, t=0) + 0.50 * copula.evaluate(0, 50 + m, t=0)
-    elif lottery == 36:
-        rslt = 0.50 * copula.evaluate(0, 40 + m, t=0) + 0.50 * copula.evaluate(0, 100 + m, t=0)
-    elif lottery == 37:
-        rslt = 0.50 * copula.evaluate(15 + m, 15, t=0) + 0.50 * copula.evaluate(25 + m, 25, t=0)
-    elif lottery == 38:
-        rslt = 0.50 * copula.evaluate(30 + m, 30, t=0) + 0.50 * copula.evaluate(50 + m, 50, t=0)
-    elif lottery == 39:
-        rslt = 0.50 * copula.evaluate(60 + m, 60, t=0) + 0.50 * copula.evaluate(100 + m, 100, t=0)
-    elif lottery == 40:
-        rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0, t=0) + 0.50 *
-                       copula.evaluate(16 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
-    elif lottery == 41:
-        rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0, t=0) + 0.20 *
-                       copula.evaluate(58 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
-    elif lottery == 42:
-        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0, t=0) + 0.20 *
-                       copula.evaluate(2 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
-    elif lottery == 43:
-        rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m, t=0) + 0.50 *
-                       copula.evaluate(0, 16 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
-    elif lottery == 44:
-        rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m, t=0) + 0.20 *
-                       copula.evaluate(0, 58 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
-    elif lottery == 45:
-        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m, t=0) + 0.20 *
-                       copula.evaluate(0, 2 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
-
     # TEMPORAL CHOICES
 
     # Univariate discounting: SELF. 0-1, 0-3, 0-6, 0-12, 0-24, 6-12
-    elif lottery == 1:
+    if lottery == 1:
         rslt = copula.evaluate(m, 0, t=1)
     elif lottery == 2:
         rslt = copula.evaluate(m, 0, t=3)
@@ -442,6 +457,8 @@ def expected_utility_b(copula, lottery, m):
 
     # Exchange rate. 0-0, 1-1, 3-3, 6-6, 12-12, 24-24
     # Question 13 is counted as a riskless lottery question because t=0.
+    elif lottery == 13:
+        rslt = copula.evaluate(0, m, t=0)
     elif lottery == 14:
         rslt = copula.evaluate(0, m, t=1)
     elif lottery == 15:
@@ -480,6 +497,44 @@ def expected_utility_b(copula, lottery, m):
         rslt = copula.evaluate(m, 0, t=24)
     elif lottery == 30:
         rslt = copula.evaluate(m, 0, t=12)
+
+    # RISKY CHOICES
+    elif lottery == 31:
+        rslt = 0.50 * copula.evaluate(10 + m, 0, t=0) + 0.50 * copula.evaluate(25 + m, 0, t=0)
+    elif lottery == 32:
+        rslt = 0.50 * copula.evaluate(20 + m, 0, t=0) + 0.50 * copula.evaluate(50 + m, 0, t=0)
+    elif lottery == 33:
+        rslt = 0.50 * copula.evaluate(40 + m, 0, t=0) + 0.50 * copula.evaluate(100 + m, 0, t=0)
+    elif lottery == 34:
+        rslt = 0.50 * copula.evaluate(0, 10 + m, t=0) + 0.50 * copula.evaluate(0, 25 + m, t=0)
+    elif lottery == 35:
+        rslt = 0.50 * copula.evaluate(0, 20 + m, t=0) + 0.50 * copula.evaluate(0, 50 + m, t=0)
+    elif lottery == 36:
+        rslt = 0.50 * copula.evaluate(0, 40 + m, t=0) + 0.50 * copula.evaluate(0, 100 + m, t=0)
+    elif lottery == 37:
+        rslt = 0.50 * copula.evaluate(15 + m, 15, t=0) + 0.50 * copula.evaluate(25 + m, 25, t=0)
+    elif lottery == 38:
+        rslt = 0.50 * copula.evaluate(30 + m, 30, t=0) + 0.50 * copula.evaluate(50 + m, 50, t=0)
+    elif lottery == 39:
+        rslt = 0.50 * copula.evaluate(60 + m, 60, t=0) + 0.50 * copula.evaluate(100 + m, 100, t=0)
+    elif lottery == 40:
+        rslt = 0.50 * (0.50 * copula.evaluate(44 + m, 0, t=0) + 0.50 *
+                       copula.evaluate(16 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
+    elif lottery == 41:
+        rslt = 0.50 * (0.80 * copula.evaluate(23 + m, 0, t=0) + 0.20 *
+                       copula.evaluate(58 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
+    elif lottery == 42:
+        rslt = 0.50 * (0.80 * copula.evaluate(37 + m, 0, t=0) + 0.20 *
+                       copula.evaluate(2 + m, 0, t=0)) + 0.50 * copula.evaluate(40 + m, 0, t=0)
+    elif lottery == 43:
+        rslt = 0.50 * (0.50 * copula.evaluate(0, 44 + m, t=0) + 0.50 *
+                       copula.evaluate(0, 16 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
+    elif lottery == 44:
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 23 + m, t=0) + 0.20 *
+                       copula.evaluate(0, 58 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
+    elif lottery == 45:
+        rslt = 0.50 * (0.80 * copula.evaluate(0, 37 + m, t=0) + 0.20 *
+                       copula.evaluate(0, 2 + m, t=0)) + 0.50 * copula.evaluate(0, 40 + m, t=0)
     else:
         raise AssertionError
 
