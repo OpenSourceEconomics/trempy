@@ -257,27 +257,21 @@ def compare_datasets(which, df_obs, questions, m_optimal):
     df_sim_masked = df_sim['Compensation'].mask(df_sim['Compensation'].isin([NEVER_SWITCHERS]))
     df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
 
-    stats = dict()
+    statistic = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
 
     # Summary statistics -- simulated data
-    stats['sim'] = dict()
-    number_of_indiv = int(df_sim_masked.shape[0] / len(questions))
-    stats_sim = df_sim_masked.groupby(['Question']).describe().to_dict(orient='index')
-    stats_sim = {q: [number_of_indiv, val['count'], val['mean'], val['std'], val['min'],
-                     val['25%'], val['50%'], val['75%'], val['max']]
-                 for q, val in stats_sim.items()}
-    stats['sim'] = stats_sim
+    n_sim = int(df_sim_masked.shape[0] / len(questions))
+    sim = df_sim_masked.groupby(['Question']).describe().to_dict(orient='index')
+    stats_sim = {q: [n_sim] + [val[key] for key in statistic] for q, val in sim.items()}
 
     # Summary statistics -- observed data
-    stats['obs'] = dict()
-    number_of_indiv = int(df_obs_masked.shape[0] / len(questions))
-    stats_obs = df_obs_masked.groupby(['Question']).describe().to_dict(orient='index')
-    stats_obs = {q: [number_of_indiv, val['count'], val['mean'], val['std'], val['min'],
-                     val['25%'], val['50%'], val['75%'], val['max']]
-                 for q, val in stats_obs.items()}
-    stats['obs'] = stats_obs
+    n_obs = int(df_obs_masked.shape[0] / len(questions))
+    obs = df_obs_masked.groupby(['Question']).describe().to_dict(orient='index')
+    stats_obs = {q: [n_obs] + [val[key] for key in statistic] for q, val in obs.items()}
 
-    # Write statistics to file.
+    # Collect statistics
+    stats = {'sim': stats_sim, 'obs': stats_obs}
+
     with open('compare.trempy.info', 'w') as outfile:
 
         outfile.write('\n')
@@ -293,7 +287,6 @@ def compare_datasets(which, df_obs, questions, m_optimal):
         for q in questions:
 
             for key_ in ['obs', 'sim']:
-
                 if key_ == 'obs':
                     label = 'Observed'
                 elif key_ == 'sim':
@@ -339,12 +332,12 @@ def compare_datasets(which, df_obs, questions, m_optimal):
             outfile.write(fmt_.format(*['Question', 'Optimal', 'Observed', 'Difference']) + '\n\n')
 
             for index, row in df_individual.iteritems():
+                # df_individual has a multi-index (Indiviuum, Question).
                 q = index[1]
                 m_obs = row
                 m_opt = m_optimal[q]
 
-                info = []
-                info += ['{:d}'.format(q)] + char_floats(m_opt)
-                info += char_floats(m_obs) + char_floats(m_obs - m_opt)
+                info = ['{:d}'.format(q)] + char_floats(m_opt) + char_floats(m_obs)
+                info += char_floats(m_obs - m_opt)
 
                 outfile.write(fmt_.format(*info) + '\n')

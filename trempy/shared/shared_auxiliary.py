@@ -72,48 +72,6 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
 
     return rslt
 
-# # Old criterion_function!
-# def criterion_function_old(df, questions, cutoffs, paras_obj, version, sds, **version_specific):
-#     """Calculate the likelihood of the observed sample.
-
-#     sds: standard deviations for each question.
-#     model_obj: the ModelCls object
-#     version: nonstationary or scaled_archimedean
-#     """
-#     # Distribute parameters
-#     m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj,
-#                                           questions=questions, **version_specific)
-
-#     contribs = []
-#     for i, q in enumerate(questions):
-#         df_subset = df.loc[(slice(None), q), "Compensation"].copy().to_frame('Compensation')
-#         lower, upper = cutoffs[q]
-
-#         is_not = df_subset['Compensation'].between(lower, upper, inclusive=False)
-#         is_upper = df_subset['Compensation'].isin([NEVER_SWITCHERS])
-#         is_lower = df_subset['Compensation'].isin([lower])
-
-#         rv = norm(loc=m_optimal[q], scale=sds[i])
-
-#         # Calculate likelihoods
-#         df_subset['likl_not'] = np.nan
-#         df_subset['likl_not'] = df_subset['likl_not'].mask(~is_not)
-
-#         df_subset['likl_not'].loc[is_not, :] = rv.pdf(df_subset['Compensation'].loc[is_not, :])
-#         df_subset['likl_upper'] = 1.0 - rv.cdf(upper)
-#         df_subset['likl_lower'] = rv.cdf(lower)
-
-#         df_subset['likl'] = 0.0
-#         df_subset['likl'][is_upper] = df_subset['likl_upper'].loc[is_upper]
-#         df_subset['likl'][is_lower] = df_subset['likl_lower'].loc[is_lower]
-#         df_subset['likl'][is_not] = df_subset['likl_not'].loc[is_not]
-
-#         contribs += df_subset['likl'].values.tolist()
-
-#     rslt = -np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
-
-#     return rslt
-
 
 def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_self,
                                                  r_other, delta, self, other):
