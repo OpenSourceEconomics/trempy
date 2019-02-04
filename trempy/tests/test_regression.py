@@ -45,9 +45,9 @@ def run_regression_test(test):
     elif version in ['nonstationary']:
         stands = x_econ_all[n_econ_params:]
 
-    stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
-                              paras_obj=paras_obj, version=version, sds=stands,
-                              **version_specific)
+    stat, m_optimal = criterion_function(
+        df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj, sds=stands,
+        version=version, **version_specific)
 
     np.testing.assert_almost_equal(stat, crit_val)
 

@@ -69,9 +69,9 @@ def simulate(fname):
 
     x_econ_all_current = paras_obj.get_values('econ', 'all')
 
-    fval = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
-                              paras_obj=paras_obj, version=version, sds=stands,
-                              **version_specific)
+    fval, m_optimal = criterion_function(
+        df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj, sds=stands,
+        version=version, **version_specific)
 
     write_info(version, x_econ_all_current, df, questions,
                fval, m_optimal, sim_file + '.trempy.info')

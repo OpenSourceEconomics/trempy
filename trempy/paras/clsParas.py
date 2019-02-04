@@ -67,8 +67,6 @@ class ParasCls(BaseCls):
 
         self.attr['nparas_questions'] = len(self.attr['para_objs']) - self.attr['nparas_econ']
 
-        self.check_integrity()
-
     def get_para(self, label):
         """Access a single parameter and get value, free/fixed and bounds."""
         # Distribute class attributes
@@ -166,13 +164,6 @@ class ParasCls(BaseCls):
                 bounds += [(lower, upper)]
         return bounds
 
-    def check_integrity(self):
-        """Check some basic features of the class that need to hold true at all times."""
-        para_objs = self.attr['para_objs']
-
-        for para_obj in para_objs:
-            para_obj.check_integrity()
-
     def _to_optimizer(self, para_obj, optimizer):
         """Transfer a single parameter to its value used by the optimizer."""
         lower, upper = para_obj.get_attr('bounds')
@@ -187,15 +178,6 @@ class ParasCls(BaseCls):
     def _to_econ(self, value, bounds, optimizer):
         """Transform parameters over the whole real to a bounded interval."""
         if optimizer == 'SCIPY-L-BFGS-B':
-            lower, upper = bounds
-            if np.isclose(value, lower):
-                value += SMALL_FLOAT
-                logger_obj.record_event(0)
-            elif np.isclose(value, upper):
-                value -= SMALL_FLOAT
-                logger_obj.record_event(0)
-            else:
-                pass
             return value
         # Optimizer without support for bounds need to convert back from real to interval.
         value = self._to_interval(value, *bounds)

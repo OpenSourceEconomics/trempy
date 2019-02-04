@@ -54,9 +54,9 @@ def create_regression_vault(num_tests):
         stands = x_econ_all[nparas_econ:]
 
         # Evaluate criterion function and process results
-        stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
-                                  paras_obj=paras_obj, version=version, sds=stands,
-                                  **version_specific)
+        stat, m_optimal = criterion_function(
+            df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj,
+            version=version, sds=stands, **version_specific)
         tests += [(init_dict, stat)]
 
         cleanup()

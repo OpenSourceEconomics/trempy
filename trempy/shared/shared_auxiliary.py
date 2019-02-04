@@ -25,52 +25,47 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
         version=version, paras_obj=paras_obj, questions=questions, **version_specific)
     data = copy.deepcopy(df)
 
-    # Add cutoff column
+    # Add auxiliary data (question cutoffs, decision implied by the model, std of observed choices)
     df_cutoff = pd.DataFrame.from_dict(cutoffs, orient='index', columns=['lower', 'upper'])
     df_cutoff.index.name = 'Question'
     data = data.join(df_cutoff, how='left')
 
-    # Add column with the theortically optimal decision for each question
     df_m_optimal = pd.DataFrame.from_dict(m_optimal, orient='index', columns=['m_optim'])
     df_m_optimal.index.name = 'Question'
     data = data.join(df_m_optimal, how='left')
 
-    # Add column with standard deviation of the implementation error for each question
     df_std = pd.DataFrame(sds, index=questions, columns=['std'])
     df_std.index.name = 'Question'
     data = data.join(df_std, how='left')
 
-    # Add indicator for interior/boundary choices.
-    data['is_interior'] = (data.lower < data.Compensation) & (data.Compensation <= data.upper)
-    data['is_upper'] = (data['Compensation'].isin([NEVER_SWITCHERS]))
-    data['is_lower'] = data.Compensation <= data.lower
+    # Subjects who selected both Option A and B at least once. This implies their valuation
+    # is in the left-open interval (lower, upper], i.e. they initially prefered Option A at 'lower',
+    # but chose option B when it offered 'upper'.
+    data['is_interior'] = (data.lower < data.Compensation) & (data.Compensation < data.upper)
+    # Subjects who always prefered option A, i.e. their value of option A is higher than 'upper'.
+    data['is_upper'] = ((data['Compensation'].isin([NEVER_SWITCHERS])) |
+                        (data.Compensation > data.upper))
+    # Subjects who always prefered option B. So their value of Option A is smaller than 'lower'
+    data['is_lower'] = (data.Compensation <= data.lower)
 
-    # Debugging. Delete later.
-    np.testing.assert_equal(data.isna().sum().sum() == 0, True)
-    np.testing.assert_equal(data.shape[0] == df.shape[0], True)
-
-    # Add standardized choices
+    # We only need the standard normal distribution for standardized choices.
     data['choice_standardized'] = (data['Compensation'] - data['m_optim']) / data['std']
     data['lower_standardized'] = (data['lower'] - data['m_optim']) / data['std']
     data['upper_standardized'] = (data['upper'] - data['m_optim']) / data['std']
-
-    # We only need the standard normal distribution for standardized choices.
     rv = norm(loc=0.0, scale=1.0)
 
-    # Compute likelihood of each question-subject pair based on interior/boundary status.
+    # Likelihood: pdf for interior choices
     likl_interior = (rv.pdf(data['choice_standardized'].loc[data['is_interior']]) /
                      data['std'].loc[data['is_interior']])
 
+    # Likelihood: cdf for indifference points that are outside our choice list.
     likl_upper = 1.0 - rv.cdf(data['upper_standardized'].loc[data['is_upper']])
     likl_lower = rv.cdf(data['lower_standardized'].loc[data['is_lower']])
 
-    # Add all summands to one list.
+    # Average negative log-likelihood
     contribs = likl_interior.tolist() + likl_lower.tolist() + likl_upper.tolist()
-
-    # Compute the average negative log-likelihood
     rslt = - np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
-
-    return rslt
+    return rslt, m_optimal
 
 
 def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_self,
