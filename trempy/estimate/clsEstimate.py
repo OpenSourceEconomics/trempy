@@ -1,7 +1,6 @@
 """This module contains the class to manage the model estimation."""
 import os
 
-from trempy.estimate.estimate_auxiliary import get_optimal_compensations
 from trempy.shared.shared_auxiliary import criterion_function
 from trempy.shared.shared_auxiliary import char_floats
 from trempy.record.clsLogger import logger_obj
@@ -81,38 +80,19 @@ class EstimateClass(BaseCls):
 
         # Get standard deviations. They have a larger index than nparas_econ.
         nparas_econ = paras_obj.attr['nparas_econ']
-        stands = x_econ_all_current[nparas_econ:]
+        sds = x_econ_all_current[nparas_econ:]
 
-        fval = criterion_function(df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj,
-                                  version=version, sds=stands, **version_specific)
+        fval, m_optimal = criterion_function(df, questions, cutoffs, paras_obj,
+                                             version, sds, **version_specific)
 
-        self._update_evaluation(fval, x_econ_all_current, x_optim_all_current)
+        self._update_evaluation(fval, x_econ_all_current, x_optim_all_current, m_optimal)
 
         return fval
 
-    def _update_evaluation(self, fval, x_econ_all_current, x_optim_all_current):
+    def _update_evaluation(self, fval, x_econ_all_current, x_optim_all_current, m_optimal):
         """Update all attributes based on the new evaluation and write some information to file."""
-        # Distribute class attribute
-
-        paras_obj = self.attr['paras_obj']
-        questions = self.attr['questions']
-        version = self.attr['version']
-
-        if version in ['scaled_archimedean']:
-            marginals = self.attr['marginals']
-            upper = self.attr['upper']
-            version_specific = {'upper': upper, 'marginals': marginals}
-        elif version in ['nonstationary']:
-            version_specific = dict()
-
-        # Update current information]
-        m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj,
-                                              questions=questions,
-                                              **version_specific)
-
         self.attr['x_econ_all_current'] = x_econ_all_current
         self.attr['m_optimal_current'] = m_optimal
-
         self.attr['f_current'] = fval
         self.attr['num_eval'] += 1
 

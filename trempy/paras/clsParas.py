@@ -8,6 +8,7 @@ from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 from trempy.shared.clsBase import BaseCls
 from trempy.paras.clsPara import ParaCls
+from trempy.config_trempy import IS_DEBUG
 
 
 class ParasCls(BaseCls):
@@ -66,7 +67,6 @@ class ParasCls(BaseCls):
             self.attr['para_labels'] += [int(label)]
 
         self.attr['nparas_questions'] = len(self.attr['para_objs']) - self.attr['nparas_econ']
-
         self.check_integrity()
 
     def get_para(self, label):
@@ -168,6 +168,9 @@ class ParasCls(BaseCls):
 
     def check_integrity(self):
         """Check some basic features of the class that need to hold true at all times."""
+        if IS_DEBUG is False:
+            return
+
         para_objs = self.attr['para_objs']
 
         for para_obj in para_objs:
@@ -187,15 +190,6 @@ class ParasCls(BaseCls):
     def _to_econ(self, value, bounds, optimizer):
         """Transform parameters over the whole real to a bounded interval."""
         if optimizer == 'SCIPY-L-BFGS-B':
-            lower, upper = bounds
-            if np.isclose(value, lower):
-                value += SMALL_FLOAT
-                logger_obj.record_event(0)
-            elif np.isclose(value, upper):
-                value -= SMALL_FLOAT
-                logger_obj.record_event(0)
-            else:
-                pass
             return value
         # Optimizer without support for bounds need to convert back from real to interval.
         value = self._to_interval(value, *bounds)

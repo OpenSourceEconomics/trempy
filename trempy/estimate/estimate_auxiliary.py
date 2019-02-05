@@ -231,9 +231,7 @@ def estimate_simulate(which, points, model_obj, df_obs):
     elif version in ['nonstationary']:
         version_specific = dict()
 
-    m_optimal = get_optimal_compensations(
-        version=version, paras_obj=paras_obj, questions=questions,
-        **version_specific)
+    m_optimal = get_optimal_compensations(version, paras_obj, questions, **version_specific)
 
     os.mkdir(which)
     os.chdir(which)
@@ -257,18 +255,20 @@ def compare_datasets(which, df_obs, questions, m_optimal):
     df_sim_masked = df_sim['Compensation'].mask(df_sim['Compensation'].isin([NEVER_SWITCHERS]))
     df_obs_masked = df_obs['Compensation'].mask(df_obs['Compensation'].isin([NEVER_SWITCHERS]))
 
-    stats = dict()
-    stats['sim'] = dict()
-    for q in questions:
-        num_obs = df_sim.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stat = df_sim_masked.loc[slice(None), slice(q, q)].describe().tolist()
-        stats['sim'][q] = [num_obs] + stat
+    statistic = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
 
-    stats['obs'] = dict()
-    for q in questions:
-        num_obs = df_obs.loc[(slice(None), slice(q, q)), 'Compensation'].shape[0]
-        stat = df_obs_masked.loc[slice(None), slice(q, q)].describe().tolist()
-        stats['obs'][q] = [num_obs] + stat
+    # Summary statistics -- simulated data
+    n_sim = int(df_sim_masked.shape[0] / len(questions))
+    sim = df_sim_masked.groupby(['Question']).describe().to_dict(orient='index')
+    stats_sim = {q: [n_sim] + [val[key] for key in statistic] for q, val in sim.items()}
+
+    # Summary statistics -- observed data
+    n_obs = int(df_obs_masked.shape[0] / len(questions))
+    obs = df_obs_masked.groupby(['Question']).describe().to_dict(orient='index')
+    stats_obs = {q: [n_obs] + [val[key] for key in statistic] for q, val in obs.items()}
+
+    # Collect statistics
+    stats = {'sim': stats_sim, 'obs': stats_obs}
 
     with open('compare.trempy.info', 'w') as outfile:
 
@@ -285,7 +285,6 @@ def compare_datasets(which, df_obs, questions, m_optimal):
         for q in questions:
 
             for key_ in ['obs', 'sim']:
-
                 if key_ == 'obs':
                     label = 'Observed'
                 elif key_ == 'sim':
@@ -325,19 +324,15 @@ def compare_datasets(which, df_obs, questions, m_optimal):
         line = '{:>15}'.format('RMSE') + '{:>15}\n'.format(rmse)
         outfile.write(line)
 
+        fmt_ = ' {:>10}    ' + '{:>25}    ' * 3
         for identifier, df_individual in df_obs['Compensation'].groupby(level=0):
             outfile.write('\n Individual {:d}\n\n'.format(identifier))
-
-            fmt_ = ' {:>10}    ' + '{:>25}    ' * 3
             outfile.write(fmt_.format(*['Question', 'Optimal', 'Observed', 'Difference']) + '\n\n')
 
-            for q in questions:
-
-                m_obs = df_individual.loc[(slice(None), slice(q, q))].values[0]
+            for (_, q), m_obs in df_individual.iteritems():
                 m_opt = m_optimal[q]
 
-                info = []
-                info += ['{:d}'.format(q)] + char_floats(m_opt)
-                info += char_floats(m_obs) + char_floats(m_obs - m_opt)
+                info = ['{:d}'.format(q)] + char_floats(m_opt) + char_floats(m_obs)
+                info += char_floats(m_obs - m_opt)
 
                 outfile.write(fmt_.format(*info) + '\n')

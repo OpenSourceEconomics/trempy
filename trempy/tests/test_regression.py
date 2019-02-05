@@ -41,14 +41,12 @@ def run_regression_test(test):
     # Standard deviations
     x_econ_all = paras_obj.get_values('econ', 'all')
     if version in ['scaled_archimedean']:
-        stands = x_econ_all[5:]
+        sds = x_econ_all[5:]
     elif version in ['nonstationary']:
-        stands = x_econ_all[n_econ_params:]
+        sds = x_econ_all[n_econ_params:]
 
-    stat = criterion_function(df=df, questions=questions, cutoffs=cutoffs,
-                              paras_obj=paras_obj, version=version, sds=stands,
-                              **version_specific)
-
+    stat, _ = criterion_function(df, questions, cutoffs, paras_obj,
+                                 version, sds, **version_specific)
     np.testing.assert_almost_equal(stat, crit_val)
 
 
