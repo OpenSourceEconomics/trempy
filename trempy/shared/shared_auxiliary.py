@@ -42,7 +42,6 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
 
     df_sds = pd.DataFrame.from_dict(sds_dict, orient='index', columns=['std'])
     df_sds.index.name = 'Question'
-    print(df_sds)
     data = data.join(df_sds, how='left')
 
     # Subjects who selected both Option A and B at least once. This implies their valuation

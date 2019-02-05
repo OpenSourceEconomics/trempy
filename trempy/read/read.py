@@ -126,7 +126,7 @@ def read(fname):
     # Enforce input requirements for optional arguments
     # such as: discounting, stationary_model, unrestricted_weights, heterogeneity,...
     check_optional_args(dict_)
-    single_agent_init(dict_)
+    heterogeneity_preparations(dict_)
 
     return dict_
 
@@ -286,7 +286,7 @@ def check_optional_args(init_dict):
                 raise TrempyError('Please set unused optional arguments to None in init file.')
 
 
-def single_agent_init(init_dict):
+def heterogeneity_preparations(init_dict):
     """Prepare init dict for use in a single-agent estimation."""
     if 'heterogeneity' in init_dict['VERSION'].keys():
         with_heterogeneity = init_dict['VERSION']['heterogeneity']

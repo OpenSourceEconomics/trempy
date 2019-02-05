@@ -10,7 +10,6 @@ import numpy as np
 
 from trempy.shared.shared_auxiliary import print_init_dict
 from trempy.tests.test_auxiliary import get_rmse
-from trempy.read.read import single_agent_init
 from trempy.estimate.estimate import estimate
 from trempy.read.read import read
 
@@ -21,7 +20,6 @@ def individual_estimation(fname):
 
     # Get start dictionary
     init_dict = read(fname)
-    init_dict['']
 
     num_agents = init_dict['ESTIMATION']['agents']
 
@@ -38,7 +36,6 @@ def individual_estimation(fname):
         os.chdir('agent_{}'.format(agent))
 
         init_agent = copy.deepcopy(init_dict)
-        single_agent_init(init_agent)
 
         # Select the nth agent.
         init_agent['ESTIMATION']['skip'] = agent
@@ -55,6 +52,10 @@ def individual_estimation(fname):
 
         # Estimate model for nth agent.
         estimate(agent_fname)
+
+        # The output per agent can be 10MB if you have more than 2000 steps.
+        if os.path.exists('est.trempy.log'):
+            os.remove('est.trempy.log')
 
         os.chdir('..')
 
@@ -87,7 +88,7 @@ def collect_parameters(agents):
         stop_values = merge_two_dicts(atemporal_paras, discounting_paras)
         stop_values['sd_temporal'] = std[1]
         stop_values['sd_risk'] = std[2]
-        stop_values = {key + '_end': value for key, value in start_values.items()}
+        stop_values = {key + '_end': value for key, value in stop_values.items()}
 
         # merge
         agent_result = merge_two_dicts(start_values, stop_values)
