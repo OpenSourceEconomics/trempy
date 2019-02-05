@@ -49,9 +49,8 @@ def estimate(fname):
 
     # We lock in an evaluation at the starting values as not all optimizers actually start there.
     if start in ['auto']:
-        paras_obj = get_automatic_starting_values(
-            paras_obj=paras_obj, df_obs=df_obs,
-            questions=questions, version=version, **version_specific)
+        paras_obj = get_automatic_starting_values(paras_obj, df_obs, questions,
+                                                  version, **version_specific)
 
     # Objects for scipy.minimize
     x_optim_free_start = paras_obj.get_values('optim', 'free')

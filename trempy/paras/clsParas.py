@@ -8,6 +8,7 @@ from trempy.config_trempy import SMALL_FLOAT
 from trempy.config_trempy import HUGE_FLOAT
 from trempy.shared.clsBase import BaseCls
 from trempy.paras.clsPara import ParaCls
+from trempy.config_trempy import IS_DEBUG
 
 
 class ParasCls(BaseCls):
@@ -66,6 +67,7 @@ class ParasCls(BaseCls):
             self.attr['para_labels'] += [int(label)]
 
         self.attr['nparas_questions'] = len(self.attr['para_objs']) - self.attr['nparas_econ']
+        self.check_integrity()
 
     def get_para(self, label):
         """Access a single parameter and get value, free/fixed and bounds."""
@@ -163,6 +165,16 @@ class ParasCls(BaseCls):
                 lower, upper = para_obj.get_attr('bounds')
                 bounds += [(lower, upper)]
         return bounds
+
+    def check_integrity(self):
+        """Check some basic features of the class that need to hold true at all times."""
+        if IS_DEBUG is False:
+            return
+
+        para_objs = self.attr['para_objs']
+
+        for para_obj in para_objs:
+            para_obj.check_integrity()
 
     def _to_optimizer(self, para_obj, optimizer):
         """Transfer a single parameter to its value used by the optimizer."""

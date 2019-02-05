@@ -33,19 +33,18 @@ def simulate(fname):
         raise TrempyError('version not implemented')
 
     np.random.seed(sim_seed)
-    m_optimal = get_optimal_compensations(version=version, paras_obj=paras_obj,
-                                          questions=questions, **version_specific)
+    m_optimal = get_optimal_compensations(version, paras_obj, questions, **version_specific)
 
     # First, get number of preference parameters. Paras with higher index belong to questions!
     nparas_econ = paras_obj.attr['nparas_econ']
     # Now, get standard deviation for the error in each question. This handles versions implicitly.
-    stands = paras_obj.get_values('econ', 'all')[nparas_econ:]
+    sds = paras_obj.get_values('econ', 'all')[nparas_econ:]
 
     # Simulate data
     data = []
     for i in range(sim_agents):
         for k, q in enumerate(questions):
-            m_latent = m_optimal[q] + np.random.normal(loc=0.0, scale=stands[k], size=1)[0]
+            m_latent = m_optimal[q] + np.random.normal(loc=0.0, scale=sds[k], size=1)[0]
             m_observed = m_latent
 
             # We need to account for the cutoffs.
@@ -69,9 +68,8 @@ def simulate(fname):
 
     x_econ_all_current = paras_obj.get_values('econ', 'all')
 
-    fval, m_optimal = criterion_function(
-        df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj, sds=stands,
-        version=version, **version_specific)
+    fval, _ = criterion_function(df, questions, cutoffs, paras_obj,
+                                 version, sds, **version_specific)
 
     write_info(version, x_econ_all_current, df, questions,
                fval, m_optimal, sim_file + '.trempy.info')

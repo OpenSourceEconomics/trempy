@@ -51,12 +51,11 @@ def create_regression_vault(num_tests):
 
         # Now get correct standard deviations. Versions are handled implicitly.
         x_econ_all = paras_obj.get_values('econ', 'all')
-        stands = x_econ_all[nparas_econ:]
+        sds = x_econ_all[nparas_econ:]
 
         # Evaluate criterion function and process results
-        stat, m_optimal = criterion_function(
-            df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj,
-            version=version, sds=stands, **version_specific)
+        stat, _ = criterion_function(df, questions, cutoffs, paras_obj,
+                                     version, sds, **version_specific)
         tests += [(init_dict, stat)]
 
         cleanup()

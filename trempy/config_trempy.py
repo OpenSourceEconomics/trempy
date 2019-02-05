@@ -9,6 +9,11 @@ np.testing.assert_equal(sys.version_info[0], 3)
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Run additional property checks only in debug mode.
+IS_DEBUG = False
+if os.getenv('TREMPY_DEV') == 'TRUE':
+    IS_DEBUG = True
+
 SMALL_FLOAT = 10e-10
 HUGE_FLOAT = 10e+20
 TINY_FLOAT = 10e-20

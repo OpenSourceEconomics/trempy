@@ -231,9 +231,7 @@ def estimate_simulate(which, points, model_obj, df_obs):
     elif version in ['nonstationary']:
         version_specific = dict()
 
-    m_optimal = get_optimal_compensations(
-        version=version, paras_obj=paras_obj, questions=questions,
-        **version_specific)
+    m_optimal = get_optimal_compensations(version, paras_obj, questions, **version_specific)
 
     os.mkdir(which)
     os.chdir(which)
@@ -331,10 +329,7 @@ def compare_datasets(which, df_obs, questions, m_optimal):
             outfile.write('\n Individual {:d}\n\n'.format(identifier))
             outfile.write(fmt_.format(*['Question', 'Optimal', 'Observed', 'Difference']) + '\n\n')
 
-            for index, row in df_individual.iteritems():
-                # df_individual has a multi-index (Indiviuum, Question).
-                q = index[1]
-                m_obs = row
+            for (_, q), m_obs in df_individual.iteritems():
                 m_opt = m_optimal[q]
 
                 info = ['{:d}'.format(q)] + char_floats(m_opt) + char_floats(m_obs)

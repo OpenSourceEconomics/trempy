@@ -21,8 +21,7 @@ from trempy.config_trempy import HUGE_FLOAT
 
 def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **version_specific):
     """Calculate the likelihood of the observed sample."""
-    m_optimal = get_optimal_compensations(
-        version=version, paras_obj=paras_obj, questions=questions, **version_specific)
+    m_optimal = get_optimal_compensations(version, paras_obj, questions, **version_specific)
     data = copy.deepcopy(df)
 
     # Add auxiliary data (question cutoffs, decision implied by the model, std of observed choices)
@@ -34,9 +33,9 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
     df_m_optimal.index.name = 'Question'
     data = data.join(df_m_optimal, how='left')
 
-    df_std = pd.DataFrame(sds, index=questions, columns=['std'])
-    df_std.index.name = 'Question'
-    data = data.join(df_std, how='left')
+    df_sds = pd.DataFrame(sds, index=questions, columns=['std'])
+    df_sds.index.name = 'Question'
+    data = data.join(df_sds, how='left')
 
     # Subjects who selected both Option A and B at least once. This implies their valuation
     # is in the left-open interval (lower, upper], i.e. they initially prefered Option A at 'lower',
@@ -63,8 +62,9 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
     likl_lower = rv.cdf(data['lower_standardized'].loc[data['is_lower']])
 
     # Average negative log-likelihood
-    contribs = likl_interior.tolist() + likl_lower.tolist() + likl_upper.tolist()
-    rslt = - np.mean(np.log(np.clip(sorted(contribs), TINY_FLOAT, np.inf)))
+    contribs = np.concatenate([likl_interior, likl_lower, likl_upper], axis=0)
+    rslt = - np.mean(np.log(np.clip(np.sort(contribs), TINY_FLOAT, np.inf)))
+
     return rslt, m_optimal
 
 

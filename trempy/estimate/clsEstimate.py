@@ -80,11 +80,10 @@ class EstimateClass(BaseCls):
 
         # Get standard deviations. They have a larger index than nparas_econ.
         nparas_econ = paras_obj.attr['nparas_econ']
-        stands = x_econ_all_current[nparas_econ:]
+        sds = x_econ_all_current[nparas_econ:]
 
-        fval, m_optimal = criterion_function(
-            df=df, questions=questions, cutoffs=cutoffs, paras_obj=paras_obj,
-            version=version, sds=stands, **version_specific)
+        fval, m_optimal = criterion_function(df, questions, cutoffs, paras_obj,
+                                             version, sds, **version_specific)
 
         self._update_evaluation(fval, x_econ_all_current, x_optim_all_current, m_optimal)
 
