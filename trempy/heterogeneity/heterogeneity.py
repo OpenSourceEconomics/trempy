@@ -53,6 +53,9 @@ def individual_estimation(fname):
         # Estimate model for nth agent.
         estimate(agent_fname)
 
+        # Save optimizer message before we delete est.trempy.log
+        save_termination_status(agent)
+
         # The output per agent can be 10MB if you have more than 2000 steps.
         if os.path.exists('est.trempy.log'):
             os.remove('est.trempy.log')
@@ -65,6 +68,10 @@ def individual_estimation(fname):
 
 def collect_parameters(agents):
     """Collect individual-level estimates in one dataframe."""
+    names = ['success', 'message']
+    optim_status = pd.read_csv('agents_out/termination.status.txt', names=names, header=None)
+    optim_status = optim_status.to_dict(orient='index')
+
     df = list()
     for agent in np.arange(0, agents):
         print(agent)
@@ -104,13 +111,12 @@ def collect_parameters(agents):
         agent_result['rmse'] = round(get_rmse(), 6)
         agent_result['participant_id'] = get_participant_id()
 
-        num_steps, num_evals, terminated, success, message, crit_val_start, crit_val_end = \
-            get_diagnostics()
+        num_steps, num_evals, terminated, crit_val_start, crit_val_end = get_diagnostics()
         agent_result['num_steps'] = num_steps
         agent_result['num_evals'] = num_evals
         agent_result['terminated'] = terminated
-        agent_result['success'] = success
-        agent_result['message'] = message
+        agent_result['success'] = optim_status[agent]['success']
+        agent_result['message'] = optim_status[agent]['message']
         agent_result['crit_val_start'] = crit_val_start
         agent_result['crit_val_end'] = crit_val_end
 
@@ -177,10 +183,14 @@ def get_diagnostics():
                 crit_val_start = round(float(crit_val_start), 6)
                 crit_val_end = round(float(crit_val_end), 6)
 
+    return num_steps, num_evals, terminated, crit_val_start, crit_val_end
+
+
+def save_termination_status(agent):
+    """Get termination message and success status before est.trempy.log is deleted."""
     with open('est.trempy.log') as in_file:
         success = False
         for line in in_file.readlines():
-
             if 'Message' in line:
                 message = shlex.split(line)[1:]
                 message = " ".join(message)
@@ -191,7 +201,8 @@ def get_diagnostics():
                 if stat in ['True']:
                     success = True
 
-    return num_steps, num_evals, terminated, success, message, crit_val_start, crit_val_end
+    with open('../termination.status.txt', 'a') as out_file:
+        out_file.write('{}, {}, {}\n'.format(agent, success, message))
 
 
 def merge_two_dicts(x, y):
