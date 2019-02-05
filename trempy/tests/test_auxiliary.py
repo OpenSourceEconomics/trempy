@@ -38,6 +38,7 @@ def random_dict(constr):
     num_questions = np.random.randint(8, 14)
     fname = get_random_string()
     discounting = np.random.choice([None, 'exponential', 'hyperbolic'], p=[0.8, 0.1, 0.1])
+    heterogeneity = np.random.choice([True, False], p=[0.1, 0.9])
 
     if constr is not None:
         # Handle version specific data.
@@ -49,13 +50,21 @@ def random_dict(constr):
             fname = constr['fname']
         if 'discounting' in constr.keys():
             discounting = constr['discounting']
+        if 'heterogeneity' in constr.keys():
+            heterogeneity = constr['heterogeneity']
 
     dict_['VERSION'] = {'version': version}
 
     # Optional arguments for model type
     if version in ['nonstationary']:
-        dict_['VERSION']['discounting'] = discounting
         dict_['VERSION']['stationary_model'] = np.random.choice([False, True], p=[0.9, 0.1])
+        dict_['VERSION']['heterogeneity'] = heterogeneity
+        dict_['VERSION']['discounting'] = discounting
+    elif version in ['scaled_archimedean']:
+        dict_['VERSION']['heterogeneity'] = False
+        dict_['VERSION']['discounting'] = None
+        dict_['VERSION']['stationary_model'] = True
+        heterogeneity = False
 
     sim_agents = np.random.randint(2, 10)
     is_fixed = np.random.choice(
@@ -121,7 +130,12 @@ def random_dict(constr):
                 [13] + list(range(31, 46)), size=num_questions, replace=False)
             # print('Generated only atemporal questions because version is scaled_archimedean')
         else:
-            questions = np.random.choice(list(range(1, 46)), size=num_questions, replace=False)
+            if heterogeneity:
+                questions = np.array([1, 2])
+                questions = np.append(questions, np.random.choice(
+                    list(range(3, 46)), size=(num_questions - 2), replace=False))
+            else:
+                questions = np.random.choice(list(range(1, 46)), size=num_questions, replace=False)
 
     dict_['QUESTIONS'] = dict()
 
@@ -130,12 +144,19 @@ def random_dict(constr):
         value = get_value(bounds, q, version)
         dict_['QUESTIONS'][q] = [value, is_fixed[i + len(PREFERENCE_PARAMETERS[version])], bounds]
 
+    # If heterogeneity is True, we want to unfix the first two questions and fix the rest.
+    if heterogeneity:
+        dict_['QUESTIONS'][1][1] = False
+        dict_['QUESTIONS'][2][1] = False
+        for q in questions:
+            if q in [1, 2]:
+                continue
+            dict_['QUESTIONS'][q] = [0.5, True, [0, HUGE_FLOAT]]
+
     # We now add some cutoff values.
     dict_['CUTOFFS'] = dict()
     for q in questions:
         if np.random.choice([True, False]):
-            continue
-        else:
             dict_['CUTOFFS'][q] = get_cutoffs()
 
     # We now turn to all simulation details.

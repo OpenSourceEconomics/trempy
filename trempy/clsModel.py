@@ -21,6 +21,9 @@ class ModelCls(BaseCls):
         # We first tackle the more complex issue of parameter management.
         self.attr = dict()
         self.attr['version'] = version
+        self.attr['heterogeneity'] = init_dict['VERSION']['heterogeneity']
+        self.attr['stationary_model'] = init_dict['VERSION']['stationary_model']
+        self.attr['discounting'] = init_dict['VERSION']['discounting']
 
         # Parameters
         paras_obj = ParasCls(init_dict)
@@ -126,6 +129,9 @@ class ModelCls(BaseCls):
 
         # 1) Version
         init_dict['VERSION']['version'] = version
+        init_dict['VERSION']['heterogeneity'] = self.attr['heterogeneity']
+        init_dict['VERSION']['stationary_model'] = self.attr['stationary_model']
+        init_dict['VERSION']['discounting'] = self.attr['discounting']
 
         # 2) Simulation
         init_dict['SIMULATION']['agents'] = self.attr['sim_agents']

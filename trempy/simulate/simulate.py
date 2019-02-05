@@ -37,14 +37,28 @@ def simulate(fname):
 
     # First, get number of preference parameters. Paras with higher index belong to questions!
     nparas_econ = paras_obj.attr['nparas_econ']
-    # Now, get standard deviation for the error in each question. This handles versions implicitly.
+
+    # Now, get standard deviation for the error in each question.
     sds = paras_obj.get_values('econ', 'all')[nparas_econ:]
+    heterogeneity = paras_obj.attr['heterogeneity']
+    if heterogeneity:
+        sds_time = sds[1]
+        sds_risk = sds[2]
 
     # Simulate data
     data = []
     for i in range(sim_agents):
         for k, q in enumerate(questions):
-            m_latent = m_optimal[q] + np.random.normal(loc=0.0, scale=sds[k], size=1)[0]
+            # If we estimate agent by agent, we use only two sds for time and risk quetions.
+            if heterogeneity:
+                if q <= 30:
+                    sds_current_q = sds_time
+                else:
+                    sds_current_q = sds_risk
+            else:
+                sds_current_q = sds[k]
+
+            m_latent = m_optimal[q] + np.random.normal(loc=0.0, scale=sds_current_q, size=1)[0]
             m_observed = m_latent
 
             # We need to account for the cutoffs.

@@ -19,16 +19,17 @@ class ParasCls(BaseCls):
         version = init_dict['VERSION']['version']
 
         self.attr = dict()
+        self.attr['heterogeneity'] = init_dict['VERSION']['heterogeneity']
         self.attr['optimizer'] = init_dict['ESTIMATION']['optimizer']
         self.attr['version'] = version
         self.attr['para_labels'] = []
         self.attr['para_objs'] = []
 
         if version in ['nonstationary']:
-            discounting = init_dict['VERSION']['discounting']
             stationary_model = init_dict['VERSION']['stationary_model']
-            self.attr['discounting'] = discounting
+            discounting = init_dict['VERSION']['discounting']
             self.attr['stationary_model'] = stationary_model
+            self.attr['discounting'] = discounting
 
         # Preference parameters are handled for each version separately.
         for label in PREFERENCE_PARAMETERS[version]:

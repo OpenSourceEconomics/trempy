@@ -20,6 +20,14 @@ def run_regression_test(test):
     # Create and process initialization file
     init_dict, crit_val = test
 
+    # Temporary: code to handle old dictionaries in the vault without:
+    # (1) 'discounting' or (2) 'stationary_model' in the VERSION block
+    version_keys = init_dict['VERSION'].keys()
+    if 'discounting' not in version_keys:
+        init_dict['VERSION']['discounting'] = None
+    if 'stationary_model' not in version_keys:
+        init_dict['VERSION']['stationary_model'] = True
+
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
     df, fval = simulate('test.trempy.ini')

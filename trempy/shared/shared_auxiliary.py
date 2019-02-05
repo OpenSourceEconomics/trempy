@@ -22,6 +22,7 @@ from trempy.config_trempy import HUGE_FLOAT
 def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **version_specific):
     """Calculate the likelihood of the observed sample."""
     m_optimal = get_optimal_compensations(version, paras_obj, questions, **version_specific)
+    heterogeneity = paras_obj.attr['heterogeneity']
     data = copy.deepcopy(df)
 
     # Add auxiliary data (question cutoffs, decision implied by the model, std of observed choices)
@@ -33,8 +34,15 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
     df_m_optimal.index.name = 'Question'
     data = data.join(df_m_optimal, how='left')
 
-    df_sds = pd.DataFrame(sds, index=questions, columns=['std'])
+    sds_dict = dict(zip(questions, sds))
+    if heterogeneity:
+        sds_time = sds_dict[1]
+        sds_risk = sds_dict[2]
+        sds_dict = {q: (sds_time if q <= 30 else sds_risk) for q in sds_dict.keys()}
+
+    df_sds = pd.DataFrame.from_dict(sds_dict, orient='index', columns=['std'])
     df_sds.index.name = 'Question'
+    print(df_sds)
     data = data.join(df_sds, how='left')
 
     # Subjects who selected both Option A and B at least once. This implies their valuation
@@ -214,7 +222,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                     str_ += ' {:>25}\n'
 
                 # Handle string output (e.g. "True" or "None")
-                if label in ['detailed', 'version']:
+                if label in ['detailed', 'version', 'heterogeneity']:
                     info = str(info)
                 if label in ['discounting', 'stationary_model']:
                     if info is None:
