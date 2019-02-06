@@ -289,10 +289,10 @@ def check_optional_args(init_dict):
 def heterogeneity_preparations(init_dict):
     """Prepare init dict for use in a single-agent estimation."""
     if 'heterogeneity' in init_dict['VERSION'].keys():
-        with_heterogeneity = init_dict['VERSION']['heterogeneity']
+        heterogeneity = init_dict['VERSION']['heterogeneity']
         version = init_dict['VERSION']['version']
 
-        if (with_heterogeneity is True):
+        if heterogeneity:
             np.testing.assert_equal(1 in init_dict['QUESTIONS'].keys(), True)
             np.testing.assert_equal(2 in init_dict['QUESTIONS'].keys(), True)
             np.testing.assert_equal(version in ['nonstationary'], True)
@@ -303,6 +303,6 @@ def heterogeneity_preparations(init_dict):
                     value, is_fixed, bounds = init_dict['QUESTIONS'][q]
                     init_dict['QUESTIONS'][q] = [value, False, bounds]
                 else:
-                    init_dict['QUESTIONS'][q] = [0.5, True, [0, HUGE_FLOAT]]
+                    init_dict['QUESTIONS'][q] = [0.5, True, [0.0, HUGE_FLOAT]]
     else:
         init_dict['VERSION']['heterogeneity'] = False

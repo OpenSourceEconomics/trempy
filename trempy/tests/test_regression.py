@@ -27,6 +27,8 @@ def run_regression_test(test):
         init_dict['VERSION']['discounting'] = None
     if 'stationary_model' not in version_keys:
         init_dict['VERSION']['stationary_model'] = True
+    if 'heterogeneity' not in version_keys:
+        init_dict['VERSION']['heterogeneity'] = False
 
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
