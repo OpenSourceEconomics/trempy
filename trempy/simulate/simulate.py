@@ -45,28 +45,45 @@ def simulate(fname):
         sds_time = sds[1]
         sds_risk = sds[2]
 
+    # TODO: This is what I am proposing instead of the loop below
     # Simulate data
+    # data = []
+    # agent_identifier = np.arange(sim_agents)
+    # for k, q in enumerate(questions):
+    #     lower_cutoff, upper_cutoff = cutoffs[q]
+    #     # If we estimate agent by agent, we use only two sds for time and risk quetions.
+    #     if heterogeneity:
+    #         if q <= 30:
+    #             sds_current_q = sds_time * (upper_cutoff - lower_cutoff) / 200
+    #         else:
+    #             sds_current_q = sds_risk * (upper_cutoff - lower_cutoff) / 20
+    #     else:
+    #         sds_current_q = sds[k]
+
+    #     m_latent = np.random.normal(loc=m_optimal[q], scale=sds_current_q, size=sim_agents)
+    #     m_observed = np.clip(m_latent, a_min=lower_cutoff, a_max=+np.inf)
+    #     m_observed[m_observed > upper_cutoff] = NEVER_SWITCHERS
+
+    #     question_identifier = np.repeat(q, repeats=sim_agents)
+
+    #     data += list(zip(agent_identifier, question_identifier, m_observed))
+
     data = []
     for i in range(sim_agents):
         for k, q in enumerate(questions):
+            lower_cutoff, upper_cutoff = cutoffs[q]
             # If we estimate agent by agent, we use only two sds for time and risk quetions.
             if heterogeneity:
                 if q <= 30:
-                    sds_current_q = sds_time
+                    sds_current_q = sds_time * (upper_cutoff - lower_cutoff) / 200
                 else:
-                    sds_current_q = sds_risk
+                    sds_current_q = sds_risk * (upper_cutoff - lower_cutoff) / 20
             else:
                 sds_current_q = sds[k]
 
-            m_latent = m_optimal[q] + np.random.normal(loc=0.0, scale=sds_current_q, size=1)[0]
-            m_observed = m_latent
-
-            # We need to account for the cutoffs.
-            lower_cutoff, upper_cutoff = cutoffs[q]
-            if m_latent < lower_cutoff:
-                m_observed = lower_cutoff
-            elif m_latent > upper_cutoff:
-                m_observed = NEVER_SWITCHERS
+            m_latent = np.random.normal(loc=m_optimal[q], scale=sds_current_q, size=1)
+            m_observed = np.clip(m_latent, a_min=lower_cutoff, a_max=+np.inf)
+            m_observed[m_observed > upper_cutoff] = NEVER_SWITCHERS
 
             data += [[i, q, m_observed]]
 

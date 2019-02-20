@@ -25,7 +25,7 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
     heterogeneity = paras_obj.attr['heterogeneity']
     data = copy.deepcopy(df)
 
-    # Add auxiliary data (question cutoffs, decision implied by the model, std of observed choices)
+    # Add cutoffs
     df_cutoff = pd.DataFrame.from_dict(cutoffs, orient='index', columns=['lower', 'upper'])
     df_cutoff.index.name = 'Question'
     data = data.join(df_cutoff, how='left')
@@ -38,7 +38,11 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
     if heterogeneity:
         sds_time = sds_dict[1]
         sds_risk = sds_dict[2]
-        sds_dict = {q: (sds_time if q <= 30 else sds_risk) for q in sds_dict.keys()}
+        sds_dict = {
+            q: (sds_time * (cutoffs[q][1] - cutoffs[q][0]) / 200 if q <= 30
+                else sds_risk * (cutoffs[q][1] - cutoffs[q][0]) / 20)
+            for q in sds_dict.keys()
+        }
 
     df_sds = pd.DataFrame.from_dict(sds_dict, orient='index', columns=['std'])
     df_sds.index.name = 'Question'
