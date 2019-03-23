@@ -79,7 +79,6 @@ def get_copula_nonstationary(alpha, beta, gamma, y_scale,
             24: unrestricted_weights_24,
         }
         if None in dict_unrestricted.values():
-            dict_unrestricted = None
             raise TrempyError('discount function for other is set to free but contains None type')
     elif df_other in ['linear']:
         # Impose a linear structure on c_t in the CES function.
