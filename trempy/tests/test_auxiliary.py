@@ -39,6 +39,9 @@ def random_dict(constr):
     fname = get_random_string()
     discounting = np.random.choice([None, 'exponential', 'hyperbolic'], p=[0.8, 0.1, 0.1])
     heterogeneity = np.random.choice([True, False], p=[0.1, 0.9])
+    df_other = np.random.choice(
+        ['equal_univariate', 'free', 'linear', 'exponential'], p=[0.7, 0.1, 0.1, 0.1]
+    )
 
     if constr is not None:
         # Handle version specific data.
@@ -60,10 +63,12 @@ def random_dict(constr):
         dict_['VERSION']['stationary_model'] = np.random.choice([False, True], p=[0.9, 0.1])
         dict_['VERSION']['heterogeneity'] = heterogeneity
         dict_['VERSION']['discounting'] = discounting
+        dict_['VERSION']['df_other'] = df_other
     elif version in ['scaled_archimedean']:
+        dict_['VERSION']['stationary_model'] = True
         dict_['VERSION']['heterogeneity'] = False
         dict_['VERSION']['discounting'] = None
-        dict_['VERSION']['stationary_model'] = True
+        dict_['VERSION']['df_other'] = 'equal_univariate'
         heterogeneity = False
 
     sim_agents = np.random.randint(2, 10)
@@ -111,9 +116,14 @@ def random_dict(constr):
 
         # Handle optional arguments. If one argument is not used, set all to None and fix them.
         optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
-        not_used = (None in [dict_['DISCOUNTING'][label][0] for label in optional_args])
-        if not_used:
+
+        if df_other in ['equal_univariate']:
             for label in optional_args:
+                dict_['DISCOUNTING'][label] = [None, True, [0.01, 1.00]]
+        elif df_other in ['free']:
+            pass
+        elif df_other in ['linear', 'exponential']:
+            if not label.endswith('_0'):
                 dict_['DISCOUNTING'][label] = [None, True, [0.01, 1.00]]
 
     else:
@@ -284,20 +294,10 @@ def get_value(bounds, label, version):
     lower, upper = bounds
 
     if label in PREFERENCE_PARAMETERS[version]:
-        # Handle optional arguments and set them to None if not required.
-        if label.startswith('unrestricted_weights'):
-            restricted = np.random.choice([True, False], p=[0.8, 0.2])
-            if restricted:
-                value = None
-            else:
-                value = float(np.random.uniform(lower + 0.01, upper - 0.01))
-                value = np.around(value, decimals=4)
-        # Other preference paramters
-        else:
-            value = float(np.random.uniform(lower + 0.01, upper - 0.01))
-            value = np.around(value, decimals=4)
-    # Handle non-preference labels
+        value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+        value = np.around(value, decimals=4)
     else:
+        # Non-preference labels
         upper = min(upper, 10)
         value = float(np.random.uniform(lower + 0.01, upper - 0.01))
         value = np.around(value, decimals=4)

@@ -94,16 +94,17 @@ def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_
     return m_optimal
 
 
-def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_scale,
-                                            discount_factors_0, discount_factors_1,
-                                            discount_factors_3, discount_factors_6,
-                                            discount_factors_12, discount_factors_24,
-                                            unrestricted_weights_0, unrestricted_weights_1,
-                                            unrestricted_weights_3, unrestricted_weights_6,
-                                            unrestricted_weights_12, unrestricted_weights_24,
-                                            # Optional arguments that determine the model type
-                                            discounting, stationary_model
-                                            ):
+def get_optimal_compensations_nonstationary(
+    questions, alpha, beta, gamma, y_scale,
+    discount_factors_0, discount_factors_1,
+    discount_factors_3, discount_factors_6,
+    discount_factors_12, discount_factors_24,
+    unrestricted_weights_0, unrestricted_weights_1,
+    unrestricted_weights_3, unrestricted_weights_6,
+    unrestricted_weights_12, unrestricted_weights_24,
+    # Optional arguments that determine the model type
+    discounting, stationary_model, df_other
+):
     """Optimal compensation for the nonstationary utility function."""
     copula = get_copula_nonstationary(
         alpha, beta, gamma, y_scale,
@@ -114,7 +115,9 @@ def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_sca
         unrestricted_weights_3, unrestricted_weights_6,
         unrestricted_weights_12, unrestricted_weights_24,
         discounting=discounting,
-        stationary_model=stationary_model)
+        stationary_model=stationary_model,
+        df_other=df_other
+    )
 
     m_optimal = dict()
     for q in questions:
@@ -153,6 +156,7 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
         # Optional arguments
         discounting = paras_obj.attr['discounting']
         stationary_model = paras_obj.attr['stationary_model']
+        df_other = paras_obj.attr['df_other']
 
         # Optimal compensation
         args = [questions, alpha, beta, gamma, y_scale,
@@ -162,7 +166,7 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
                 unrestricted_weights_0, unrestricted_weights_1, unrestricted_weights_3,
                 unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24,
                 # Optional arguments:
-                discounting, stationary_model]
+                discounting, stationary_model, df_other]
         m_optimal = get_optimal_compensations_nonstationary(*args)
     else:
         raise TrempyError('version not implemented')

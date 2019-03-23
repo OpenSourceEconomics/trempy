@@ -237,6 +237,9 @@ def type_conversions(flag, value):
         value = value.lower()
         if value == 'none':
             value = None
+    elif flag in ['df_other']:
+        value = str(value)
+        value = value.lower()
     elif flag.startswith('unrestricted_weights_'):
         if value == 'None':
             value = None
@@ -265,6 +268,14 @@ def check_optional_args(init_dict):
             np.testing.assert_equal(discounting in ['hyperbolic', 'exponential', None], True)
         else:
             init_dict['VERSION']['discounting'] = None
+
+        if 'df_other' in init_dict['VERSION'].keys():
+            df_other = init_dict['VERSION']['df_other']
+            np.testing.assert_equal(
+                df_other in ['free', 'linear', 'exponential', 'equal_univariate'], True
+            )
+        else:
+            init_dict['VERSION']['df_other'] = 'equal_univariate'
 
         # Fill in stationary_model if not specified by user
         if 'stationary_model' not in init_dict['VERSION'].keys():

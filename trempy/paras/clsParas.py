@@ -26,10 +26,9 @@ class ParasCls(BaseCls):
         self.attr['para_objs'] = []
 
         if version in ['nonstationary']:
-            stationary_model = init_dict['VERSION']['stationary_model']
-            discounting = init_dict['VERSION']['discounting']
-            self.attr['stationary_model'] = stationary_model
-            self.attr['discounting'] = discounting
+            self.attr['stationary_model'] = init_dict['VERSION']['stationary_model']
+            self.attr['discounting'] = init_dict['VERSION']['discounting']
+            self.attr['df_other'] = init_dict['VERSION']['df_other']
 
         # Preference parameters are handled for each version separately.
         for label in PREFERENCE_PARAMETERS[version]:

@@ -21,7 +21,6 @@ def run_regression_test(test):
     init_dict, crit_val = test
 
     # Temporary: code to handle old dictionaries in the vault without:
-    # (1) 'discounting' or (2) 'stationary_model' in the VERSION block
     version_keys = init_dict['VERSION'].keys()
     if 'discounting' not in version_keys:
         init_dict['VERSION']['discounting'] = None
@@ -29,6 +28,8 @@ def run_regression_test(test):
         init_dict['VERSION']['stationary_model'] = True
     if 'heterogeneity' not in version_keys:
         init_dict['VERSION']['heterogeneity'] = False
+    if 'df_other' not in version_keys:
+        init_dict['VERSION']['df_other'] = 'equal_univariate'
 
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
