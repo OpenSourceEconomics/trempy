@@ -131,7 +131,7 @@ def test_6():
             else:
                 for t, c_t in y_weights.items():
                     if df_other in ['linear']:
-                        lhs = y_scale + t * unrestricted_weights_0
+                        lhs = max(0, y_scale + t * unrestricted_weights_0)
                     elif df_other in ['exponential']:
                         lhs = y_scale * unrestricted_weights_0 ** t
                     elif df_other in ['equal_univariate']:

@@ -82,7 +82,9 @@ def get_copula_nonstationary(alpha, beta, gamma, y_scale,
             raise TrempyError('discount function for other is set to free but contains None type')
     elif df_other in ['linear']:
         # Impose a linear structure on c_t in the CES function.
-        dict_unrestricted = {t: y_scale + t * unrestricted_weights_0 for t in [0, 1, 3, 6, 12, 24]}
+        dict_unrestricted = {
+            t: max(0, y_scale + t * unrestricted_weights_0) for t in [0, 1, 3, 6, 12, 24]
+        }
     elif df_other in ['exponential']:
         # Impose an exponential structure on c_t in the CES function.
         dict_unrestricted = {t: y_scale * unrestricted_weights_0 ** t for t in [0, 1, 3, 6, 12, 24]}
