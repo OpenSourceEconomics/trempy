@@ -42,8 +42,8 @@ def process_checks(df, est_agents, questions, cutoffs):
     df.groupby('Individual').apply(functools.partial(_check_questions, questions))
 
     # Check that compensation levels line up with cutoffs and the NEVER_SWITCHERS
-    for q in questions:
+    for q, group in df.groupby(level=1):
         lower, upper = cutoffs[q]
-        cond = df.loc[(slice(None), q), 'Compensation'].between(lower, upper, inclusive=True)
-        cond = cond | (df.loc[(slice(None), q), 'Compensation'].isin([NEVER_SWITCHERS]))
+        cond = group['Compensation'].between(lower, upper, inclusive=True)
+        cond = cond | group['Compensation'].isin([NEVER_SWITCHERS])
         np.testing.assert_equal(np.all(cond), True)

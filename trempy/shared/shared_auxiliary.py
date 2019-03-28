@@ -22,9 +22,10 @@ from trempy.config_trempy import HUGE_FLOAT
 def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **version_specific):
     """Calculate the likelihood of the observed sample."""
     m_optimal = get_optimal_compensations(version, paras_obj, questions, **version_specific)
+    heterogeneity = paras_obj.attr['heterogeneity']
     data = copy.deepcopy(df)
 
-    # Add auxiliary data (question cutoffs, decision implied by the model, std of observed choices)
+    # Add cutoffs
     df_cutoff = pd.DataFrame.from_dict(cutoffs, orient='index', columns=['lower', 'upper'])
     df_cutoff.index.name = 'Question'
     data = data.join(df_cutoff, how='left')
@@ -33,7 +34,17 @@ def criterion_function(df, questions, cutoffs, paras_obj, version, sds, **versio
     df_m_optimal.index.name = 'Question'
     data = data.join(df_m_optimal, how='left')
 
-    df_sds = pd.DataFrame(sds, index=questions, columns=['std'])
+    sds_dict = dict(zip(questions, sds))
+    if heterogeneity:
+        sds_time = sds_dict[1]
+        sds_risk = sds_dict[2]
+        sds_dict = {
+            q: (sds_time * (cutoffs[q][1] - cutoffs[q][0]) / 200 if q <= 30
+                else sds_risk * (cutoffs[q][1] - cutoffs[q][0]) / 20)
+            for q in sds_dict.keys()
+        }
+
+    df_sds = pd.DataFrame.from_dict(sds_dict, orient='index', columns=['std'])
     df_sds.index.name = 'Question'
     data = data.join(df_sds, how='left')
 
@@ -83,16 +94,17 @@ def get_optimal_compensations_scaled_archimedean(questions, upper, marginals, r_
     return m_optimal
 
 
-def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_scale,
-                                            discount_factors_0, discount_factors_1,
-                                            discount_factors_3, discount_factors_6,
-                                            discount_factors_12, discount_factors_24,
-                                            unrestricted_weights_0, unrestricted_weights_1,
-                                            unrestricted_weights_3, unrestricted_weights_6,
-                                            unrestricted_weights_12, unrestricted_weights_24,
-                                            # Optional arguments that determine the model type
-                                            discounting, stationary_model
-                                            ):
+def get_optimal_compensations_nonstationary(
+    questions, alpha, beta, gamma, y_scale,
+    discount_factors_0, discount_factors_1,
+    discount_factors_3, discount_factors_6,
+    discount_factors_12, discount_factors_24,
+    unrestricted_weights_0, unrestricted_weights_1,
+    unrestricted_weights_3, unrestricted_weights_6,
+    unrestricted_weights_12, unrestricted_weights_24,
+    # Optional arguments that determine the model type
+    discounting, stationary_model, df_other
+):
     """Optimal compensation for the nonstationary utility function."""
     copula = get_copula_nonstationary(
         alpha, beta, gamma, y_scale,
@@ -103,7 +115,9 @@ def get_optimal_compensations_nonstationary(questions, alpha, beta, gamma, y_sca
         unrestricted_weights_3, unrestricted_weights_6,
         unrestricted_weights_12, unrestricted_weights_24,
         discounting=discounting,
-        stationary_model=stationary_model)
+        stationary_model=stationary_model,
+        df_other=df_other
+    )
 
     m_optimal = dict()
     for q in questions:
@@ -142,6 +156,7 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
         # Optional arguments
         discounting = paras_obj.attr['discounting']
         stationary_model = paras_obj.attr['stationary_model']
+        df_other = paras_obj.attr['df_other']
 
         # Optimal compensation
         args = [questions, alpha, beta, gamma, y_scale,
@@ -151,7 +166,7 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
                 unrestricted_weights_0, unrestricted_weights_1, unrestricted_weights_3,
                 unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24,
                 # Optional arguments:
-                discounting, stationary_model]
+                discounting, stationary_model, df_other]
         m_optimal = get_optimal_compensations_nonstationary(*args)
     else:
         raise TrempyError('version not implemented')
@@ -214,7 +229,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                     str_ += ' {:>25}\n'
 
                 # Handle string output (e.g. "True" or "None")
-                if label in ['detailed', 'version']:
+                if label in ['detailed', 'version', 'heterogeneity']:
                     info = str(info)
                 if label in ['discounting', 'stationary_model']:
                     if info is None:

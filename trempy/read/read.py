@@ -124,8 +124,9 @@ def read(fname):
                     dict_['CUTOFFS'][q][i] = (-1)**i * -HUGE_FLOAT
 
     # Enforce input requirements for optional arguments
-    # such as: discounting, stationary_model, unrestricted_weights
+    # such as: discounting, stationary_model, unrestricted_weights, heterogeneity,...
     check_optional_args(dict_)
+    heterogeneity_preparations(dict_)
 
     return dict_
 
@@ -212,7 +213,7 @@ def type_conversions(flag, value):
         value = int(value)
     elif flag in ['version', 'file', 'optimizer', 'start']:
         value = str(value)
-    elif flag in ['detailed', 'stationary_model']:
+    elif flag in ['detailed', 'stationary_model', 'heterogeneity']:
         assert (value.upper() in ['TRUE', 'FALSE'])
         value = (value.upper() == 'TRUE')
     # Handle SCIPY-BFGS, SCIPY-L-BFGS-B and SCIPY-POWELL
@@ -236,6 +237,9 @@ def type_conversions(flag, value):
         value = value.lower()
         if value == 'none':
             value = None
+    elif flag in ['df_other']:
+        value = str(value)
+        value = value.lower()
     elif flag.startswith('unrestricted_weights_'):
         if value == 'None':
             value = None
@@ -265,11 +269,21 @@ def check_optional_args(init_dict):
         else:
             init_dict['VERSION']['discounting'] = None
 
-        # Fill in stationary_model if not specified by user
-        if 'stationary_model' in init_dict['VERSION'].keys():
-            pass
+        if 'df_other' in init_dict['VERSION'].keys():
+            df_other = init_dict['VERSION']['df_other']
+            np.testing.assert_equal(
+                df_other in ['free', 'linear', 'exponential', 'equal_univariate'], True
+            )
         else:
+            init_dict['VERSION']['df_other'] = 'equal_univariate'
+
+        # Fill in stationary_model if not specified by user
+        if 'stationary_model' not in init_dict['VERSION'].keys():
             init_dict['VERSION']['stationary_model'] = False
+
+        # Enfore that there is a boolean variable 'heterogenenity'. Default: False.
+        if 'heterogeneity' not in init_dict['VERSION'].keys():
+            init_dict['VERSION']['heterogeneity'] = False
 
         optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
         for label in optional_args:
@@ -281,3 +295,25 @@ def check_optional_args(init_dict):
                     raise TrempyError('Optional argument misspecified.')
             else:
                 raise TrempyError('Please set unused optional arguments to None in init file.')
+
+
+def heterogeneity_preparations(init_dict):
+    """Prepare init dict for use in a single-agent estimation."""
+    if 'heterogeneity' in init_dict['VERSION'].keys():
+        heterogeneity = init_dict['VERSION']['heterogeneity']
+        version = init_dict['VERSION']['version']
+
+        if heterogeneity:
+            np.testing.assert_equal(1 in init_dict['QUESTIONS'].keys(), True)
+            np.testing.assert_equal(2 in init_dict['QUESTIONS'].keys(), True)
+            np.testing.assert_equal(version in ['nonstationary'], True)
+
+            # Question 1 and 2 encode the standard deviations for the temporal and risk part.
+            for q in init_dict['QUESTIONS']:
+                if q in [1, 2]:
+                    value, is_fixed, bounds = init_dict['QUESTIONS'][q]
+                    init_dict['QUESTIONS'][q] = [value, False, bounds]
+                else:
+                    init_dict['QUESTIONS'][q] = [0.5, True, [0.0, HUGE_FLOAT]]
+    else:
+        init_dict['VERSION']['heterogeneity'] = False
