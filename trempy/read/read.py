@@ -311,7 +311,7 @@ def heterogeneity_preparations(init_dict):
             # Question 1 and 2 encode the standard deviations for the temporal and risk part.
             for q in init_dict['QUESTIONS']:
                 if q in [1, 2]:
-                    value, is_fixed, bounds = init_dict['QUESTIONS'][q]
+                    value, _, bounds = init_dict['QUESTIONS'][q]
                     init_dict['QUESTIONS'][q] = [value, False, bounds]
                 else:
                     init_dict['QUESTIONS'][q] = [0.5, True, [0.0, HUGE_FLOAT]]

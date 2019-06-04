@@ -84,7 +84,7 @@ def test_6():
         get_random_init()
         model_obj = ModelCls('test.trempy.ini')
         args = ['paras_obj', 'num_questions', 'version']
-        paras_obj, num_questions, version = dist_class_attributes(model_obj, *args)
+        paras_obj, _, version = dist_class_attributes(model_obj, *args)
 
         if version in ['nonstationary']:
             nparas_econ = paras_obj.attr['nparas_econ']
