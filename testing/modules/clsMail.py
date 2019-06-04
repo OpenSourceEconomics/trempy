@@ -1,8 +1,8 @@
-""" This module holds the class for mailing capabilities. A file with the
-    log in credentials is required in the HOME directory.
+"""This module holds the class for mailing capabilities.
+
+   A file with the log in credentials is required in the HOME directory.
 
     Example Usage:
-
 
         mailObj = mailCls()
 
@@ -20,6 +20,7 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pickle as pkl
+import numpy as np
 import smtplib
 import socket
 import copy
@@ -28,13 +29,10 @@ import os
 
 
 class MailCls(object):
-    """ This class is used to manage the sending of the notification after a
-    completed test run.
-    """
+    """This class is used to manage the sending of the notification after a completed test run."""
 
     def __init__(self):
-        """ Initialization of MailCls.
-        """
+        """Initialization of MailCls."""
         self.attr = dict()
 
         # Constitutive attributes
@@ -58,10 +56,9 @@ class MailCls(object):
         self.is_locked = False
 
     def send(self):
-        """ Send message.
-        """
+        """Send message."""
         # Antibugging
-        assert (self.get_status() is True)
+        np.testing.assert_equal(self.get_status(), True)
 
         # Distribute class attributes
         subject = self.attr['subject']
@@ -115,13 +112,12 @@ class MailCls(object):
         server.quit()
 
     def _derived_attributes(self):
-        """ Construct derived attributes.
-        """
+        """Construct derived attributes."""
         # Antibugging
-        assert (self.get_status() is True)
+        np.testing.assert_equal(self.get_status(), True)
 
         # Check availability
-        assert (self.attr['message'] is not None)
+        np.testing.assert_equal(self.attr['message'] is not None, True)
 
         # Process credentials
         dict_ = json.load(open(os.environ['HOME'] + '/.credentials'))
@@ -131,16 +127,13 @@ class MailCls(object):
         self.attr['password'] = dict_['password']
 
     def get_status(self):
-        """ Get status of class instance.
-        """
-
+        """Get status of class instance."""
         return self.is_locked
 
     def lock(self):
-        """ Lock class instance.
-        """
+        """Lock class instance."""
         # Antibugging
-        assert (self.get_status() is False)
+        np.testing.assert_equal(self.get_status(), False)
 
         # Update class attributes
         self.is_locked = True
@@ -151,20 +144,18 @@ class MailCls(object):
         self._check_integrity()
 
     def unlock(self):
-        """ Unlock class instance.
-        """
+        """Unlock class instance."""
         # Antibugging
-        assert (self.get_status() is True)
+        np.testing.assert_equal(self.get_status(), True)
 
         # Update class attributes
         self.is_locked = False
 
     def get_attr(self, key, deep=False):
-        """ Get attributes.
-        """
+        """Get attributes."""
         # Antibugging
-        assert (self.get_status() is True)
-        assert (deep in [True, False])
+        np.testing.assert_equal(self.get_status(), True)
+        np.testing.assert_equal(deep in [True, False], True)
 
         # Copy requested object
         if deep:
@@ -176,11 +167,10 @@ class MailCls(object):
         return attr
 
     def set_attr(self, key, value, deep=False):
-        """ Get attributes.
-        """
+        """Get attributes."""
         # Antibugging
-        assert (self.get_status() is False)
-        assert (key in self.attr.keys())
+        np.testing.assert_equal(self.get_status(), False)
+        np.testing.assert_equal(key in self.attr.keys(), True)
 
         # Copy requested object
         if deep:
@@ -193,15 +183,13 @@ class MailCls(object):
 
     @staticmethod
     def _check_integrity():
-        """ Check integrity of class instance.
-        """
+        """Check integrity of class instance."""
 
     def store(self, file_name):
-        """ Store class instance.
-        """
+        """Store class instance."""
         # Antibugging
-        assert (self.get_status() is True)
-        assert (isinstance(file_name, str))
+        np.testing.assert_equal(self.get_status(), True)
+        np.testing.assert_equal(isinstance(file_name, str), True)
 
         # Store
         pkl.dump(self, open(file_name, 'wb'))

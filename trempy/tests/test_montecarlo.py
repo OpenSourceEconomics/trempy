@@ -82,7 +82,7 @@ def estimate_at_truth(fix_question_paras):
 
     print_init_dict(init_dict, fname='truth.trempy.ini')
 
-    df, fval = simulate('truth.trempy.ini')
+    _, fval = simulate('truth.trempy.ini')
     est_output = estimate('truth.trempy.ini')
 
     # Print output
@@ -92,7 +92,7 @@ def estimate_at_truth(fix_question_paras):
 
     for group in ESTIMATION_GROUP[version]:
         for key in init_dict[group].keys():
-            start_value, is_fixed, bounds = init_dict[group][key]
+            start_value, is_fixed, _ = init_dict[group][key]
             estimated_value = estimated_dict[group][key][0]
 
             if start_value is None or is_fixed is True:
@@ -123,7 +123,7 @@ def perturbate_econ(init_dict, no_temporal_choices=True, max_dist=None):
         for label in PREFERENCE_PARAMETERS[version]:
             if label in init_dict[group].keys():
                 # Distribute parameters
-                value, is_fixed, bounds = init_dict[group][label]
+                value, is_fixed, _ = init_dict[group][label]
 
                 # Handle optional or unused arguments.
                 if value is None:
@@ -180,7 +180,7 @@ def pertubation_robustness_all(version, no_temporal_choices=True,
     print_init_dict(perturbed_dict, fname='perturbed.trempy.ini')
 
     # Simulate data from init file and report criterion function.
-    df, fval = simulate('truth.trempy.ini')
+    _, fval = simulate('truth.trempy.ini')
     print('fval at truth: {:>25}'.format(fval))
 
     # Estimate starting from perturbed values
@@ -231,7 +231,7 @@ def perturbate_single(init_dict, label, value=None):
     # Fix every parameter except for perturbed one. The perturbed one is "un-fixed".
     for group in ESTIMATION_GROUP[version]:
         for key in init_dict[group].keys():
-            current_value, is_fixed, bounds = init_dict[group][key]
+            current_value, _, bounds = init_dict[group][key]
             if key == label:
                 # Reset bounds to default
                 lower, upper = DEFAULT_BOUNDS[label]

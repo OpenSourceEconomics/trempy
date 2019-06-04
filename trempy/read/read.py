@@ -214,7 +214,7 @@ def type_conversions(flag, value):
     elif flag in ['version', 'file', 'optimizer', 'start']:
         value = str(value)
     elif flag in ['detailed', 'stationary_model', 'heterogeneity']:
-        assert (value.upper() in ['TRUE', 'FALSE'])
+        np.testing.assert_equal(value.upper() in ['TRUE', 'FALSE'], True)
         value = (value.upper() == 'TRUE')
     # Handle SCIPY-BFGS, SCIPY-L-BFGS-B and SCIPY-POWELL
     elif flag in ['eps', 'gtol', 'ftol', 'xtol']:
@@ -290,7 +290,7 @@ def check_optional_args(init_dict):
             # If optional argument is not used (None), then we fix it at None.
             # In this case, the optimizer is not confused!
             if label in init_dict['DISCOUNTING'].keys():
-                value, is_fixed, bounds = init_dict['DISCOUNTING'][label]
+                value, is_fixed, _ = init_dict['DISCOUNTING'][label]
                 if value is None and is_fixed is False:
                     raise TrempyError('Optional argument misspecified.')
             else:

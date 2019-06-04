@@ -33,7 +33,7 @@ def run_regression_test(test):
 
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')
-    df, fval = simulate('test.trempy.ini')
+    df, _ = simulate('test.trempy.ini')
 
     # Distribute class attributes for further processing.
     args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']

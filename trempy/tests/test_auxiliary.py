@@ -355,7 +355,7 @@ def visualize_modelfit(df_simulated, df_estimated):
         interior = df.shape[0] - neverswitcher
         percent_interior = (interior / df.shape[0])
         if percent_interior <= 0.20:
-            data_type, question = col.split(": ")
+            _, question = col.split(": ")
             print('Dropped question: {}'.format(question))
             print('Interior: {}'.format(percent_interior))
             try:
