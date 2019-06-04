@@ -38,6 +38,10 @@ def random_dict(constr):
     num_questions = np.random.randint(8, 14)
     fname = get_random_string()
     discounting = np.random.choice([None, 'exponential', 'hyperbolic'], p=[0.8, 0.1, 0.1])
+    heterogeneity = np.random.choice([True, False], p=[0.1, 0.9])
+    df_other = np.random.choice(
+        ['equal_univariate', 'free', 'linear', 'exponential'], p=[0.7, 0.1, 0.1, 0.1]
+    )
 
     if constr is not None:
         # Handle version specific data.
@@ -49,13 +53,23 @@ def random_dict(constr):
             fname = constr['fname']
         if 'discounting' in constr.keys():
             discounting = constr['discounting']
+        if 'heterogeneity' in constr.keys():
+            heterogeneity = constr['heterogeneity']
 
     dict_['VERSION'] = {'version': version}
 
     # Optional arguments for model type
     if version in ['nonstationary']:
-        dict_['VERSION']['discounting'] = discounting
         dict_['VERSION']['stationary_model'] = np.random.choice([False, True], p=[0.9, 0.1])
+        dict_['VERSION']['heterogeneity'] = heterogeneity
+        dict_['VERSION']['discounting'] = discounting
+        dict_['VERSION']['df_other'] = df_other
+    elif version in ['scaled_archimedean']:
+        dict_['VERSION']['stationary_model'] = True
+        dict_['VERSION']['heterogeneity'] = False
+        dict_['VERSION']['discounting'] = None
+        dict_['VERSION']['df_other'] = 'equal_univariate'
+        heterogeneity = False
 
     sim_agents = np.random.randint(2, 10)
     is_fixed = np.random.choice(
@@ -102,9 +116,14 @@ def random_dict(constr):
 
         # Handle optional arguments. If one argument is not used, set all to None and fix them.
         optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
-        not_used = (None in [dict_['DISCOUNTING'][label][0] for label in optional_args])
-        if not_used:
+
+        if df_other in ['equal_univariate']:
             for label in optional_args:
+                dict_['DISCOUNTING'][label] = [None, True, [0.01, 1.00]]
+        elif df_other in ['free']:
+            pass
+        elif df_other in ['linear', 'exponential']:
+            if not label.endswith('_0'):
                 dict_['DISCOUNTING'][label] = [None, True, [0.01, 1.00]]
 
     else:
@@ -121,7 +140,12 @@ def random_dict(constr):
                 [13] + list(range(31, 46)), size=num_questions, replace=False)
             # print('Generated only atemporal questions because version is scaled_archimedean')
         else:
-            questions = np.random.choice(list(range(1, 46)), size=num_questions, replace=False)
+            if heterogeneity:
+                questions = np.array([1, 2])
+                questions = np.append(questions, np.random.choice(
+                    list(range(3, 46)), size=(num_questions - 2), replace=False))
+            else:
+                questions = np.random.choice(list(range(1, 46)), size=num_questions, replace=False)
 
     dict_['QUESTIONS'] = dict()
 
@@ -130,12 +154,19 @@ def random_dict(constr):
         value = get_value(bounds, q, version)
         dict_['QUESTIONS'][q] = [value, is_fixed[i + len(PREFERENCE_PARAMETERS[version])], bounds]
 
+    # If heterogeneity is True, we want to unfix the first two questions and fix the rest.
+    if heterogeneity:
+        dict_['QUESTIONS'][1][1] = False
+        dict_['QUESTIONS'][2][1] = False
+        for q in questions:
+            if q in [1, 2]:
+                continue
+            dict_['QUESTIONS'][q] = [0.5, True, [0, HUGE_FLOAT]]
+
     # We now add some cutoff values.
     dict_['CUTOFFS'] = dict()
     for q in questions:
         if np.random.choice([True, False]):
-            continue
-        else:
             dict_['CUTOFFS'][q] = get_cutoffs()
 
     # We now turn to all simulation details.
@@ -263,20 +294,10 @@ def get_value(bounds, label, version):
     lower, upper = bounds
 
     if label in PREFERENCE_PARAMETERS[version]:
-        # Handle optional arguments and set them to None if not required.
-        if label.startswith('unrestricted_weights'):
-            restricted = np.random.choice([True, False], p=[0.8, 0.2])
-            if restricted:
-                value = None
-            else:
-                value = float(np.random.uniform(lower + 0.01, upper - 0.01))
-                value = np.around(value, decimals=4)
-        # Other preference paramters
-        else:
-            value = float(np.random.uniform(lower + 0.01, upper - 0.01))
-            value = np.around(value, decimals=4)
-    # Handle non-preference labels
+        value = float(np.random.uniform(lower + 0.01, upper - 0.01))
+        value = np.around(value, decimals=4)
     else:
+        # Non-preference labels
         upper = min(upper, 10)
         value = float(np.random.uniform(lower + 0.01, upper - 0.01))
         value = np.around(value, decimals=4)
@@ -334,7 +355,7 @@ def visualize_modelfit(df_simulated, df_estimated):
         interior = df.shape[0] - neverswitcher
         percent_interior = (interior / df.shape[0])
         if percent_interior <= 0.20:
-            data_type, question = col.split(": ")
+            _, question = col.split(": ")
             print('Dropped question: {}'.format(question))
             print('Interior: {}'.format(percent_interior))
             try:

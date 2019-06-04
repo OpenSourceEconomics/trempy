@@ -33,7 +33,7 @@ def create_regression_vault(num_tests):
         # Create and process initialization file
         init_dict = get_random_init(constr)
         model_obj = ModelCls('test.trempy.ini')
-        df, fval = simulate('test.trempy.ini')
+        df, _ = simulate('test.trempy.ini')
 
         # Distribute class attributes for further processing.
         args = [model_obj, 'paras_obj', 'questions', 'cutoffs', 'version']

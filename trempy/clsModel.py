@@ -21,6 +21,10 @@ class ModelCls(BaseCls):
         # We first tackle the more complex issue of parameter management.
         self.attr = dict()
         self.attr['version'] = version
+        self.attr['heterogeneity'] = init_dict['VERSION']['heterogeneity']
+        self.attr['stationary_model'] = init_dict['VERSION']['stationary_model']
+        self.attr['discounting'] = init_dict['VERSION']['discounting']
+        self.attr['df_other'] = init_dict['VERSION']['df_other']
 
         # Parameters
         paras_obj = ParasCls(init_dict)
@@ -126,6 +130,10 @@ class ModelCls(BaseCls):
 
         # 1) Version
         init_dict['VERSION']['version'] = version
+        init_dict['VERSION']['heterogeneity'] = self.attr['heterogeneity']
+        init_dict['VERSION']['stationary_model'] = self.attr['stationary_model']
+        init_dict['VERSION']['discounting'] = self.attr['discounting']
+        init_dict['VERSION']['df_other'] = self.attr['df_other']
 
         # 2) Simulation
         init_dict['SIMULATION']['agents'] = self.attr['sim_agents']
@@ -214,11 +222,8 @@ class ModelCls(BaseCls):
     def _check_integrity(self):
         """Check the integrity of the class instance."""
         # Distribute class attributes for further processing.
-        args = ['paras_obj', 'sim_seed', 'sim_agents', 'sim_file', 'est_agents', 'maxfun',
-                'est_file', 'questions', 'start', 'num_skip']
-
-        paras_obj, sim_seed, sim_agents, sim_file, est_agents, maxfun, est_file, questions, \
-            start, num_skip = dist_class_attributes(self, *args)
+        args = ['questions', 'start', 'num_skip']
+        questions, start, num_skip = dist_class_attributes(self, *args)
 
         # We restrict the identifiers for the questions between 1 and 16
         np.testing.assert_equal(0 < min(questions) <= max(questions) < 46, True)
