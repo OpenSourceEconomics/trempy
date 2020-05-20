@@ -326,7 +326,7 @@ def format_coefficient_line(label_internal, info, str_):
         label_external = 'r'
 
     # First, filter out integer values
-    if isinstance(label_external, np.int64) or isinstance(label_external, int):
+    if isinstance(label_external, (list, np.int64, np.int32, int)):
         line = [label_external, value]
     # Handle optional arguments that should be set to 'None'
     elif label_external.startswith('unrestricted_weights') and value is None:

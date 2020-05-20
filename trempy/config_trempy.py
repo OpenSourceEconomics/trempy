@@ -39,7 +39,7 @@ DEFAULT_BOUNDS['other'] = [0.00, 0.99]
 DEFAULT_BOUNDS['self'] = [0.00, 0.99]
 
 # Nonstationary utility function
-DEFAULT_BOUNDS['alpha'] = [0.01, 10.00]
+DEFAULT_BOUNDS['alpha'] = [0.01, 50.00]
 DEFAULT_BOUNDS['beta'] = [0.01, 10.00]
 DEFAULT_BOUNDS['gamma'] = [0.01, 10.00]
 DEFAULT_BOUNDS['y_scale'] = [0.01, 10.00]

@@ -20,6 +20,7 @@ def get_random_init(constr=None):
         constr = dict()
 
     init_dict = random_dict(constr)
+    print(init_dict)
 
     if 'fname' in constr.keys():
         fname = constr['fname']
