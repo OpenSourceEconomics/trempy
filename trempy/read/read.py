@@ -19,6 +19,7 @@ BASIC_GROUPS = [
 ESTIMATION_GROUP = {
     'scaled_archimedean': ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA'],
     'nonstationary': ['ATEMPORAL', 'DISCOUNTING'],
+    'warmglow': ['ATEMPORAL', 'DISCOUNTING'],
 }
 
 
@@ -99,7 +100,7 @@ def read(fname):
                     else:
                         dict_[group][flag] = value
 
-                elif version in ['nonstationary']:
+                elif version in ['nonstationary', 'warmglow']:
                     dict_[group][flag] = process_coefficient_line(group, list_, value)
 
                 else:
@@ -306,7 +307,7 @@ def heterogeneity_preparations(init_dict):
         if heterogeneity:
             np.testing.assert_equal(1 in init_dict['QUESTIONS'].keys(), True)
             np.testing.assert_equal(2 in init_dict['QUESTIONS'].keys(), True)
-            np.testing.assert_equal(version in ['nonstationary'], True)
+            np.testing.assert_equal(version in ['nonstationary', 'warmglow'], True)
 
             # Question 1 and 2 encode the standard deviations for the temporal and risk part.
             for q in init_dict['QUESTIONS']:

@@ -25,7 +25,7 @@ class ParasCls(BaseCls):
         self.attr['para_labels'] = []
         self.attr['para_objs'] = []
 
-        if version in ['nonstationary']:
+        if version in ['nonstationary', 'warmglow']:
             self.attr['stationary_model'] = init_dict['VERSION']['stationary_model']
             self.attr['discounting'] = init_dict['VERSION']['discounting']
             self.attr['df_other'] = init_dict['VERSION']['df_other']
@@ -41,7 +41,7 @@ class ParasCls(BaseCls):
                 else:
                     value, is_fixed, bounds = init_dict['MULTIATTRIBUTE COPULA'][label]
 
-            elif version in ['nonstationary']:
+            elif version in ['nonstationary', 'warmglow']:
                 if label in ['alpha', 'beta', 'gamma', 'y_scale']:
                     value, is_fixed, bounds = init_dict['ATEMPORAL'][label]
                 elif (label.startswith('discount_factors') or

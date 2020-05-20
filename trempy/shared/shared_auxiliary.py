@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 
 from trempy.interface.interface_copulpy import get_copula_nonstationary
+from trempy.interface.interface_copulpy import get_copula_warmglow
 from trempy.interface.interface_copulpy import get_copula_scaled_archimedean
 from trempy.custom_exceptions import TrempyError
 from trempy.config_trempy import PREFERENCE_PARAMETERS
@@ -125,6 +126,37 @@ def get_optimal_compensations_nonstationary(
     return m_optimal
 
 
+def get_optimal_compensations_warmglow(
+    questions, alpha, beta, gamma, y_scale,
+    discount_factors_0, discount_factors_1,
+    discount_factors_3, discount_factors_6,
+    discount_factors_12, discount_factors_24,
+    unrestricted_weights_0, unrestricted_weights_1,
+    unrestricted_weights_3, unrestricted_weights_6,
+    unrestricted_weights_12, unrestricted_weights_24,
+    # Optional arguments that determine the model type
+    discounting, stationary_model, df_other
+):
+    """Optimal compensation for the warmglow utility function."""
+    copula = get_copula_warmglow(
+        alpha, beta, gamma, y_scale,
+        discount_factors_0, discount_factors_1,
+        discount_factors_3, discount_factors_6,
+        discount_factors_12, discount_factors_24,
+        unrestricted_weights_0, unrestricted_weights_1,
+        unrestricted_weights_3, unrestricted_weights_6,
+        unrestricted_weights_12, unrestricted_weights_24,
+        discounting=discounting,
+        stationary_model=stationary_model,
+        df_other=df_other
+    )
+
+    m_optimal = dict()
+    for q in questions:
+        m_optimal[q] = determine_optimal_compensation(copula, q)
+    return m_optimal
+
+
 def get_optimal_compensations(version, paras_obj, questions, **version_specific):
     """Get optimal compensations based on a model_obj."""
     nparas_econ = paras_obj.attr['nparas_econ']
@@ -143,7 +175,7 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
         args = [questions, upper, marginals, r_self, r_other, delta, self, other]
         m_optimal = get_optimal_compensations_scaled_archimedean(*args)
 
-    elif version in ['nonstationary']:
+    elif version in ['nonstationary', 'warmglow']:
         # Variable args
         # TODO: How to handle optional arguments? If unrestricted_weights is not generated,
         # this does not work.
@@ -167,7 +199,10 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
                 unrestricted_weights_6, unrestricted_weights_12, unrestricted_weights_24,
                 # Optional arguments:
                 discounting, stationary_model, df_other]
-        m_optimal = get_optimal_compensations_nonstationary(*args)
+        if version in ['nonstationary']:
+            m_optimal = get_optimal_compensations_nonstationary(*args)
+        elif version in ['warmglow']:
+            m_optimal = get_optimal_compensations_warmglow(*args)
     else:
         raise TrempyError('version not implemented')
 
@@ -185,7 +220,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
     # Add keys based on version of the utility function
     if version in ['scaled_archimedean']:
         keys += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
-    elif version in ['nonstationary']:
+    elif version in ['nonstationary', 'warmglow']:
         keys += ['ATEMPORAL', 'DISCOUNTING']
     else:
         raise TrempyError('version not implemented')
@@ -211,7 +246,7 @@ def print_init_dict(dict_, fname='test.trempy.ini'):
                         label_internal = 'r_self'
                     elif label in ['r'] and 'OTHER' in key_:
                         label_internal = 'r_other'
-                elif version in ['nonstationary']:
+                elif version in ['nonstationary', 'warmglow']:
                     pass
 
                 # Build format string for line

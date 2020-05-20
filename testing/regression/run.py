@@ -43,7 +43,7 @@ def create_regression_vault(num_tests):
         if version in ['scaled_archimedean']:
             upper, marginals = dist_class_attributes(*[model_obj, 'upper', 'marginals'])
             version_specific = {'upper': upper, 'marginals': marginals}
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             version_specific = dict()
 
         # Get number of economic parameters. Paras with higher index belong to questions.

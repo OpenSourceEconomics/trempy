@@ -60,7 +60,7 @@ def test_3():
 def test_4():
     """Check for valid bounds."""
     for _ in range(1000):
-        version = np.random.choice(['scaled_archimedean', 'nonstationary'])
+        version = np.random.choice(['scaled_archimedean', 'nonstationary', 'warmglow'])
 
         for label in PREFERENCE_PARAMETERS[version]:
             lower, upper = get_bounds(label, version)
@@ -79,7 +79,7 @@ def test_5():
 
 
 def test_6():
-    """Ensure that the weight c_t in the CES function is computed correctly."""
+    """Ensure that the weight c_t in the CES function is computed correctly for -nonstationary-."""
     for _ in range(500):
         get_random_init()
         model_obj = ModelCls('test.trempy.ini')

@@ -23,9 +23,8 @@ def simulate(fname):
         args += ['upper', 'marginals']
         sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs, upper, marginals = \
             dist_class_attributes(*args)
-
         version_specific = {'upper': upper, 'marginals': marginals}
-    elif version in ['nonstationary']:
+    elif version in ['nonstationary', 'warmglow']:
         sim_agents, questions, sim_seed, sim_file, paras_obj, cutoffs = \
             dist_class_attributes(*args)
         version_specific = dict()

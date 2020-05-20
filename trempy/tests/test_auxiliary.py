@@ -34,7 +34,7 @@ def random_dict(constr):
     """Create a random initialization file."""
     dict_ = dict()
 
-    version = np.random.choice(['scaled_archimedean', 'nonstationary'])
+    version = np.random.choice(['scaled_archimedean', 'nonstationary', 'warmglow'])
     num_questions = np.random.randint(8, 14)
     fname = get_random_string()
     discounting = np.random.choice([None, 'exponential', 'hyperbolic'], p=[0.8, 0.1, 0.1])
@@ -59,7 +59,7 @@ def random_dict(constr):
     dict_['VERSION'] = {'version': version}
 
     # Optional arguments for model type
-    if version in ['nonstationary']:
+    if version in ['nonstationary', 'warmglow']:
         dict_['VERSION']['stationary_model'] = np.random.choice([False, True], p=[0.9, 0.1])
         dict_['VERSION']['heterogeneity'] = heterogeneity
         dict_['VERSION']['discounting'] = discounting
@@ -105,7 +105,7 @@ def random_dict(constr):
             j = i + 2
             dict_['MULTIATTRIBUTE COPULA'][label] = [values[j], is_fixed[j], bounds[j]]
 
-    elif version in ['nonstationary']:
+    elif version in ['nonstationary', 'warmglow']:
         dict_['ATEMPORAL'] = dict()
         dict_['DISCOUNTING'] = dict()
         for i, label in enumerate(PREFERENCE_PARAMETERS[version]):
@@ -255,7 +255,7 @@ def get_bounds(label, version):
                 lower = float(np.random.uniform(0.01, 0.98 - wedge))
             else:
                 raise TrempyError('flawed request for bounds')
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             if label in ['alpha', 'beta', 'gamma']:
                 lower = float(np.random.uniform(0.01, 5.0 - wedge))
             elif label in ['y_scale']:

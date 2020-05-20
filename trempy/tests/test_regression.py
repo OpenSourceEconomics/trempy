@@ -53,7 +53,7 @@ def run_regression_test(test):
     x_econ_all = paras_obj.get_values('econ', 'all')
     if version in ['scaled_archimedean']:
         sds = x_econ_all[5:]
-    elif version in ['nonstationary']:
+    elif version in ['nonstationary', 'warmglow']:
         sds = x_econ_all[n_econ_params:]
 
     stat, _ = criterion_function(df, questions, cutoffs, paras_obj,

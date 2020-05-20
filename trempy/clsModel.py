@@ -43,7 +43,7 @@ class ModelCls(BaseCls):
             marginals += [init_dict['UNIATTRIBUTE SELF']['marginal']]
             marginals += [init_dict['UNIATTRIBUTE OTHER']['marginal']]
             self.attr['marginals'] = marginals
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             pass
         else:
             raise TrempyError('version not implemented')
@@ -119,7 +119,7 @@ class ModelCls(BaseCls):
         version_labels = []
         if version in ['scaled_archimedean']:
             version_labels += ['UNIATTRIBUTE SELF', 'UNIATTRIBUTE OTHER', 'MULTIATTRIBUTE COPULA']
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             version_labels += ['ATEMPORAL', 'DISCOUNTING']
 
         # Create init dictionary
@@ -183,7 +183,8 @@ class ModelCls(BaseCls):
             init_dict['MULTIATTRIBUTE COPULA']['delta'] = paras_obj.get_para('delta')
             init_dict['MULTIATTRIBUTE COPULA']['self'] = paras_obj.get_para('self')
             init_dict['MULTIATTRIBUTE COPULA']['other'] = paras_obj.get_para('other')
-        elif version in ['nonstationary']:
+
+        elif version in ['nonstationary', 'warmglow']:
             init_dict['ATEMPORAL']['alpha'] = paras_obj.get_para('alpha')
             init_dict['ATEMPORAL']['beta'] = paras_obj.get_para('beta')
             init_dict['ATEMPORAL']['gamma'] = paras_obj.get_para('gamma')

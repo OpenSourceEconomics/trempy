@@ -34,7 +34,7 @@ class StartClass(BaseCls):
             # assert all(x in version_specific.keys() for x in ['marginals', 'upper'])
             self.attr['marginals'] = version_specific['marginals']
             self.attr['upper'] = version_specific['upper']
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             pass
 
         # Initialization attributes
@@ -61,7 +61,7 @@ class StartClass(BaseCls):
             marginals = self.attr['marginals']
             upper = self.attr['upper']
             version_specific = {'upper': upper, 'marginals': marginals}
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             version_specific = dict()
 
         start_utility_paras = self.attr['start_utility_paras']
@@ -228,7 +228,7 @@ def estimate_simulate(which, points, model_obj, df_obs):
     if version in ['scaled_archimedean']:
         upper, marginals = dist_class_attributes(model_obj, 'upper', 'marginals')
         version_specific = {'upper': upper, 'marginals': marginals}
-    elif version in ['nonstationary']:
+    elif version in ['nonstationary', 'warmglow']:
         version_specific = dict()
 
     m_optimal = get_optimal_compensations(version, paras_obj, questions, **version_specific)

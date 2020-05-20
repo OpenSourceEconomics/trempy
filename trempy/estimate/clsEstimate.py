@@ -24,7 +24,7 @@ class EstimateClass(BaseCls):
         if version in ['scaled_archimedean']:
             for key, value in version_specific.items():
                 self.attr[key] = value
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             # Currently nothing to do.
             pass
 
@@ -70,7 +70,7 @@ class EstimateClass(BaseCls):
             marginals = self.attr['marginals']
             upper = self.attr['upper']
             version_specific = {'upper': upper, 'marginals': marginals}
-        elif version in ['nonstationary']:
+        elif version in ['nonstationary', 'warmglow']:
             version_specific = dict()
 
         # Construct relevant set of parameters

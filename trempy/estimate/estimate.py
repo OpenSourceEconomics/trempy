@@ -33,7 +33,7 @@ def estimate(fname):
     if version in ['scaled_archimedean']:
         upper, marginals = dist_class_attributes(*[model_obj, 'upper', 'marginals'])
         version_specific = {'upper': upper, 'marginals': marginals}
-    elif version in ['nonstationary']:
+    elif version in ['nonstationary', 'warmglow']:
         version_specific = dict()
 
     # We only need to continue if there is at least one parameter to actually estimate.
