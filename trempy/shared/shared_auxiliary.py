@@ -135,7 +135,7 @@ def get_optimal_compensations_warmglow(
     unrestricted_weights_3, unrestricted_weights_6,
     unrestricted_weights_12, unrestricted_weights_24,
     # Optional arguments that determine the model type
-    discounting, stationary_model, df_other
+    discounting, stationary_model, df_other, warmglow_type
 ):
     """Optimal compensation for the warmglow utility function."""
     copula = get_copula_warmglow(
@@ -148,7 +148,8 @@ def get_optimal_compensations_warmglow(
         unrestricted_weights_12, unrestricted_weights_24,
         discounting=discounting,
         stationary_model=stationary_model,
-        df_other=df_other
+        df_other=df_other,
+        warmglow_type=warmglow_type
     )
 
     m_optimal = dict()
@@ -201,7 +202,12 @@ def get_optimal_compensations(version, paras_obj, questions, **version_specific)
                 discounting, stationary_model, df_other]
         if version in ['nonstationary']:
             m_optimal = get_optimal_compensations_nonstationary(*args)
+
         elif version in ['warmglow']:
+            # Optional version-specific args
+            warmglow_type = paras_obj.attr['warmglow_type']
+            args.append(warmglow_type)
+
             m_optimal = get_optimal_compensations_warmglow(*args)
     else:
         raise TrempyError('version not implemented')

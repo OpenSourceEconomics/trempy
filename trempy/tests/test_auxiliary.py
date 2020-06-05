@@ -43,6 +43,7 @@ def random_dict(constr):
     df_other = np.random.choice(
         ['equal_univariate', 'free', 'linear', 'exponential'], p=[0.7, 0.1, 0.1, 0.1]
     )
+    warmglow_type = np.random.choice(['constant', 'linear'], p=[0.5, 0.5])
 
     if constr is not None:
         # Handle version specific data.
@@ -65,11 +66,13 @@ def random_dict(constr):
         dict_['VERSION']['heterogeneity'] = heterogeneity
         dict_['VERSION']['discounting'] = discounting
         dict_['VERSION']['df_other'] = df_other
+        dict_['VERSION']['warmglow_type'] = warmglow_type
     elif version in ['scaled_archimedean']:
         dict_['VERSION']['stationary_model'] = True
         dict_['VERSION']['heterogeneity'] = False
         dict_['VERSION']['discounting'] = None
         dict_['VERSION']['df_other'] = 'equal_univariate'
+        dict_['VERSION']['warmglow_type'] = warmglow_type
         heterogeneity = False
 
     sim_agents = np.random.randint(2, 10)

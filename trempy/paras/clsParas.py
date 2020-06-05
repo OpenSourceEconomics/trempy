@@ -29,6 +29,7 @@ class ParasCls(BaseCls):
             self.attr['stationary_model'] = init_dict['VERSION']['stationary_model']
             self.attr['discounting'] = init_dict['VERSION']['discounting']
             self.attr['df_other'] = init_dict['VERSION']['df_other']
+            self.attr['warmglow_type'] = init_dict['VERSION']['warmglow_type']
 
         # Preference parameters are handled for each version separately.
         for label in PREFERENCE_PARAMETERS[version]:

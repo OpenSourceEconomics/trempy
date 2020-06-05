@@ -30,6 +30,8 @@ def run_regression_test(test):
         init_dict['VERSION']['heterogeneity'] = False
     if 'df_other' not in version_keys:
         init_dict['VERSION']['df_other'] = 'equal_univariate'
+    if 'warmglow_type' not in version_keys:
+        init_dict['VERSION']['warmglow_type'] = 'constant'
 
     print_init_dict(init_dict)
     model_obj = ModelCls('test.trempy.ini')

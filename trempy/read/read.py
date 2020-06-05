@@ -238,7 +238,7 @@ def type_conversions(flag, value):
         value = value.lower()
         if value == 'none':
             value = None
-    elif flag in ['df_other']:
+    elif flag in ['df_other', 'warmglow_type']:
         value = str(value)
         value = value.lower()
     elif flag.startswith('unrestricted_weights_'):
@@ -248,17 +248,13 @@ def type_conversions(flag, value):
             value = float(value)
     else:
         value = float(value)
-
-    # TODO: add consistency check for unrestricted weights and
-    # TODO: add additional tests for the init dict in separate file "read_init_check.py"
-
-    # Finishing
     return value
 
 
 def check_optional_args(init_dict):
     """Enforce input requirements for the init_dict."""
     version = init_dict['VERSION']['version']
+
     if version in ['scaled_archimedean']:
         pass
 
@@ -267,24 +263,31 @@ def check_optional_args(init_dict):
         if 'discounting' in init_dict['VERSION'].keys():
             discounting = init_dict['VERSION']['discounting']
             np.testing.assert_equal(discounting in ['hyperbolic', 'exponential', None], True)
-        else:
-            init_dict['VERSION']['discounting'] = None
+        # else:
+        #     init_dict['VERSION']['discounting'] = None
 
         if 'df_other' in init_dict['VERSION'].keys():
             df_other = init_dict['VERSION']['df_other']
             np.testing.assert_equal(
                 df_other in ['free', 'linear', 'exponential', 'equal_univariate'], True
             )
-        else:
-            init_dict['VERSION']['df_other'] = 'equal_univariate'
+        # else:
+        #     init_dict['VERSION']['df_other'] = 'equal_univariate'
 
-        # Fill in stationary_model if not specified by user
-        if 'stationary_model' not in init_dict['VERSION'].keys():
-            init_dict['VERSION']['stationary_model'] = False
+        # General parameters
+        if 'warmglow_type' in init_dict['VERSION'].keys():
+            warmglow_type = init_dict['VERSION']['warmglow_type']
+            np.testing.assert_equal(warmglow_type in ['constant', 'linear'], True)
+        # else:
+        #     init_dict['VERSION']['warmglow_type'] = 'constant'
 
-        # Enfore that there is a boolean variable 'heterogenenity'. Default: False.
-        if 'heterogeneity' not in init_dict['VERSION'].keys():
-            init_dict['VERSION']['heterogeneity'] = False
+        # # Fill in stationary_model if not specified by user
+        # if 'stationary_model' not in init_dict['VERSION'].keys():
+        #     init_dict['VERSION']['stationary_model'] = False
+
+        # # Enfore that there is a boolean variable 'heterogenenity'. Default: False.
+        # if 'heterogeneity' not in init_dict['VERSION'].keys():
+        #     init_dict['VERSION']['heterogeneity'] = False
 
         optional_args = ['unrestricted_weights_{}'.format(int(x)) for x in [0, 1, 3, 6, 12, 24]]
         for label in optional_args:
@@ -300,21 +303,21 @@ def check_optional_args(init_dict):
 
 def heterogeneity_preparations(init_dict):
     """Prepare init dict for use in a single-agent estimation."""
-    if 'heterogeneity' in init_dict['VERSION'].keys():
-        heterogeneity = init_dict['VERSION']['heterogeneity']
-        version = init_dict['VERSION']['version']
+    # if 'heterogeneity' in init_dict['VERSION'].keys():
+    heterogeneity = init_dict['VERSION']['heterogeneity']
+    version = init_dict['VERSION']['version']
 
-        if heterogeneity:
-            np.testing.assert_equal(1 in init_dict['QUESTIONS'].keys(), True)
-            np.testing.assert_equal(2 in init_dict['QUESTIONS'].keys(), True)
-            np.testing.assert_equal(version in ['nonstationary', 'warmglow'], True)
+    if heterogeneity:
+        np.testing.assert_equal(1 in init_dict['QUESTIONS'].keys(), True)
+        np.testing.assert_equal(2 in init_dict['QUESTIONS'].keys(), True)
+        np.testing.assert_equal(version in ['nonstationary', 'warmglow'], True)
 
-            # Question 1 and 2 encode the standard deviations for the temporal and risk part.
-            for q in init_dict['QUESTIONS']:
-                if q in [1, 2]:
-                    value, _, bounds = init_dict['QUESTIONS'][q]
-                    init_dict['QUESTIONS'][q] = [value, False, bounds]
-                else:
-                    init_dict['QUESTIONS'][q] = [0.5, True, [0.0, HUGE_FLOAT]]
-    else:
-        init_dict['VERSION']['heterogeneity'] = False
+        # Question 1 and 2 encode the standard deviations for the temporal and risk part.
+        for q in init_dict['QUESTIONS']:
+            if q in [1, 2]:
+                value, _, bounds = init_dict['QUESTIONS'][q]
+                init_dict['QUESTIONS'][q] = [value, False, bounds]
+            else:
+                init_dict['QUESTIONS'][q] = [0.5, True, [0.0, HUGE_FLOAT]]
+    # else:
+    #     init_dict['VERSION']['heterogeneity'] = False

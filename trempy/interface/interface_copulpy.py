@@ -109,11 +109,13 @@ def get_copula_warmglow(alpha, beta, gamma, y_scale,
                         unrestricted_weights_12, unrestricted_weights_24,
                         discounting=None,
                         stationary_model=False,
-                        df_other='equal_univariate'
+                        df_other='equal_univariate',
+                        warmglow_type='constant'
                         ):
     """Access the warm glow utility function."""
     # Anti-bugging.
     np.testing.assert_equal(discounting in [None, 'hyperbolic', 'exponential'], True)
+    np.testing.assert_equal(warmglow_type in ['constant', 'linear'], True)
 
     version = 'warmglow'
     copula_spec = {'version': version}
@@ -124,6 +126,7 @@ def get_copula_warmglow(alpha, beta, gamma, y_scale,
         'alpha': alpha,
         'gamma': gamma,
         'beta': beta,
+        'warmglow_type': warmglow_type,
     }
 
     # "Nonparametric" discount factors D_t for t in 0,1,3,6,12,24.

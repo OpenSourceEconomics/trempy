@@ -21,10 +21,12 @@ class ModelCls(BaseCls):
         # We first tackle the more complex issue of parameter management.
         self.attr = dict()
         self.attr['version'] = version
-        self.attr['heterogeneity'] = init_dict['VERSION']['heterogeneity']
-        self.attr['stationary_model'] = init_dict['VERSION']['stationary_model']
-        self.attr['discounting'] = init_dict['VERSION']['discounting']
-        self.attr['df_other'] = init_dict['VERSION']['df_other']
+
+        para_list = [
+            'heterogeneity', 'stationary_model',
+            'discounting', 'df_other', 'warmglow_type']
+        for para_name in para_list:
+            self.attr[para_name] = init_dict['VERSION'][para_name]
 
         # Parameters
         paras_obj = ParasCls(init_dict)
@@ -43,7 +45,7 @@ class ModelCls(BaseCls):
             marginals += [init_dict['UNIATTRIBUTE SELF']['marginal']]
             marginals += [init_dict['UNIATTRIBUTE OTHER']['marginal']]
             self.attr['marginals'] = marginals
-        elif version in ['nonstationary', 'warmglow']:
+        elif version in ['warmglow', 'nonstationary']:
             pass
         else:
             raise TrempyError('version not implemented')
@@ -134,6 +136,7 @@ class ModelCls(BaseCls):
         init_dict['VERSION']['stationary_model'] = self.attr['stationary_model']
         init_dict['VERSION']['discounting'] = self.attr['discounting']
         init_dict['VERSION']['df_other'] = self.attr['df_other']
+        init_dict['VERSION']['warmglow_type'] = self.attr['warmglow_type']
 
         # 2) Simulation
         init_dict['SIMULATION']['agents'] = self.attr['sim_agents']
@@ -185,36 +188,22 @@ class ModelCls(BaseCls):
             init_dict['MULTIATTRIBUTE COPULA']['other'] = paras_obj.get_para('other')
 
         elif version in ['nonstationary', 'warmglow']:
+            # ATEMPORAL arguments that are common to both models
             init_dict['ATEMPORAL']['alpha'] = paras_obj.get_para('alpha')
             init_dict['ATEMPORAL']['beta'] = paras_obj.get_para('beta')
             init_dict['ATEMPORAL']['gamma'] = paras_obj.get_para('gamma')
             init_dict['ATEMPORAL']['y_scale'] = paras_obj.get_para('y_scale')
 
-            init_dict['DISCOUNTING']['discount_factors_0'] = \
-                paras_obj.get_para('discount_factors_0')
-            init_dict['DISCOUNTING']['discount_factors_1'] = \
-                paras_obj.get_para('discount_factors_1')
-            init_dict['DISCOUNTING']['discount_factors_3'] = \
-                paras_obj.get_para('discount_factors_3')
-            init_dict['DISCOUNTING']['discount_factors_6'] = \
-                paras_obj.get_para('discount_factors_6')
-            init_dict['DISCOUNTING']['discount_factors_12'] = \
-                paras_obj.get_para('discount_factors_12')
-            init_dict['DISCOUNTING']['discount_factors_24'] = \
-                paras_obj.get_para('discount_factors_24')
+            # DISCOUNTING arguments that are common to both models
+            para_list = [
+                "discount_factors_0", "discount_factors_1", "discount_factors_3",
+                "discount_factors_6", "discount_factors_12", "discount_factors_24",
+                "unrestricted_weights_0", "unrestricted_weights_1", "unrestricted_weights_3",
+                "unrestricted_weights_6", "unrestricted_weights_12", "unrestricted_weights_24"
+                ]
+            for para_name in para_list:
+                init_dict['DISCOUNTING'][para_name] = paras_obj.get_para(para_name)
 
-            init_dict['DISCOUNTING']['unrestricted_weights_0'] = \
-                paras_obj.get_para('unrestricted_weights_0')
-            init_dict['DISCOUNTING']['unrestricted_weights_1'] = \
-                paras_obj.get_para('unrestricted_weights_1')
-            init_dict['DISCOUNTING']['unrestricted_weights_3'] = \
-                paras_obj.get_para('unrestricted_weights_3')
-            init_dict['DISCOUNTING']['unrestricted_weights_6'] = \
-                paras_obj.get_para('unrestricted_weights_6')
-            init_dict['DISCOUNTING']['unrestricted_weights_12'] = \
-                paras_obj.get_para('unrestricted_weights_12')
-            init_dict['DISCOUNTING']['unrestricted_weights_24'] = \
-                paras_obj.get_para('unrestricted_weights_24')
         else:
             raise TrempyError('version not implemented')
 
